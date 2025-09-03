@@ -1,11 +1,12 @@
-
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
+import 'package:hrms_mobile_app/presentaion/pages/authentication/login/forget_password_screen.dart';
 import 'package:provider/provider.dart';
 
-import '../../../core/constants/appimages.dart';
-import '../../../core/fonts/fonts.dart';
-import '../../../widgets/custom_textfield/custom_textfield.dart';
-import 'login_provider.dart';
+import '../../../../core/constants/appimages.dart';
+import '../../../../core/fonts/fonts.dart';
+import '../../../../widgets/custom_textfield/custom_textfield.dart';
+import '../../../../provider/login_provider/login_provider.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
@@ -41,14 +42,14 @@ class LoginScreen extends StatelessWidget {
                     top: 8,
                     bottom: 8,
                   ),
-                  child: Container(
+                  child: SizedBox(
                     height: 50,
                     width: 180,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(AppImages.logo),
-                        fit: BoxFit.contain,
-                      ),
+                    child: Image.asset(
+                      "assets/images/login_logo_image.jpg",
+                      height: 50,
+                      width: 180,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -102,24 +103,51 @@ class LoginScreen extends StatelessWidget {
                             hintText: "Enter Email Id",
                             validator:
                                 (val) =>
-                            val == null || val.isEmpty
-                                ? "Enter Email"
-                                : null,
+                                    val == null || val.isEmpty
+                                        ? "Enter Email"
+                                        : null,
                           ),
                           const SizedBox(height: 20),
 
-                          CustomTextField(
-                            labelText: "Password",
-                            obscureText: true,
-                            controller: provider.passwordcontroller,
-                            hintText: "Enter password",
-                            validator:
-                                (val) =>
-                            val == null || val.isEmpty
-                                ? 'Enter password'
-                                : null,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              CustomTextField(
+                                labelText: "Password",
+                                obscureText: true,
+                                controller: provider.passwordcontroller,
+                                hintText: "Enter password",
+                                validator:
+                                    (val) =>
+                                        val == null || val.isEmpty
+                                            ? 'Enter password'
+                                            : null,
+                              ),
+                              SizedBox(height: 15),
+
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                      builder:
+                                          (context) =>
+                                               ForgetPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "Forget Password?",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontFamily: AppFonts.poppins,
+                                    color: AppColor.gryColor,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: 25),
 
                           SizedBox(
                             width: double.infinity,
@@ -151,61 +179,29 @@ class LoginScreen extends StatelessWidget {
                                 child: Container(
                                   alignment: Alignment.center,
                                   child:
-                                  provider.isloading
-                                      ? Text(
-                                    "Loading...",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontFamily: AppFonts.poppins,
-
-                                    ),
-                                  )
-                                      : Text(
-                                    "SignIn",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.white,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
+                                      provider.isloading
+                                          ? Text(
+                                            "Loading...",
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white,
+                                              fontFamily: AppFonts.poppins,
+                                            ),
+                                          )
+                                          : Text(
+                                            "SignIn",
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              color: Colors.white,
+                                              fontFamily: AppFonts.poppins,
+                                            ),
+                                          ),
                                 ),
                               ),
                             ),
                           ),
 
                           const SizedBox(height: 20),
-
-                          Center(
-                            child: Text.rich(
-                              TextSpan(
-                                text:
-                                'By logging into an account you are agreeing\nwith our ',
-                                children: [
-                                  TextSpan(
-                                    text: 'Terms and Conditions',
-                                    style: TextStyle(
-                                        color: Colors.blue.shade700,
-                                        fontFamily: AppFonts.poppins,
-                                        fontSize: 14
-
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' and '),
-                                  TextSpan(
-                                    text: 'Privacy Policy',
-                                    style: TextStyle(
-                                      color: Colors.blue.shade700,
-                                      fontFamily: AppFonts.poppins,
-
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
                         ],
                       ),
                     ),

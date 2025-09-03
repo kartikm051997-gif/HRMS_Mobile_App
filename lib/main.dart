@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
-import 'package:hrms_mobile_app/presentaion/pages/login/login_provider.dart';
-import 'package:hrms_mobile_app/presentaion/pages/login/login_screen.dart';
+import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider_screen.dart';
+import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
+import 'package:hrms_mobile_app/presentaion/pages/authentication/login/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.dart';
 
 import 'package:provider/provider.dart';
@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LoginProvider()),
+        ChangeNotifierProvider(create: (_) => ForgetPasswordProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -59,7 +60,6 @@ class MyApp extends StatelessWidget {
           return GetPageRoute(
             settings: settings,
             page: () => const NotFoundPage(),
-
           );
         },
       ),
@@ -74,7 +74,6 @@ class MyApp extends StatelessWidget {
         return LoginScreen();
       default:
         return const NotFoundPage();
-
     }
   }
 }
