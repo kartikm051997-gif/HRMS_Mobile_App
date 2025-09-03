@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../dashborad/dashboard_screen.dart';
+import '../../presentaion/pages/dashborad/dashboard_screen.dart';
 
 class LoginProvider extends ChangeNotifier{
 //controller for textfield
