@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
-import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/dashborad/dashboard_screen.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deliverable_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/attendance_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/bank_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/document_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
+import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authentication/login/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.dart';
@@ -27,6 +37,13 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LoginProvider()),
         ChangeNotifierProvider(create: (_) => ForgetPasswordProvider()),
+        ChangeNotifierProvider(create: (_) => DeliverablesOverviewProvider()),
+        ChangeNotifierProvider(create: (_) => AddDeliverableProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => BankDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => DocumentProvider()),
+        ChangeNotifierProvider(create: (_) => SalaryDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => AttendanceProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -72,6 +89,14 @@ class MyApp extends StatelessWidget {
         return SplashScreen();
       case AppRoutes.loginScreen:
         return LoginScreen();
+      case AppRoutes.dashboardScreen:
+        return DashboardScreen();
+      case AppRoutes.deliverablesOverview:
+        return DeliverablesOverviewScreen();
+      case AppRoutes.addDeliverable:
+        return AddDeliverableScreen();
+
+
       default:
         return const NotFoundPage();
     }
