@@ -7,8 +7,10 @@ class HelperUtil {
     final validRoutes = [
       AppRoutes.splashScreen,
       AppRoutes.splashScreen,
-
       AppRoutes.loginScreen,
+      AppRoutes.dashboardScreen,
+      AppRoutes.deliverablesOverview,
+
 
     ];
 

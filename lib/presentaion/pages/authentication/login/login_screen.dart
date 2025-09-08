@@ -109,43 +109,39 @@ class LoginScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 20),
 
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              CustomTextField(
-                                labelText: "Password",
-                                obscureText: true,
-                                controller: provider.passwordcontroller,
-                                hintText: "Enter password",
-                                validator:
-                                    (val) =>
-                                        val == null || val.isEmpty
-                                            ? 'Enter password'
-                                            : null,
-                              ),
-                              SizedBox(height: 15),
+                          CustomTextField(
+                            labelText: "Password",
+                            obscureText: true,
+                            controller: provider.passwordcontroller,
+                            hintText: "Enter password",
+                            validator:
+                                (val) =>
+                                    val == null || val.isEmpty
+                                        ? 'Enter password'
+                                        : null,
+                          ),
+                          SizedBox(height: 15),
 
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute<void>(
-                                      builder:
-                                          (context) =>
-                                               ForgetPasswordScreen(),
-                                    ),
-                                  );
-                                },
-                                child: Text(
-                                  "Forget Password?",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontFamily: AppFonts.poppins,
-                                    color: AppColor.gryColor,
-                                  ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (context) => ForgetPasswordScreen(),
+                                ),
+                              );
+                            },
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Text(
+                                "Forget Password?",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: AppFonts.poppins,
+                                  color: AppColor.primaryColor2,
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                           SizedBox(height: 25),
 

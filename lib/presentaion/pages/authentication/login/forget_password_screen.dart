@@ -3,15 +3,14 @@ import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../provider/forget_password_provider/forget_password_provider_screen.dart';
+import '../../../../provider/forget_password_provider/forget_password_provider.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
 import '../../dashborad/dashboard_screen.dart';
 import 'login_screen.dart';
 
 class ForgetPasswordScreen extends StatelessWidget {
-   ForgetPasswordScreen({Key? key}) : super(key: key);
+  ForgetPasswordScreen({Key? key}) : super(key: key);
   final _formKey = GlobalKey<FormState>();
-
 
   @override
   Widget build(BuildContext context) {
@@ -111,15 +110,46 @@ class ForgetPasswordScreen extends StatelessWidget {
                     SizedBox(height: 20),
 
                     CustomTextField(
-                      labelText: "Email",
                       controller:
                           forgetEmailPasswordProvider.forgetPasswordController,
-                      hintText: "Enter Email Id",
+                      hintText: "Email & username",
+                      labelText: "Email & username",
+                      isMandatory: true,
+                      keyboardType: TextInputType.emailAddress,
+                      suffixIcon: Icon(
+                        Icons.email,
+                        color: AppColor.primaryColor2,
+                        size: 20,
+                      ),
                       validator:
                           (val) =>
                               val == null || val.isEmpty ? "Enter Email" : null,
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 10),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (context) => LoginScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          "Remmembered Password?",
+                          style: TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 14,
+                            color: AppColor.primaryColor2,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -131,9 +161,7 @@ class ForgetPasswordScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute<void>(
-                              builder:
-                                  (context) =>
-                                  LoginScreen(),
+                              builder: (context) => LoginScreen(),
                             ),
                           );
                         },

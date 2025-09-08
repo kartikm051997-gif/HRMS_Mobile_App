@@ -1,126 +1,4 @@
-
-// import 'package:crm_draivfmobileapp/core/constatnts/appcolors.dart';
-// import 'package:crm_draivfmobileapp/core/fonts/fonts.dart';
-// import 'package:flutter/material.dart';
-// class CustomTextField extends StatelessWidget {
-//   final TextEditingController controller;
-//   final String hintText;
-//   final String labelText;
-//   final bool isMandatory;
-//   final String? Function(String?)? validator;
-//   final bool obscureText;
-//   final TextInputType keyboardType;
-//   final bool readOnly;   // ✅ new field
-
-//   const CustomTextField({
-//     super.key,
-//     required this.controller,
-//     required this.hintText,
-//     this.labelText = "",
-//     this.isMandatory = false,
-//     this.validator,
-//     this.obscureText = false,
-//     this.keyboardType = TextInputType.text,
-//     this.readOnly = false,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Row(
-//           children: [
-//             if (isMandatory)
-//               const Text("*", style: TextStyle(fontSize: 16, color: Colors.red)),
-//             if (isMandatory) const SizedBox(width: 3),
-//             Text(
-//               labelText,
-//               style: const TextStyle(
-//                 fontSize: 14,
-//                 color: AppColor.blackColor,
-//                 fontFamily: AppFonts.poppins,
-//               ),
-//             ),
-//           ],
-//         ),
-//         const SizedBox(height: 6),
-
-//         FormField<String>(
-//           validator: (value) {
-//             if (isMandatory && (controller.text.isEmpty)) {
-//               return "Please enter $labelText";
-//             }
-//             if (validator != null) {
-//               return validator!(controller.text);
-//             }
-//             return null;
-//           },
-//           builder: (FormFieldState<String> state) {
-//             return Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 TextFormField(
-//                   controller: controller,
-//                   readOnly: readOnly,   // ✅ now supports read-only
-//                   obscureText: obscureText,
-//                   keyboardType: keyboardType,
-//                   decoration: InputDecoration(
-//                     hintText: hintText,
-//                     hintStyle: const TextStyle(
-//                       fontSize: 14,
-//                       fontFamily: AppFonts.poppins,
-//                       color: AppColor.hinttextblackColor,
-//                     ),
-//                     filled: true,
-//                     fillColor: Colors.white,
-//                     contentPadding: const EdgeInsets.symmetric(
-//                         horizontal: 12, vertical: 14),
-//                     border: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(8),
-//                       borderSide: BorderSide(
-//                         color: state.hasError
-//                             ? Colors.red
-//                             : AppColor.blackColor,
-//                       ),
-//                     ),
-//                     enabledBorder: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(8),
-//                       borderSide: BorderSide(
-//                         color: state.hasError
-//                             ? Colors.red
-//                             : AppColor.blackColor,
-//                       ),
-//                     ),
-//                     focusedBorder: OutlineInputBorder(
-//                       borderRadius: BorderRadius.circular(8),
-//                       borderSide: const BorderSide(
-//                         color: AppColor.primaryColor2,
-//                         width: 1.5,
-//                       ),
-//                     ),
-//                   ),
-//                   onChanged: (val) => state.didChange(val),
-//                 ),
-//                 if (state.hasError)
-//                   Padding(
-//                     padding: const EdgeInsets.only(top: 5, left: 8),
-//                     child: Text(
-//                       state.errorText!,
-//                       style: const TextStyle(color: Colors.red, fontSize: 12),
-//                     ),
-//                   ),
-//               ],
-//             );
-//           },
-//         ),
-//       ],
-//     );
-//   }
-// }
-
 import 'package:flutter/material.dart';
-
 import '../../core/constants/appcolor_dart.dart';
 import '../../core/fonts/fonts.dart';
 
@@ -133,6 +11,7 @@ class CustomTextField extends StatefulWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final bool readOnly;
+  final Widget? suffixIcon;
 
   const CustomTextField({
     super.key,
@@ -144,6 +23,7 @@ class CustomTextField extends StatefulWidget {
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
     this.readOnly = false,
+    this.suffixIcon,
   });
 
   @override
@@ -164,30 +44,36 @@ class _CustomTextFieldState extends State<CustomTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            if (widget.isMandatory)
-              const Text("*", style: TextStyle(fontSize: 16, color: Colors.red)),
-            if (widget.isMandatory) const SizedBox(width: 3),
-            Text(
-              widget.labelText,
-              style:  TextStyle(
-                fontSize: 14,
-                color: AppColor.blackColor,
-                fontFamily: AppFonts.poppins,
+        // Label + Mandatory Star
+        if (widget.labelText.isNotEmpty)
+          Row(
+            children: [
+              if (widget.isMandatory)
+                 Text(
+                  "*",
+                  style: TextStyle(fontSize: 16, color: Colors.red,fontFamily: AppFonts.poppins),
+                ),
+              if (widget.isMandatory) const SizedBox(width: 3),
+              Text(
+                widget.labelText,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColor.blackColor,
+                  fontFamily: AppFonts.poppins,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
+            ],
+          ),
+        if (widget.labelText.isNotEmpty) const SizedBox(height: 6),
 
+        // TextFormField with Validation
         FormField<String>(
           validator: (value) {
             if (widget.isMandatory && (widget.controller.text.isEmpty)) {
               return "Please enter ${widget.labelText}";
             }
             if (widget.validator != null) {
-              return widget.validator!(widget.controller.text);
+              return widget.validator!(widget.controller.text,);
             }
             return null;
           },
@@ -214,15 +100,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color:
-                        state.hasError ? Colors.red : AppColor.blackColor,
+                        color: state.hasError
+                            ? Colors.red
+                            : AppColor.blackColor,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color:
-                        state.hasError ? Colors.red : AppColor.blackColor,
+                        color: state.hasError
+                            ? Colors.red
+                            : AppColor.blackColor,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -232,7 +120,9 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         width: 1.5,
                       ),
                     ),
-                    // 👁 Add eye icon if it's a password field
+
+                    // ✅ Show password toggle if obscureText = true
+                    // ✅ Otherwise, show custom suffixIcon if provided
                     suffixIcon: widget.obscureText
                         ? IconButton(
                       icon: Icon(
@@ -247,7 +137,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         });
                       },
                     )
-                        : null,
+                        : widget.suffixIcon,
                   ),
                   onChanged: (val) => state.didChange(val),
                 ),
