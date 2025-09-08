@@ -49,9 +49,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
           Row(
             children: [
               if (widget.isMandatory)
-                 Text(
+                Text(
                   "*",
-                  style: TextStyle(fontSize: 16, color: Colors.red,fontFamily: AppFonts.poppins),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.red,
+                    fontFamily: AppFonts.poppins,
+                  ),
                 ),
               if (widget.isMandatory) const SizedBox(width: 3),
               Text(
@@ -73,7 +77,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               return "Please enter ${widget.labelText}";
             }
             if (widget.validator != null) {
-              return widget.validator!(widget.controller.text,);
+              return widget.validator!(widget.controller.text);
             }
             return null;
           },
@@ -86,6 +90,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   readOnly: widget.readOnly,
                   obscureText: _isObscured,
                   keyboardType: widget.keyboardType,
+                  style: const TextStyle(
+                    // ✅ Add this for input text font
+                    fontSize: 14,
+                    fontFamily: AppFonts.poppins,
+                    color: AppColor.blackColor,
+                  ),
                   decoration: InputDecoration(
                     hintText: widget.hintText,
                     hintStyle: const TextStyle(
@@ -95,22 +105,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: state.hasError
-                            ? Colors.red
-                            : AppColor.blackColor,
+                        color:
+                            state.hasError ? Colors.red : AppColor.blackColor,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: state.hasError
-                            ? Colors.red
-                            : AppColor.blackColor,
+                        color:
+                            state.hasError ? Colors.red : AppColor.blackColor,
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -123,21 +133,22 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
                     // ✅ Show password toggle if obscureText = true
                     // ✅ Otherwise, show custom suffixIcon if provided
-                    suffixIcon: widget.obscureText
-                        ? IconButton(
-                      icon: Icon(
-                        _isObscured
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppColor.blackColor,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isObscured = !_isObscured;
-                        });
-                      },
-                    )
-                        : widget.suffixIcon,
+                    suffixIcon:
+                        widget.obscureText
+                            ? IconButton(
+                              icon: Icon(
+                                _isObscured
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: AppColor.blackColor,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isObscured = !_isObscured;
+                                });
+                              },
+                            )
+                            : widget.suffixIcon,
                   ),
                   onChanged: (val) => state.didChange(val),
                 ),
@@ -146,7 +157,11 @@ class _CustomTextFieldState extends State<CustomTextField> {
                     padding: const EdgeInsets.only(top: 5, left: 8),
                     child: Text(
                       state.errorText!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                        fontFamily: AppFonts.poppins,
+                      ),
                     ),
                   ),
               ],

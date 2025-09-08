@@ -10,6 +10,8 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deli
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/attendance_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/bank_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/document_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_information_details_TabBar_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_personal_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
 import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
         ChangeNotifierProvider(create: (_) => SalaryDetailsProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeInformationTabBarProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeInformationProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -95,7 +99,6 @@ class MyApp extends StatelessWidget {
         return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
         return AddDeliverableScreen();
-
 
       default:
         return const NotFoundPage();
