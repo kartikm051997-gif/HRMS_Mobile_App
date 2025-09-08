@@ -24,107 +24,109 @@ class AddDeliverableScreen extends StatelessWidget {
       appBar: const CustomAppBar(title: "Add Deliverables Form"),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: Column(
-          children: [
-            CustomTextField(
-              controller: addDeliverableProvider.titleTaskController,
-              hintText: "",
-              labelText: "Task Title",
-              isMandatory: true,
-            ),
-            SizedBox(height: 10),
-            CustomSearchDropdownWithSearch(
-              isMandatory: true,
-              labelText: "Employee Name",
-              items: addDeliverableProvider.employeeName,
-              selectedValue: addDeliverableProvider.selectedemployeeName,
-              onChanged: addDeliverableProvider.setSelectedemployeeName,
-              hintText: "Select Employee..",
-            ),
-            SizedBox(height: 10),
-
-            CustomDateField(
-              controller: addDeliverableProvider.endDateController,
-              hintText: "Select date",
-              labelText: "To Date",
-              isMandatory: true,
-            ),
-            SizedBox(height: 10),
-
-            CustomTextField(
-              controller: addDeliverableProvider.titleTaskController,
-              hintText: "",
-              labelText: "Location",
-              isMandatory: true,
-              readOnly: true,
-            ),
-            SizedBox(height: 10,),
-            CustomSearchDropdownWithSearch(
-              isMandatory: true,
-              labelText: "Priority",
-              items: addDeliverableProvider.priority,
-              selectedValue: addDeliverableProvider.selectedpriority,
-              onChanged: addDeliverableProvider.setSelectedpriority,
-              hintText: "Select Priority..",
-            ),
-            SizedBox(height: 10,),
-            CustomFileChooserField(
-              labelText: "Attachment",
-              isMandatory: true,
-              selectedFile: addDeliverableProvider.selectedFile,
-              allowedExtensions: ["csv"], //  pass dynamically
-              onFilePicked: (file) {
-                if (file != null) {
-                  addDeliverableProvider.setFile(file);
-                }
-              },
-            ),
-            SizedBox(height: 10,),
-            CustomLargeTextField(
-              readOnly: false, // ✅ Make it uneditable
-              controller:
-              addDeliverableProvider.descriptionController,
-              hintText: "",
-              labelText: "Description",
-              isMandatory: true,
-            ),
-            SizedBox(height: 20,),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: CustomGradientButton(
-                    text: "Cancel",
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.blackColor,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              CustomTextField(
+                controller: addDeliverableProvider.titleTaskController,
+                hintText: "",
+                labelText: "Task Title",
+                isMandatory: true,
+              ),
+              SizedBox(height: 10),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Employee Name",
+                items: addDeliverableProvider.employeeName,
+                selectedValue: addDeliverableProvider.selectedemployeeName,
+                onChanged: addDeliverableProvider.setSelectedemployeeName,
+                hintText: "Select Employee..",
+              ),
+              SizedBox(height: 10),
+          
+              CustomDateField(
+                controller: addDeliverableProvider.endDateController,
+                hintText: "Select date",
+                labelText: "To Date",
+                isMandatory: true,
+              ),
+              SizedBox(height: 10),
+          
+              CustomTextField(
+                controller: addDeliverableProvider.titleTaskController,
+                hintText: "",
+                labelText: "Location",
+                isMandatory: true,
+                readOnly: true,
+              ),
+              SizedBox(height: 10,),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Priority",
+                items: addDeliverableProvider.priority,
+                selectedValue: addDeliverableProvider.selectedpriority,
+                onChanged: addDeliverableProvider.setSelectedpriority,
+                hintText: "Select Priority..",
+              ),
+              SizedBox(height: 10,),
+              CustomFileChooserField(
+                labelText: "Attachment",
+                isMandatory: true,
+                selectedFile: addDeliverableProvider.selectedFile,
+                allowedExtensions: ["csv"], //  pass dynamically
+                onFilePicked: (file) {
+                  if (file != null) {
+                    addDeliverableProvider.setFile(file);
+                  }
+                },
+              ),
+              SizedBox(height: 10,),
+              CustomLargeTextField(
+                readOnly: false, // ✅ Make it uneditable
+                controller:
+                addDeliverableProvider.descriptionController,
+                hintText: "",
+                labelText: "Description",
+                isMandatory: true,
+              ),
+              SizedBox(height: 20,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: CustomGradientButton(
+                      text: "Cancel",
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        fontFamily: AppFonts.poppins,
+                        color: AppColor.blackColor,
+                      ),
+                      gradientColors: [
+                        const Color.fromARGB(255, 200, 200, 200),
+                        const Color.fromARGB(255, 224, 224, 224),
+                      ],
+                      onPressed: () {
+                        Get.back();
+                      },
                     ),
-                    gradientColors: [
-                      const Color.fromARGB(255, 200, 200, 200),
-                      const Color.fromARGB(255, 224, 224, 224),
-                    ],
-                    onPressed: () {
-                      Get.back();
-                    },
                   ),
-                ),
-                const SizedBox(width: 12), // space between buttons
-                Expanded(
-                  child: CustomGradientButton(
-                    text: "Submit",
-                    onPressed: () {
-                      // submit action
-                    },
+                  const SizedBox(width: 12), // space between buttons
+                  Expanded(
+                    child: CustomGradientButton(
+                      text: "Submit",
+                      onPressed: () {
+                        // submit action
+                      },
+                    ),
                   ),
-                ),
-              ],
-            ),
-
-
-
-
-          ],
+                ],
+              ),
+          
+          
+          
+          
+            ],
+          ),
         ),
       ),
     );

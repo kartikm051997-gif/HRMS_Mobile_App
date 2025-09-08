@@ -63,7 +63,13 @@ class CustomLargeTextField extends StatelessWidget {
                   readOnly: readOnly,
                   keyboardType: TextInputType.multiline,
                   maxLines: 5, // ✅ Large field
-                  minLines: 3, // ✅ Ensures initial height
+                  minLines: 3,
+                  style: const TextStyle(
+                    // ✅ Add this for input text font
+                    fontSize: 14,
+                    fontFamily: AppFonts.poppins,
+                    color: AppColor.blackColor,
+                  ),// ✅ Ensures initial height
                   decoration: InputDecoration(
                     hintText: hintText,
                     hintStyle: const TextStyle(

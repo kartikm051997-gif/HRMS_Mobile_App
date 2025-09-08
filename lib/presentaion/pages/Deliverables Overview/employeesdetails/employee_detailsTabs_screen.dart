@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/employee_information_details_TabBar_View.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
@@ -42,6 +43,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     "Bank",
     "Documents",
     "Salary",
+    "Job Application",
   ];
 
   @override
@@ -90,13 +92,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
           centerTitle: true,
           elevation: 0,
           backgroundColor: AppColor.primaryColor2,
-          title:  Text(
+          title: Text(
             "Employee Details",
             style: TextStyle(
               fontFamily: AppFonts.poppins,
               fontWeight: FontWeight.w500,
-              color: AppColor.whiteColor
-
+              color: AppColor.whiteColor,
             ),
           ),
           bottom: TabBar(
@@ -145,6 +146,13 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               empBranch: widget.empBranch,
             ),
             SalaryScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),
+            ProfileTabBarView(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
@@ -293,9 +301,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               fontWeight: FontWeight.w600,
               fontSize: 14,
               fontFamily: AppFonts.poppins,
-              color: Color(
-                0xFF1A237E,
-              ),
+              color: Color(0xFF1A237E),
             ),
           ),
           Expanded(
@@ -304,9 +310,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               textAlign: TextAlign.right,
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(
-                  0xFF37474F,
-                ),                fontFamily: AppFonts.poppins,
+                color: Color(0xFF37474F),
+                fontFamily: AppFonts.poppins,
               ),
             ),
           ),
