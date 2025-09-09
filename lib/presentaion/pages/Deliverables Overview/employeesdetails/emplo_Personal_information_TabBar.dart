@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../provider/Deliverables_Overview_provider/employee_information_details_TabBar_provider.dart';
+import 'edu_exp_Details_screen.dart';
 import 'employee_personal_details_screen.dart';
 
 class ProfileTabBarView extends StatefulWidget {
@@ -67,9 +69,9 @@ class _ProfileTabBarViewState extends State<ProfileTabBarView>
                 controller: _tabController,
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                labelColor: Colors.blue,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Colors.blue,
+                labelColor: AppColor.primaryColor2,
+                unselectedLabelColor: AppColor.gryColor,
+                indicatorColor: AppColor.primaryColor2,
                 labelStyle: TextStyle(fontFamily: AppFonts.poppins),
                 tabs: const [
                   Tab(text: 'Personal Detail'),
@@ -88,9 +90,7 @@ class _ProfileTabBarViewState extends State<ProfileTabBarView>
                   EmployeePersonalDetailsScreen(
                     empId: "12345", // Replace with your dynamic employee ID
                   ),
-                  Center(
-                    child: Text("Education & Experience Details Coming Soon"),
-                  ), // Tab 2
+                  EduExpDetailsScreen(empId: "12345"), // Tab 2
                   Center(child: Text("Other Details Coming Soon")), // Tab 3
                   Center(child: Text("Reference Details Coming Soon")), // Tab 4
                 ],

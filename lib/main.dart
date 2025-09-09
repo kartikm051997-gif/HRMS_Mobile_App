@@ -10,6 +10,7 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deli
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/attendance_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/bank_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/document_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/edu_exp_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_information_details_TabBar_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_personal_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeInformationTabBarProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeInformationProvider()),
+        ChangeNotifierProvider(create: (_) => EduExpProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

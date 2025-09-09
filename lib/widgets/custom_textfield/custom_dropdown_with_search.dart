@@ -12,6 +12,8 @@ class CustomSearchDropdownWithSearch extends StatelessWidget {
   final double searchHeight;
   final bool isMandatory;
   final String labelText;
+  final bool readOnly;
+
 
   const CustomSearchDropdownWithSearch({
     super.key,
@@ -22,6 +24,8 @@ class CustomSearchDropdownWithSearch extends StatelessWidget {
     this.searchHeight = 60,
     this.isMandatory = false,
     this.labelText = "",
+    this.readOnly = false,
+
   });
 
   @override
@@ -79,26 +83,39 @@ class CustomSearchDropdownWithSearch extends StatelessWidget {
                           fontFamily: AppFonts.poppins,
                         ),
                       ),
-                      items:
-                          items
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item,
-                                  child: Text(
-                                    item,
-                                    style: TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toList(),
+                      items: items
+                          .map(
+                            (item) => DropdownMenuItem(
+                          value: item,
+                          enabled: !readOnly, // 🔹 Disable individual items when readOnly
+                          child: Text(
+                            item,
+                            style: TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              color: readOnly ? Colors.grey : Colors.black, // 🔹 Change text color
+                            ),
+                          ),
+                        ),
+                      )
+                          .toList(),
                       value: selectedValue,
-                      onChanged: (val) {
+                      onChanged: readOnly
+                          ? null // 🔹 Disable selection when readOnly = true
+                          : (val) {
                         onChanged(val);
                         state.didChange(val);
                       },
-                      dropdownSearchData: DropdownSearchData(
+                      buttonStyleData: ButtonStyleData(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: readOnly ? Colors.grey.shade200 : Colors.white, // 🔹 Show disabled UI
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      dropdownSearchData: readOnly
+                          ? null // 🔹 Disable search when readOnly
+                          : DropdownSearchData(
                         searchController: searchController,
                         searchInnerWidgetHeight: searchHeight,
                         searchInnerWidget: Padding(
@@ -133,6 +150,7 @@ class CustomSearchDropdownWithSearch extends StatelessWidget {
                         if (!isOpen) searchController.clear();
                       },
                     ),
+
                   ),
                 ),
                 if (state.hasError)
