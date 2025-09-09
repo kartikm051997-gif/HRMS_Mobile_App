@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class EmployeeInformationProvider extends ChangeNotifier {
@@ -7,6 +8,35 @@ class EmployeeInformationProvider extends ChangeNotifier {
 
   void setGender(String gender) {
     _selectedGender = gender;
+    notifyListeners();
+  }
+
+  final List<String> _materialStatus = ["Single"];
+  List<String> get materialStatus => _materialStatus;
+
+  String? _selectedmaterialStatus = "Single"; // ✅ Set default value here
+  String? get selectedmaterialStatus => _selectedmaterialStatus;
+
+  void setSelectedmaterialStatus(String? value) {
+    _selectedmaterialStatus = value;
+    print("Selected Marital Status: $_selectedmaterialStatus");
+    notifyListeners();
+  }
+
+  final List<String> _secondaryContactRelationship = ["mother"];
+  List<String> get secondaryContactRelationship =>
+      _secondaryContactRelationship;
+
+  // ✅ Make it non-final, so we can update it
+  String? _selectedSecondaryContactRelationship = "mother";
+  String? get selectedSecondaryContactRelationship =>
+      _selectedSecondaryContactRelationship;
+
+  void setSelectedSecondaryContactRelationship(String? value) {
+    _selectedSecondaryContactRelationship = value;
+    if (kDebugMode) {
+      print("Selected Relationship: $_selectedSecondaryContactRelationship");
+    }
     notifyListeners();
   }
 
@@ -23,7 +53,12 @@ class EmployeeInformationProvider extends ChangeNotifier {
         "religion": "Hindu",
         "Mother Tongue": "Tamil",
         "Caste": "",
-        "Blood Group ": "A+",
+        "Blood Group": "A+",
+        "Secondary Contact Number": "9788772707",
+        "Secondary Contact Occupation": "9788772707",
+        "Secondary Contact Mobile": "9788772707",
+        "Permanent Address": "7 kattapomman street thiruvarur",
+        "Present Address": "Virugambakkam",
       };
 
       // Update controllers with API data
@@ -33,9 +68,14 @@ class EmployeeInformationProvider extends ChangeNotifier {
       dobController.text = response["dob"] ?? "";
       ageController.text = response["age"] ?? "";
       religionController.text = response["religion"] ?? "";
-      motherTongueController.text= response["Mother Tongue"] ?? "";
+      motherTongueController.text = response["Mother Tongue"] ?? "";
       casteController.text = response["Caste"] ?? "";
-      bloodGroupController.text= response["Blood Group"] ?? "";
+      bloodGroupController.text = response["Blood Group"] ?? "";
+      secondaryContactNumberController.text = response["Secondary Contact Number"] ?? "";
+      secondaryContactOccupationController.text = response["Secondary Contact Occupation"] ?? "";
+      secondaryContactMobileController.text = response["Secondary Contact Mobile"] ?? "";
+      permanentAddressController.text = response["Permanent Address"] ?? "";
+      presentAddressController.text = response["Present Address"] ?? "";
 
       notifyListeners();
     } catch (e) {
@@ -45,15 +85,20 @@ class EmployeeInformationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    dobController.dispose();
+    ageController.dispose();
     emailController.dispose();
     mobileController.dispose();
     experienceController.dispose();
-    dobController.dispose();
-    ageController.dispose();
     religionController.dispose();
     motherTongueController.dispose();
     casteController.dispose();
     bloodGroupController.dispose();
+    secondaryContactNumberController.dispose();
+    secondaryContactOccupationController.dispose();
+    secondaryContactMobileController.dispose();
+    permanentAddressController.dispose();
+    presentAddressController.dispose();
     super.dispose();
   }
 
@@ -66,4 +111,11 @@ class EmployeeInformationProvider extends ChangeNotifier {
   final motherTongueController = TextEditingController();
   final casteController = TextEditingController();
   final bloodGroupController = TextEditingController();
+  final choiceOfWorkController = TextEditingController();
+  final secondaryContactNumberController = TextEditingController();
+  final secondaryContactRelationshipController = TextEditingController();
+  final secondaryContactOccupationController = TextEditingController();
+  final secondaryContactMobileController = TextEditingController();
+  final permanentAddressController = TextEditingController();
+  final presentAddressController = TextEditingController();
 }

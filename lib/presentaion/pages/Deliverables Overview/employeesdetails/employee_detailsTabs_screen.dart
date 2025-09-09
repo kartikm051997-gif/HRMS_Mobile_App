@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/employee_information_details_TabBar_View.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/emplo_Personal_information_TabBar.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
@@ -93,7 +93,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
           elevation: 0,
           backgroundColor: AppColor.primaryColor2,
           title: Text(
-            "Employee Details",
+            "Deliverables Overview",
             style: TextStyle(
               fontFamily: AppFonts.poppins,
               fontWeight: FontWeight.w500,
