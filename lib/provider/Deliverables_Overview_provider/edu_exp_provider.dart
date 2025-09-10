@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class EduExpProvider extends ChangeNotifier {
@@ -7,6 +8,20 @@ class EduExpProvider extends ChangeNotifier {
 
   void setGender(String gender) {
     _selectedNoticePeriod = gender;
+    notifyListeners();
+  }
+
+  final List<String> _expectedWorkingHours = ["8", "9", "10"];
+  List<String> get expectedWorkingHours => _expectedWorkingHours;
+
+  String? _selectedexpectedWorkingHours;
+  String? get selectedexpectedWorkingHours => _selectedexpectedWorkingHours;
+
+  void setSelectedexpectedWorkingHours(String? value) {
+    _selectedexpectedWorkingHours = value;
+    if (kDebugMode) {
+      print(_selectedexpectedWorkingHours);
+    }
     notifyListeners();
   }
 
@@ -24,6 +39,8 @@ class EduExpProvider extends ChangeNotifier {
   final stayController = TextEditingController();
   final minimumYearsGuaranteedToStayController = TextEditingController();
   final probableOfDateOfJoiningController = TextEditingController();
+  final expectedWorkingHoursController = TextEditingController();
+  final salaryExpectedController = TextEditingController();
 
   @override
   void dispose() {
@@ -41,6 +58,8 @@ class EduExpProvider extends ChangeNotifier {
     stayController.dispose();
     minimumYearsGuaranteedToStayController.dispose();
     probableOfDateOfJoiningController.dispose();
+    expectedWorkingHoursController.dispose();
+    salaryExpectedController.dispose();
 
     super.dispose();
   }
@@ -63,6 +82,8 @@ class EduExpProvider extends ChangeNotifier {
         "stay": "Day Scholar",
         "minimum Years Guaranteed to Stay": "5",
         "Probable of Date of Joining": "2018-08",
+        "expected Working Hours": "9",
+        "salary Expected": "4000",
       };
 
       // Update controllers with API data
@@ -85,6 +106,9 @@ class EduExpProvider extends ChangeNotifier {
           response["minimum Years Guaranteed to Stay"] ?? "";
       probableOfDateOfJoiningController.text =
           response["Probable of Date of Joining"] ?? "";
+      expectedWorkingHoursController.text =
+          response["expected Working Hours"] ?? "";
+      salaryExpectedController.text = response["salary Expected"] ?? "";
 
       notifyListeners();
     } catch (e) {

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/reference_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../provider/Deliverables_Overview_provider/employee_information_details_TabBar_provider.dart';
 import 'edu_exp_Details_screen.dart';
 import 'employee_personal_details_screen.dart';
+import 'other_details_screen.dart';
 
 class ProfileTabBarView extends StatefulWidget {
   final String empId, empPhoto, empName, empDesignation, empBranch;
@@ -86,13 +88,13 @@ class _ProfileTabBarViewState extends State<ProfileTabBarView>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: const [
+                children:  [
                   EmployeePersonalDetailsScreen(
                     empId: "12345", // Replace with your dynamic employee ID
                   ),
                   EduExpDetailsScreen(empId: "12345"), // Tab 2
-                  Center(child: Text("Other Details Coming Soon")), // Tab 3
-                  Center(child: Text("Reference Details Coming Soon")), // Tab 4
+                  OtherDetailsScreen(empId: "12345"),
+                  ReferenceDetailsScreen(empId: "12345"), // Tab 4
                 ],
               ),
             ),

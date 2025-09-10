@@ -13,6 +13,12 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/document
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/edu_exp_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_information_details_TabBar_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/employee_personal_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/ESI_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/letter_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/other_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/payslip_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/pf_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/reference_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
 import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
@@ -47,9 +53,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
         ChangeNotifierProvider(create: (_) => SalaryDetailsProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
-        ChangeNotifierProvider(create: (_) => EmployeeInformationTabBarProvider()),
+        ChangeNotifierProvider(
+          create: (_) => EmployeeInformationTabBarProvider(),
+        ),
         ChangeNotifierProvider(create: (_) => EmployeeInformationProvider()),
         ChangeNotifierProvider(create: (_) => EduExpProvider()),
+        ChangeNotifierProvider(create: (_) => OtherDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => ReferenceDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => PfProvider()),
+        ChangeNotifierProvider(create: (_) => ESIProvider()),
+        ChangeNotifierProvider(create: (_) => DocumentListProvider()),
+        ChangeNotifierProvider(create: (_) => PaySlipProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
