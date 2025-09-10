@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/edu_exp_provider.dart';
+import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
 
 class EduExpDetailsScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class _EduExpDetailsScreenState extends State<EduExpDetailsScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     final eduExpProvider = Provider.of<EduExpProvider>(context);
     return Scaffold(
@@ -214,6 +216,31 @@ class _EduExpDetailsScreenState extends State<EduExpDetailsScreen> {
                     ],
                   ),
                 ],
+              ),
+              SizedBox(height: 10),
+              CustomTextField(
+                controller: eduExpProvider.probableOfDateOfJoiningController,
+                hintText: "",
+                labelText: "Probable of Date of Joining",
+                isMandatory: true,
+                readOnly: true,
+              ),
+              SizedBox(height: 10),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Expected Working Hours",
+                items: eduExpProvider.expectedWorkingHours,
+                selectedValue: eduExpProvider.selectedexpectedWorkingHours,
+                onChanged: eduExpProvider.setSelectedexpectedWorkingHours,
+                hintText: "Select Priority..",
+              ),
+              SizedBox(height: 10),
+              CustomTextField(
+                controller: eduExpProvider.salaryExpectedController,
+                hintText: "",
+                labelText: "Salary Expected ",
+                isMandatory: true,
+                readOnly: true,
               ),
             ],
           ),

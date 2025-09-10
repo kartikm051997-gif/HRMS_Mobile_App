@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/ESI_provider.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/fonts/fonts.dart';
-import '../../../../provider/Deliverables_Overview_provider/bank_details_provider.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
 
-class SalaryScreen extends StatefulWidget {
+class ESIScreen extends StatefulWidget {
   final String empId, empPhoto, empName, empDesignation, empBranch;
 
-  const SalaryScreen({
+  const ESIScreen({
     super.key,
     required this.empId,
     required this.empPhoto,
@@ -18,21 +18,21 @@ class SalaryScreen extends StatefulWidget {
   });
 
   @override
-  State<SalaryScreen> createState() => _SalaryScreenState();
+  State<ESIScreen> createState() => _ESIScreenState();
 }
 
-class _SalaryScreenState extends State<SalaryScreen> {
+class _ESIScreenState extends State<ESIScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SalaryDetailsProvider>().fetchSalaryDetails(widget.empId);
+      context.read<ESIProvider>().fetchESIDetails(widget.empId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final salaryDetailsProvider = context.watch<SalaryDetailsProvider>();
+    final esiProvider = context.watch<ESIProvider>();
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Padding(
@@ -41,8 +41,8 @@ class _SalaryScreenState extends State<SalaryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Title
-            const Text(
-              "Bank Details",
+            Text(
+              "ESI Details",
               style: TextStyle(
                 fontFamily: AppFonts.poppins,
                 fontWeight: FontWeight.bold,
@@ -55,14 +55,14 @@ class _SalaryScreenState extends State<SalaryScreen> {
             // ✅ Conditional UI
             Expanded(
               child:
-                  salaryDetailsProvider.isLoading
+                  esiProvider.isLoading
                       ? const CustomCardShimmer(
                         itemCount: 1,
                       ) // ✅ Show shimmer when loading
-                      : salaryDetailsProvider.salaryDetails.isEmpty
+                      : esiProvider.ESIDetails.isEmpty
                       ? const Center(
                         child: Text(
-                          "No salary details found.",
+                          "No ESI details found.",
                           style: TextStyle(
                             fontSize: 16,
                             fontFamily: AppFonts.poppins,
@@ -71,10 +71,9 @@ class _SalaryScreenState extends State<SalaryScreen> {
                         ),
                       )
                       : ListView.builder(
-                        itemCount: salaryDetailsProvider.salaryDetails.length,
+                        itemCount: esiProvider.ESIDetails.length,
                         itemBuilder: (context, index) {
-                          final salary =
-                              salaryDetailsProvider.salaryDetails[index];
+                          final salary = esiProvider.ESIDetails[index];
                           return Card(
                             color: Colors.white,
                             elevation: 2,
@@ -94,7 +93,7 @@ class _SalaryScreenState extends State<SalaryScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
-                                        "Annual CTC:",
+                                        "Date :",
                                         style: TextStyle(
                                           fontFamily: AppFonts.poppins,
                                           fontSize: 15,
@@ -104,7 +103,7 @@ class _SalaryScreenState extends State<SalaryScreen> {
                                       ),
                                       Flexible(
                                         child: Text(
-                                          salary["annual CTC"] ?? "420000",
+                                          salary["date"] ?? "11-02-2025	",
                                           textAlign: TextAlign.right,
                                           style: const TextStyle(
                                             fontFamily: AppFonts.poppins,
@@ -123,7 +122,7 @@ class _SalaryScreenState extends State<SalaryScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
-                                        "Monthly Salary:",
+                                        "ESI Month	:",
                                         style: TextStyle(
                                           fontFamily: AppFonts.poppins,
                                           fontSize: 15,
@@ -133,7 +132,8 @@ class _SalaryScreenState extends State<SalaryScreen> {
                                       ),
                                       Flexible(
                                         child: Text(
-                                          salary["monthly salary"] ?? "35000",
+                                          salary["esi Month	"] ??
+                                              "January 2025	",
                                           textAlign: TextAlign.right,
                                           style: const TextStyle(
                                             fontFamily: AppFonts.poppins,
@@ -145,6 +145,32 @@ class _SalaryScreenState extends State<SalaryScreen> {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        "ESI Amount :",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A237E),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          salary["esi Amount"] ?? "0.00",
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontFamily: AppFonts.poppins,
+                                            fontSize: 15,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
 
                                   // ✅ IFSC Code Row
                                 ],

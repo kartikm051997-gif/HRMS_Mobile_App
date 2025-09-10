@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/emplo_Personal_information_TabBar.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/payslip_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/pf_cscreen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
@@ -11,6 +13,8 @@ import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Pro
 import 'AttendanceScreen.dart';
 import 'Bank_Screen.dart';
 import 'document_screen.dart';
+import 'ESI_screen.dart';
+import 'letter_screen.dart';
 import 'salary_screen.dart';
 
 class EmployeeDetailsScreen extends StatefulWidget {
@@ -44,6 +48,10 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     "Documents",
     "Salary",
     "Job Application",
+    "PF",
+    "ESI",
+    "Letter",
+    "Payslip",
   ];
 
   @override
@@ -153,6 +161,30 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               empBranch: widget.empBranch,
             ),
             ProfileTabBarView(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),PfScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),ESIScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),DocumentListScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),PaySlipScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,

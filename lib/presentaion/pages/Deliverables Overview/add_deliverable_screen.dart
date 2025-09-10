@@ -43,7 +43,7 @@ class AddDeliverableScreen extends StatelessWidget {
                 hintText: "Select Employee..",
               ),
               SizedBox(height: 10),
-          
+
               CustomDateField(
                 controller: addDeliverableProvider.endDateController,
                 hintText: "Select date",
@@ -51,7 +51,7 @@ class AddDeliverableScreen extends StatelessWidget {
                 isMandatory: true,
               ),
               SizedBox(height: 10),
-          
+
               CustomTextField(
                 controller: addDeliverableProvider.titleTaskController,
                 hintText: "",
@@ -59,7 +59,7 @@ class AddDeliverableScreen extends StatelessWidget {
                 isMandatory: true,
                 readOnly: true,
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               CustomSearchDropdownWithSearch(
                 isMandatory: true,
                 labelText: "Priority",
@@ -68,7 +68,7 @@ class AddDeliverableScreen extends StatelessWidget {
                 onChanged: addDeliverableProvider.setSelectedpriority,
                 hintText: "Select Priority..",
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               CustomFileChooserField(
                 labelText: "Attachment",
                 isMandatory: true,
@@ -80,16 +80,15 @@ class AddDeliverableScreen extends StatelessWidget {
                   }
                 },
               ),
-              SizedBox(height: 10,),
+              SizedBox(height: 10),
               CustomLargeTextField(
                 readOnly: false, // ✅ Make it uneditable
-                controller:
-                addDeliverableProvider.descriptionController,
+                controller: addDeliverableProvider.descriptionController,
                 hintText: "",
                 labelText: "Description",
                 isMandatory: true,
               ),
-              SizedBox(height: 20,),
+              SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -121,10 +120,6 @@ class AddDeliverableScreen extends StatelessWidget {
                   ),
                 ],
               ),
-          
-          
-          
-          
             ],
           ),
         ),
