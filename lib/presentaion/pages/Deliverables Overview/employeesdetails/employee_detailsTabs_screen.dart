@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/circular_details_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/emplo_Personal_information_TabBar.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/payslip_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/pf_cscreen.dart';
@@ -10,6 +11,7 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
 
 // Import all tab screens
+import 'Assets_Details_screen.dart';
 import 'AttendanceScreen.dart';
 import 'Bank_Screen.dart';
 import 'document_screen.dart';
@@ -52,6 +54,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     "ESI",
     "Letter",
     "Payslip",
+    "Assets Details",
+    "Circular",
   ];
 
   @override
@@ -185,6 +189,18 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
             ),PaySlipScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),AssetsDetailsScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),CircularDetailsScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
