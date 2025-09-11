@@ -42,7 +42,6 @@ dependencies:
   intl: ^0.18.1
   dropdown_button2: ^2.3.9
   shimmer: ^3.0.0
-  open_filex: ^4.0.2
   url_launcher: ^6.3.0
   flutter_cached_pdfview: ^0.4.1
   dio: ^5.3.2

@@ -66,6 +66,7 @@ class _PaySlipScreenState extends State<PaySlipScreen> {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Row
                 Container(

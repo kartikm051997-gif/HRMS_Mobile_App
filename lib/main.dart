@@ -4,6 +4,8 @@ import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/dashborad/dashboard_screen.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deliverable_provider.dart';
@@ -64,6 +66,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ESIProvider()),
         ChangeNotifierProvider(create: (_) => DocumentListProvider()),
         ChangeNotifierProvider(create: (_) => PaySlipProvider()),
+        ChangeNotifierProvider(create: (_) => AssetsDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => CircularProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

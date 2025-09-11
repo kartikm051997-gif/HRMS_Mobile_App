@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/ESI_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
 
-class ESIScreen extends StatefulWidget {
+class AssetsDetailsScreen extends StatefulWidget {
   final String empId, empPhoto, empName, empDesignation, empBranch;
 
-  const ESIScreen({
+  const AssetsDetailsScreen({
     super.key,
     required this.empId,
     required this.empPhoto,
@@ -18,21 +18,22 @@ class ESIScreen extends StatefulWidget {
   });
 
   @override
-  State<ESIScreen> createState() => _ESIScreenState();
+  State<AssetsDetailsScreen> createState() => _AssetsDetailsScreenState();
 }
 
-class _ESIScreenState extends State<ESIScreen> {
+class _AssetsDetailsScreenState extends State<AssetsDetailsScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ESIProvider>().fetchESIDetails(widget.empId);
+      context.read<AssetsDetailsProvider>().fetchAssetsDetails(widget.empId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final esiProvider = context.watch<ESIProvider>();
+    final assetsDetailsProvider = Provider.of<AssetsDetailsProvider>(context);
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Padding(
@@ -42,7 +43,7 @@ class _ESIScreenState extends State<ESIScreen> {
           children: [
             // Title
             Text(
-              "ESI Details",
+              "Assets Details",
               style: TextStyle(
                 fontFamily: AppFonts.poppins,
                 fontWeight: FontWeight.bold,
@@ -50,19 +51,18 @@ class _ESIScreenState extends State<ESIScreen> {
                 color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 12),
 
             // ✅ Conditional UI
             Expanded(
               child:
-                  esiProvider.isLoading
+                  assetsDetailsProvider.isLoading
                       ? const CustomCardShimmer(
                         itemCount: 1,
                       ) // ✅ Show shimmer when loading
-                      : esiProvider.ESIDetails.isEmpty
+                      : assetsDetailsProvider.assetsDetails.isEmpty
                       ? const Center(
                         child: Text(
-                          "No ESI details found.",
+                          "No Assets details found.",
                           style: TextStyle(
                             fontSize: 16,
                             fontFamily: AppFonts.poppins,
@@ -71,9 +71,10 @@ class _ESIScreenState extends State<ESIScreen> {
                         ),
                       )
                       : ListView.builder(
-                        itemCount: esiProvider.ESIDetails.length,
+                        itemCount: assetsDetailsProvider.assetsDetails.length,
                         itemBuilder: (context, index) {
-                          final salary = esiProvider.ESIDetails[index];
+                          final assetsDetails =
+                              assetsDetailsProvider.assetsDetails[index];
                           return Card(
                             color: Colors.white,
                             elevation: 2,
@@ -103,7 +104,7 @@ class _ESIScreenState extends State<ESIScreen> {
                                       ),
                                       Flexible(
                                         child: Text(
-                                          salary["date"] ?? "11-02-2025",
+                                          assetsDetails["date"] ?? "11-02-2025",
                                           textAlign: TextAlign.right,
                                           style: const TextStyle(
                                             fontFamily: AppFonts.poppins,
@@ -122,7 +123,7 @@ class _ESIScreenState extends State<ESIScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
-                                        "ESI Month	:",
+                                        "Laptop :",
                                         style: TextStyle(
                                           fontFamily: AppFonts.poppins,
                                           fontSize: 15,
@@ -132,8 +133,12 @@ class _ESIScreenState extends State<ESIScreen> {
                                       ),
                                       Flexible(
                                         child: Text(
-                                          salary["esi Month	"] ??
-                                              "January 2025	",
+                                          assetsDetails.containsKey("Laptop") &&
+                                                  assetsDetails["Laptop"] !=
+                                                      null
+                                              ? assetsDetails["Laptop"]
+                                                  .toString()
+                                              : "not found",
                                           textAlign: TextAlign.right,
                                           style: const TextStyle(
                                             fontFamily: AppFonts.poppins,
@@ -150,7 +155,7 @@ class _ESIScreenState extends State<ESIScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       const Text(
-                                        "ESI Amount :",
+                                        "Sim Number :",
                                         style: TextStyle(
                                           fontFamily: AppFonts.poppins,
                                           fontSize: 15,
@@ -160,7 +165,56 @@ class _ESIScreenState extends State<ESIScreen> {
                                       ),
                                       Flexible(
                                         child: Text(
-                                          salary["esi Amount"] ?? "0.00",
+                                          assetsDetails.containsKey(
+                                                    "Sim Number",
+                                                  ) &&
+                                                  assetsDetails["Sim Number"] !=
+                                                      null &&
+                                                  assetsDetails["Sim Number"]
+                                                      .toString()
+                                                      .trim()
+                                                      .isNotEmpty
+                                              ? assetsDetails["Sim Number"]
+                                                  .toString()
+                                              : "not found",
+
+                                          textAlign: TextAlign.right,
+                                          style: const TextStyle(
+                                            fontFamily: AppFonts.poppins,
+                                            fontSize: 15,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const Text(
+                                        "Tablet :",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A237E),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Text(
+                                          assetsDetails.containsKey("Tablet") &&
+                                                  assetsDetails["Tablet"] !=
+                                                      null &&
+                                                  assetsDetails["Tablet"]
+                                                      .toString()
+                                                      .trim()
+                                                      .isNotEmpty
+                                              ? assetsDetails["Tablet"]
+                                                  .toString()
+                                              : "not found",
+
                                           textAlign: TextAlign.right,
                                           style: const TextStyle(
                                             fontFamily: AppFonts.poppins,
