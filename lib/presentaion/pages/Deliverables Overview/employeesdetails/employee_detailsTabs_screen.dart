@@ -3,6 +3,7 @@ import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employ
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/emplo_Personal_information_TabBar.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/payslip_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/pf_cscreen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/task_Details_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
@@ -12,7 +13,7 @@ import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Pro
 
 // Import all tab screens
 import 'Assets_Details_screen.dart';
-import 'AttendanceScreen.dart';
+import 'attendance_screens/AttendanceScreen.dart';
 import 'Bank_Screen.dart';
 import 'document_screen.dart';
 import 'ESI_screen.dart';
@@ -56,6 +57,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     "Payslip",
     "Assets Details",
     "Circular",
+    "Task Details",
   ];
 
   @override
@@ -170,37 +172,50 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),PfScreen(
+            ),
+            PfScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),ESIScreen(
+            ),
+            ESIScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),DocumentListScreen(
+            ),
+            DocumentListScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),PaySlipScreen(
+            ),
+            PaySlipScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),AssetsDetailsScreen(
+            ),
+            AssetsDetailsScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
-            ),CircularDetailsScreen(
+            ),
+            CircularDetailsScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+            ),
+            TaskDetailsScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,

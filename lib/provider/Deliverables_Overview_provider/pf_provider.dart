@@ -5,7 +5,7 @@ class PfProvider extends ChangeNotifier {
   List<Map<String, String>> pfDetails = [];
 
   /// Fetch bank details (Dummy API for now)
-  Future<void> fetchSalaryDetails(String empId) async {
+  Future<void> fetchPfDetails(String empId) async {
     isLoading = true;
     notifyListeners();
 

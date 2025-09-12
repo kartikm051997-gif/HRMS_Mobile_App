@@ -26,7 +26,7 @@ class _PfScreenState extends State<PfScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PfProvider>().fetchSalaryDetails(widget.empId);
+      context.read<PfProvider>().fetchPfDetails(widget.empId);
     });
   }
 

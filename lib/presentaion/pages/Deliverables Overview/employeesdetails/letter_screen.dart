@@ -24,7 +24,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      context.read<DocumentListProvider>().fetchDocuments(widget.empId);
+      context.read<DocumentListProvider>().fetchLetter(widget.empId);
     });
   }
 
@@ -37,7 +37,7 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (documentProvider.documents.isEmpty) {
+          if (documentProvider.letter.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -127,14 +127,14 @@ class _DocumentListScreenState extends State<DocumentListScreen> {
                 // Document List
                 Expanded(
                   child: ListView.separated(
-                    itemCount: documentProvider.documents.length,
+                    itemCount: documentProvider.letter.length,
                     separatorBuilder:
                         (context, index) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final document = documentProvider.documents[index];
+                      final document = documentProvider.letter[index];
                       final isDownloading =
                           documentProvider.isDownloading &&
-                          documentProvider.downloadingDocumentId == document.id;
+                          documentProvider.downloadingLetterId == document.id;
 
                       return Container(
                         padding: const EdgeInsets.symmetric(

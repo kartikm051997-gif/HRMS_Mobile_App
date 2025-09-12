@@ -1,7 +1,5 @@
-
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-
 import '../../controller/ui_controller/appbar_controllers.dart';
 
 class AppRouteObserver extends GetObserver {

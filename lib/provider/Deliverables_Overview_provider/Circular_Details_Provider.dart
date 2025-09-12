@@ -1,21 +1,22 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../model/deliverables_model/circular_model.dart';
+
 class CircularProvider extends ChangeNotifier {
-  List<CircularModel> _documents = [];
+  List<CircularModel> _circular = [];
   bool _isLoading = false;
   bool _isDownloading = false;
-  String _downloadingDocumentId = '';
+  String _downloadingCircularId = '';
 
-  List<CircularModel> get documents => _documents;
+  List<CircularModel> get circular => _circular;
   bool get isLoading => _isLoading;
   bool get isDownloading => _isDownloading;
-  String get downloadingDocumentId => _downloadingDocumentId;
+  String get downloadingCircularId => _downloadingCircularId;
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -24,7 +25,7 @@ class CircularProvider extends ChangeNotifier {
 
   void setDownloading(bool downloading, String documentId) {
     _isDownloading = downloading;
-    _downloadingDocumentId = documentId;
+    _downloadingCircularId = documentId;
     notifyListeners();
   }
 
@@ -70,14 +71,14 @@ class CircularProvider extends ChangeNotifier {
         },
       ];
 
-      _documents = response.map((doc) => CircularModel.fromJson(doc)).toList();
+      _circular = response.map((doc) => CircularModel.fromJson(doc)).toList();
 
       if (kDebugMode) {
-        print("Fetched ${_documents.length} circular documents");
+        print("Fetched ${_circular.length} circular documents");
       }
     } catch (e) {
       debugPrint("Error fetching circular documents: $e");
-      _documents = [];
+      _circular = [];
     } finally {
       setLoading(false);
     }
@@ -181,44 +182,9 @@ class CircularProvider extends ChangeNotifier {
   }
 
   void clearDocuments() {
-    _documents.clear();
+    _circular.clear();
     notifyListeners();
   }
 }
 
 // ✅ This should be OUTSIDE CircularProvider
-class CircularModel {
-  final String id;
-  final String date;
-  final String circularName;
-  final String documentUrl;
-  final String fileName;
-
-  CircularModel({
-    required this.id,
-    required this.date,
-    required this.circularName,
-    required this.documentUrl,
-    required this.fileName,
-  });
-
-  factory CircularModel.fromJson(Map<String, dynamic> json) {
-    return CircularModel(
-      id: json['id'] ?? '',
-      date: json['date'] ?? '',
-      circularName: json['circular_name'] ?? '',
-      documentUrl: json['document_url'] ?? '',
-      fileName: json['file_name'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'date': date,
-      'circular_name': circularName,
-      'document_url': documentUrl,
-      'file_name': fileName,
-    };
-  }
-}

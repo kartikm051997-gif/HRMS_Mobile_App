@@ -1,41 +1,34 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../model/deliverables_model/task_details_model.dart';
 
-import '../../model/deliverables_model/letter_model.dart';
-// import 'package:dio/dio.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'package:open_file/open_file.dart';
-// import 'package:permission_handler/permission_handler.dart';
-
-class DocumentListProvider extends ChangeNotifier {
-  List<LetterModel> _letter = [];
+class TaskDetailsProvider extends ChangeNotifier {
+  List<TaskModel> _tasks = [];
   bool _isLoading = false;
   bool _isDownloading = false;
-  String _downloadingLetterId = '';
+  String _downloadingTaskId = '';
 
-  List<LetterModel> get letter => _letter;
+  List<TaskModel> get tasks => _tasks;
   bool get isLoading => _isLoading;
   bool get isDownloading => _isDownloading;
-  String get downloadingLetterId => _downloadingLetterId;
+  String get downloadingTaskId => _downloadingTaskId;
 
   void setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
   }
 
-  void setDownloading(bool downloading, String documentId) {
+  void setDownloading(bool downloading, String taskId) {
     _isDownloading = downloading;
-    _downloadingLetterId = documentId;
+    _downloadingTaskId = taskId;
     notifyListeners();
   }
 
-  Future<void> fetchLetter(String empId) async {
+  Future<void> fetchTasks(String empId) async {
     setLoading(true);
     try {
       // Dummy API response (replace with real API)
@@ -44,43 +37,75 @@ class DocumentListProvider extends ChangeNotifier {
       final response = [
         {
           "id": "1",
-          "date": "19-06-2025",
-          "letter_type": "Notice",
+          "title": "Test1",
+          "start_date": "08-08-2025",
+          "end_date": "06-08-2025",
+          "status": "In-progress",
+          "assigned_by": "Chandra Kumar",
           "document_url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-          "file_name": "notice_19062025.pdf",
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "file_name": "test1_attachment.pdf",
+        },
+        {
+          "id": "2",
+          "title": "Test2",
+          "start_date": "08-08-2025",
+          "end_date": "08-08-2025",
+          "status": "Testing",
+          "assigned_by": "Chandra Kumar",
+          "document_url":
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "file_name": "test2_attachment.pdf",
+        },
+        {
+          "id": "3",
+          "title": "need tasks",
+          "start_date": "09-08-2025",
+          "end_date": "08-08-2025",
+          "status": "Completed",
+          "assigned_by": "Chandra Kumar",
+          "document_url":
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "file_name": "need_tasks_attachment.pdf",
+        },
+        {
+          "id": "4",
+          "title": "Need crm update",
+          "start_date": "09-08-2025",
+          "end_date": "10-08-2025",
+          "status": "Not Yet Start",
+          "assigned_by": "Chandra Kumar",
+          "document_url":
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "file_name": "crm_update_attachment.pdf",
         },
       ];
 
-      _letter = response.map((doc) => LetterModel.fromJson(doc)).toList();
+      _tasks = response.map((task) => TaskModel.fromJson(task)).toList();
 
       if (kDebugMode) {
-        print("Fetched ${_letter.length} documents");
+        print("Fetched ${_tasks.length} tasks");
       }
     } catch (e) {
-      debugPrint("Error fetching documents: $e");
-      _letter = [];
+      debugPrint("Error fetching tasks: $e");
+      _tasks = [];
     } finally {
       setLoading(false);
     }
   }
 
-  Future<bool> downloadDocument(LetterModel document) async {
+  Future<bool> downloadTask(TaskModel task) async {
     try {
-      setDownloading(true, document.id);
+      setDownloading(true, task.id);
 
       // Check and request storage permission
       if (await _requestStoragePermission()) {
-
         final dio = Dio();
         Directory? directory;
 
-        // Get the appropriate directory based on platform
         if (Platform.isAndroid) {
-          // For Android, use external storage Downloads folder
           directory = await getExternalStorageDirectory();
           if (directory != null) {
-            // Create Downloads folder if it doesn't exist
             final downloadsDir = Directory('${directory.path}/Download');
             if (!await downloadsDir.exists()) {
               await downloadsDir.create(recursive: true);
@@ -88,7 +113,6 @@ class DocumentListProvider extends ChangeNotifier {
             directory = downloadsDir;
           }
         } else {
-          // For iOS, use documents directory
           directory = await getApplicationDocumentsDirectory();
         }
 
@@ -97,32 +121,30 @@ class DocumentListProvider extends ChangeNotifier {
           return false;
         }
 
-        final filePath = '${directory.path}/${document.fileName}';
-
+        final filePath = '${directory.path}/${task.fileName}';
         if (kDebugMode) {
-          print("Downloading to: $filePath");
+          print("Downloading document to: $filePath");
         }
 
         await dio.download(
-          document.documentUrl,
+          task.documentUrl,
           filePath,
           onReceiveProgress: (received, total) {
             if (total != -1) {
               final progress = received / total;
-              debugPrint('Download progress: ${(progress * 100).toStringAsFixed(0)}%');
+              debugPrint(
+                'Download progress: ${(progress * 100).toStringAsFixed(0)}%',
+              );
             }
           },
         );
 
-        // Verify file was downloaded
         final file = File(filePath);
         if (await file.exists()) {
           if (kDebugMode) {
             print("File downloaded successfully: ${file.path}");
-            print("File size: ${await file.length()} bytes");
           }
 
-          // Try to open the downloaded file
           final result = await OpenFile.open(filePath);
           if (kDebugMode) {
             print("Open file result: ${result.message}");
@@ -130,15 +152,13 @@ class DocumentListProvider extends ChangeNotifier {
 
           return true;
         } else {
-          debugPrint("File was not created at expected location");
+          debugPrint("File not created at expected location");
           return false;
         }
-
       } else {
         debugPrint("Storage permission denied");
         return false;
       }
-
     } catch (e) {
       debugPrint("Error downloading document: $e");
       return false;
@@ -149,18 +169,13 @@ class DocumentListProvider extends ChangeNotifier {
 
   Future<bool> _requestStoragePermission() async {
     if (Platform.isAndroid) {
-      // For Android 13+ (API 33+), we need different permissions
       if (await Permission.manageExternalStorage.isGranted) {
         return true;
       }
 
-      // Try to request manage external storage permission first
       var result = await Permission.manageExternalStorage.request();
-      if (result.isGranted) {
-        return true;
-      }
+      if (result.isGranted) return true;
 
-      // Fallback to regular storage permission
       if (await Permission.storage.isGranted) {
         return true;
       }
@@ -168,18 +183,16 @@ class DocumentListProvider extends ChangeNotifier {
       result = await Permission.storage.request();
       return result.isGranted;
     } else {
-      // For iOS, no special permission needed for app documents directory
       return true;
     }
   }
 
   void refreshDocuments(String empId) {
-    fetchLetter(empId);
+    fetchTasks(empId);
   }
 
   void clearDocuments() {
-    _letter.clear();
+    _tasks.clear();
     notifyListeners();
   }
 }
-

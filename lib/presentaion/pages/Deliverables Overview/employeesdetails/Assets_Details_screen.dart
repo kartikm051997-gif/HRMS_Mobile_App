@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
 

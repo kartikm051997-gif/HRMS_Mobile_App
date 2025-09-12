@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
 import '../../../core/constants/appimages.dart';
 import '../authentication/login/login_screen.dart';
 
@@ -28,23 +27,29 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     // Logo Zoom-In Animation
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     // Fade-In Animation
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     // Start Animation
     _controller.forward();
 
     // Navigate to Dashboard After 3.5 sec
-    Timer(const Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context){
-        return LoginScreen();
-      }));
+    Timer(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) {
+            return LoginScreen();
+          },
+        ),
+      );
     });
   }
 
@@ -59,27 +64,13 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: AnimatedContainer(
         duration: const Duration(seconds: 3),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          // gradient: LinearGradient(
-          //   colors: [
-          //     AppColor.primaryColor1,
-          //     AppColor.primaryColor2,
-          //   ],
-          //   begin: Alignment.topLeft,
-          //   end: Alignment.bottomRight,
-          // ),
-        ),
+        decoration: BoxDecoration(color: Colors.white),
         child: Center(
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: Image.asset(
-                AppImages.logo,
-                width: 220,
-                height: 220,
-              ),
+              child: Image.asset(AppImages.logo, width: 220, height: 220),
             ),
           ),
         ),
