@@ -1,9 +1,8 @@
 class AppRoutes {
   static const splashScreen = '/splashscreen';
-  static const loginScreen = '/loginscreen';
+  static const loginScreen = '/loginScreen';
 
-  static const dashboardScreen = '/dashboardscreen';
+  static const dashboardScreen = '/dashboardScreen';
   static const deliverablesOverview = '/DeliverablesOverview';
-  static const addDeliverable = '/adddeliverable'; // ✅ Lowercase here
-
+  static const addDeliverable = '/addDeliverable'; // ✅ Lowercase here
 }

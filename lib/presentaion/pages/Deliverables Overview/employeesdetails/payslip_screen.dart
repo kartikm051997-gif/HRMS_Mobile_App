@@ -38,7 +38,7 @@ class _PaySlipScreenState extends State<PaySlipScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (paySlipProvider.documents.isEmpty) {
+          if (paySlipProvider.payslip.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -141,14 +141,14 @@ class _PaySlipScreenState extends State<PaySlipScreen> {
                 // Document List
                 Expanded(
                   child: ListView.separated(
-                    itemCount: paySlipProvider.documents.length,
+                    itemCount: paySlipProvider.payslip.length,
                     separatorBuilder:
                         (context, index) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final document = paySlipProvider.documents[index];
+                      final document = paySlipProvider.payslip[index];
                       final isDownloading =
                           paySlipProvider.isDownloading &&
-                          paySlipProvider.downloadingDocumentId == document.id;
+                          paySlipProvider.downloadingPaySlipId == document.id;
 
                       return Container(
                         padding: const EdgeInsets.symmetric(

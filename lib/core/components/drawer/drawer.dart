@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
 import 'drawer_button.dart';
@@ -72,12 +71,12 @@ class TabletMobileDrawer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         TabletAppbarNavigationBtn(
-                          leadingicon: Icons.dashboard,
+                          leadingIcon: Icons.dashboard,
                           title: 'DashBoard',
                           targetPage: AppRoutes.dashboardScreen,
                           fontSize: navItemFontSize,
                         ),TabletAppbarNavigationBtn(
-                          leadingicon: Icons.message_outlined,
+                          leadingIcon: Icons.message_outlined,
                           title: 'Deliverables Overview',
                           targetPage: AppRoutes.deliverablesOverview,
                           fontSize: navItemFontSize,

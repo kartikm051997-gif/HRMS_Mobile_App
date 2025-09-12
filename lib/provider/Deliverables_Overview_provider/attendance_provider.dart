@@ -1,41 +1,43 @@
+// File: providers/attendance_provider.dart
 import 'package:flutter/material.dart';
+
+import '../../model/deliverables_model/attendance_model.dart';
 
 class AttendanceProvider extends ChangeNotifier {
   DateTime _selectedMonth = DateTime.now();
+  DateTime? _selectedDate;
   bool _isLoading = false;
   List<AttendanceRecord> _attendanceRecords = [];
+  Set<DateTime> _eventDates = {};
 
   // Getters
   DateTime get selectedMonth => _selectedMonth;
+  DateTime? get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
   List<AttendanceRecord> get attendanceRecords => _attendanceRecords;
+  Set<DateTime> get eventDates => _eventDates;
 
-  // Get formatted month year string
   String get monthYearString {
     const months = [
       'January', 'February', 'March', 'April', 'May', 'June',
       'July', 'August', 'September', 'October', 'November', 'December',
     ];
-    return '${months[_selectedMonth.month - 1]}, ${_selectedMonth.year}';
+    return '${months[_selectedMonth.month - 1]} ${_selectedMonth.year}';
   }
 
-  // Get days in selected month
   int get daysInMonth {
     return DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
   }
 
-  // Get first day of month (for calendar layout)
   int get firstDayOfMonth {
     return DateTime(_selectedMonth.year, _selectedMonth.month, 1).weekday % 7;
   }
 
-  // Check if a day is a working day (not weekend)
   bool isWorkingDay(int day) {
     final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
-    return date.weekday != 6 && date.weekday != 7; // Not Saturday or Sunday
+    return date.weekday != 6 && date.weekday != 7;
   }
 
-  // Check if a day is today
   bool isToday(int day) {
     final today = DateTime.now();
     final dayDate = DateTime(_selectedMonth.year, _selectedMonth.month, day);
@@ -44,29 +46,45 @@ class AttendanceProvider extends ChangeNotifier {
         today.day == dayDate.day;
   }
 
-  // Set selected month
+  bool isSelected(int day) {
+    if (_selectedDate == null) return false;
+    final dayDate = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+    return _selectedDate!.year == dayDate.year &&
+        _selectedDate!.month == dayDate.month &&
+        _selectedDate!.day == dayDate.day;
+  }
+
+  void selectDate(int day) {
+    _selectedDate = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedDate = null;
+    notifyListeners();
+  }
+
   void setSelectedMonth(DateTime month) {
     _selectedMonth = DateTime(month.year, month.month, 1);
+    _selectedDate = null; // Reset selected date when changing month
     notifyListeners();
     _loadAttendanceData();
   }
 
-  // Load attendance data for selected month
   Future<void> _loadAttendanceData() async {
     _isLoading = true;
     notifyListeners();
 
     // Simulate API call delay
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    // Generate dummy attendance data
     _attendanceRecords = _generateDummyAttendance();
+    _eventDates = _generateEventDates();
 
     _isLoading = false;
     notifyListeners();
   }
 
-  // Generate dummy attendance data (only for working days)
   List<AttendanceRecord> _generateDummyAttendance() {
     final List<AttendanceRecord> records = [];
     final random = [
@@ -83,14 +101,10 @@ class AttendanceProvider extends ChangeNotifier {
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
 
-      // Skip weekends (Saturday = 6, Sunday = 7)
-      if (date.weekday == 6 || date.weekday == 7) continue;
-
-      // Skip some random days (holidays/leaves) - only affect working days
-      if (day % 12 == 0 || day % 17 == 0) continue;
+      // Generate attendance for some working days and some weekends too
+      if (day % 8 == 0 || day % 13 == 0) continue; // Skip some days as holidays
 
       final randomTime = random[day % random.length];
-
       records.add(
         AttendanceRecord(
           date: date,
@@ -100,20 +114,27 @@ class AttendanceProvider extends ChangeNotifier {
         ),
       );
     }
-
     return records;
   }
 
-  // Determine attendance status based on in-time
+  Set<DateTime> _generateEventDates() {
+    final events = <DateTime>{};
+    // Add some random events/holidays
+    for (int day = 1; day <= daysInMonth; day++) {
+      if (day % 7 == 0 || day % 11 == 0 || day == 15 || day == 26) {
+        events.add(DateTime(_selectedMonth.year, _selectedMonth.month, day));
+      }
+    }
+    return events;
+  }
+
   AttendanceStatus _getAttendanceStatus(String inTime) {
     final time = TimeOfDay(
       hour: int.parse(inTime.split(':')[0]),
       minute: int.parse(inTime.split(':')[1]),
     );
 
-    // Office starts at 9:00 AM
     const officeStart = TimeOfDay(hour: 9, minute: 0);
-
     if (time.hour < officeStart.hour ||
         (time.hour == officeStart.hour && time.minute <= officeStart.minute)) {
       return AttendanceStatus.onTime;
@@ -124,7 +145,6 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
-  // Get attendance record for specific day
   AttendanceRecord? getAttendanceForDay(int day) {
     try {
       return _attendanceRecords.firstWhere((record) => record.date.day == day);
@@ -133,26 +153,38 @@ class AttendanceProvider extends ChangeNotifier {
     }
   }
 
-  // Initialize provider
+  bool hasEvent(int day) {
+    final date = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+    return _eventDates.contains(date);
+  }
+
   void initialize() {
     _loadAttendanceData();
   }
 
-  // Navigate to previous month
   void previousMonth() {
     _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+    _selectedDate = null;
     notifyListeners();
     _loadAttendanceData();
   }
 
-  // Navigate to next month
   void nextMonth() {
     _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+    _selectedDate = null;
     notifyListeners();
     _loadAttendanceData();
   }
 
-  // Get attendance summary (only working days)
+  void goToToday() {
+    final today = DateTime.now();
+    _selectedMonth = DateTime(today.year, today.month, 1);
+    _selectedDate = today;
+    notifyListeners();
+    _loadAttendanceData();
+  }
+
+  // Get attendance summary
   AttendanceSummary getAttendanceSummary() {
     int presentDays = _attendanceRecords.length;
     int onTimeDays = _attendanceRecords
@@ -181,35 +213,3 @@ class AttendanceProvider extends ChangeNotifier {
   }
 }
 
-// Data Models
-class AttendanceRecord {
-  final DateTime date;
-  final String inTime;
-  final String outTime;
-  final AttendanceStatus status;
-
-  AttendanceRecord({
-    required this.date,
-    required this.inTime,
-    required this.outTime,
-    required this.status,
-  });
-}
-
-enum AttendanceStatus { onTime, late, veryLate, absent }
-
-class AttendanceSummary {
-  final int presentDays;
-  final int onTimeDays;
-  final int lateDays;
-  final int veryLateDays;
-  final int totalWorkingDays;
-
-  AttendanceSummary({
-    required this.presentDays,
-    required this.onTimeDays,
-    required this.lateDays,
-    required this.veryLateDays,
-    required this.totalWorkingDays,
-  });
-}

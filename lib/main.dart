@@ -8,6 +8,7 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_D
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Task_details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deliverable_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/attendance_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/bank_details_provider.dart';
@@ -26,9 +27,7 @@ import 'package:hrms_mobile_app/provider/forget_password_provider/forget_passwor
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authentication/login/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.dart';
-
 import 'package:provider/provider.dart';
-
 import 'controller/ui_controller/appbar_controllers.dart';
 import 'core/routes/app_route_observer.dart';
 import 'core/routes/routes.dart';
@@ -68,6 +67,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PaySlipProvider()),
         ChangeNotifierProvider(create: (_) => AssetsDetailsProvider()),
         ChangeNotifierProvider(create: (_) => CircularProvider()),
+        ChangeNotifierProvider(create: (_) => TaskDetailsProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

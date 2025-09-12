@@ -5,17 +5,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import '../../model/deliverables_model/payslip_model.dart';
 
 class PaySlipProvider extends ChangeNotifier {
-  List<PaySlipModel> _documents = [];
+  List<PaySlipModel> _payslip = [];
   bool _isLoading = false;
   bool _isDownloading = false;
-  String _downloadingDocumentId = '';
+  String _downloadingPaySlipId = '';
 
-  List<PaySlipModel> get documents => _documents;
+  List<PaySlipModel> get payslip => _payslip;
   bool get isLoading => _isLoading;
   bool get isDownloading => _isDownloading;
-  String get downloadingDocumentId => _downloadingDocumentId;
+  String get downloadingPaySlipId => _downloadingPaySlipId;
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -24,7 +25,7 @@ class PaySlipProvider extends ChangeNotifier {
 
   void setDownloading(bool downloading, String documentId) {
     _isDownloading = downloading;
-    _downloadingDocumentId = documentId;
+    _downloadingPaySlipId = documentId;
     notifyListeners();
   }
 
@@ -45,15 +46,15 @@ class PaySlipProvider extends ChangeNotifier {
         },
       ];
 
-      _documents = response.map((doc) => PaySlipModel.fromJson(doc)).toList();
+      _payslip = response.map((doc) => PaySlipModel.fromJson(doc)).toList();
 
       if (kDebugMode) {
-        print("Fetched ${_documents.length} payslip documents");
+        print("Fetched ${_payslip.length} payslip documents");
       }
 
     } catch (e) {
       debugPrint("Error fetching payslip documents: $e");
-      _documents = [];
+      _payslip = [];
     } finally {
       setLoading(false);
     }
@@ -172,47 +173,8 @@ class PaySlipProvider extends ChangeNotifier {
   }
 
   void clearDocuments() {
-    _documents.clear();
+    _payslip.clear();
     notifyListeners();
   }
 }
 
-class PaySlipModel {
-  final String id;
-  final String date;
-  final String salaryMonth;
-  final String salary;
-  final String documentUrl;
-  final String fileName;
-
-  PaySlipModel({
-    required this.id,
-    required this.date,
-    required this.salaryMonth,
-    required this.salary,
-    required this.documentUrl,
-    required this.fileName,
-  });
-
-  factory PaySlipModel.fromJson(Map<String, dynamic> json) {
-    return PaySlipModel(
-      id: json['id'] ?? '',
-      date: json['date'] ?? '',
-      salaryMonth: json['salary_month'] ?? '',
-      salary: json['salary'] ?? '',
-      documentUrl: json['document_url'] ?? '',
-      fileName: json['file_name'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'date': date,
-      'salary_month': salaryMonth,
-      'salary': salary,
-      'document_url': documentUrl,
-      'file_name': fileName,
-    };
-  }
-}

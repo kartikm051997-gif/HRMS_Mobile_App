@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../../controller/ui_controller/appbar_controllers.dart';
 import '../../constants/appcolor_dart.dart';
 import '../../fonts/fonts.dart';
@@ -10,26 +9,26 @@ class TabletAppbarNavigationBtn extends StatelessWidget {
   final String title;
   final String targetPage;
   final bool highlight;
-  final bool hasborder;
+  final bool hasBorder;
   final IconData? icon;
   final double? fontSize;
   final bool isTopInfo;
-  final Color? bgcolor;
+  final Color? bgColor;
   final Color? titleColor;
-  final IconData? leadingicon;
+  final IconData? leadingIcon;
 
   const TabletAppbarNavigationBtn({
     super.key,
     required this.title,
     required this.targetPage,
     this.highlight = false,
-    this.hasborder = false,
+    this.hasBorder = false,
     this.icon,
     this.isTopInfo = false,
     this.fontSize,
-    this.bgcolor,
+    this.bgColor,
     this.titleColor,
-    this.leadingicon,
+    this.leadingIcon,
   });
 
   @override
@@ -59,10 +58,10 @@ class TabletAppbarNavigationBtn extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 color:
-                bgcolor ??
+                bgColor ??
                     (highlight ? AppColor.mediumGrey : Colors.transparent),
                 border:
-                hasborder
+                hasBorder
                     ? Border.all(color: AppColor.mediumGrey, width: 1.5)
                     : null,
                 borderRadius: BorderRadius.circular(5),
@@ -71,7 +70,7 @@ class TabletAppbarNavigationBtn extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Icon(
-                    leadingicon,
+                    leadingIcon,
                     size: 20,
                     color:
                     isSelected

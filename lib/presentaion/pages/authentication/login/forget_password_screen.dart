@@ -2,15 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../provider/forget_password_provider/forget_password_provider.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
-import '../../dashborad/dashboard_screen.dart';
 import 'login_screen.dart';
 
 class ForgetPasswordScreen extends StatelessWidget {
-  ForgetPasswordScreen({Key? key}) : super(key: key);
-  final _formKey = GlobalKey<FormState>();
+  const ForgetPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +136,7 @@ class ForgetPasswordScreen extends StatelessWidget {
                           );
                         },
                         child: Text(
-                          "Remmembered Password?",
+                          "Remembered Password?",
                           style: TextStyle(
                             fontFamily: AppFonts.poppins,
                             fontSize: 14,
@@ -190,7 +187,7 @@ class ForgetPasswordScreen extends StatelessWidget {
                                       strokeWidth: 2,
                                     )
                                     : Text(
-                                      "Sumbit",
+                                      "Submit",
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: Colors.white,

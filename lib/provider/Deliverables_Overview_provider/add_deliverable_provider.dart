@@ -1,9 +1,10 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AddDeliverableProvider extends ChangeNotifier {
-  final List<String> _employeename = [
+  final List<String> _employeeName = [
     "Chennai - Sholinganallur",
     "Chennai - Madipakkam",
     "Chennai - Urapakkam",
@@ -12,26 +13,30 @@ class AddDeliverableProvider extends ChangeNotifier {
     "Tiruppur",
     "Erode",
   ];
-  List<String> get employeeName => _employeename;
+  List<String> get employeeName => _employeeName;
 
-  String? _selectedemployeeName;
-  String? get selectedemployeeName => _selectedemployeeName;
+  String? _selectedEmployeeName;
+  String? get selectedEmployeeName => _selectedEmployeeName;
 
-  void setSelectedemployeeName(String? value) {
-    _selectedemployeeName = value;
-    print(_selectedemployeeName);
+  void setSelectedEmployeeName(String? value) {
+    _selectedEmployeeName = value;
+    if (kDebugMode) {
+      print(_selectedEmployeeName);
+    }
     notifyListeners();
   }
 
-  final List<String> _priority = ["High", "Meduim", "Low"];
+  final List<String> _priority = ["High", "medium", "Low"];
   List<String> get priority => _priority;
 
-  String? _selectedpriority;
-  String? get selectedpriority => _selectedpriority;
+  String? _selectedPriority;
+  String? get selectedPriority => _selectedPriority;
 
-  void setSelectedpriority(String? value) {
-    _selectedpriority = value;
-    print(_selectedpriority);
+  void setSelectedPriority(String? value) {
+    _selectedPriority = value;
+    if (kDebugMode) {
+      print(_selectedPriority);
+    }
     notifyListeners();
   }
 
@@ -42,6 +47,7 @@ class AddDeliverableProvider extends ChangeNotifier {
     _selectedFile = file;
     notifyListeners();
   }
+
   void clearFile() {
     _selectedFile = null;
     notifyListeners();

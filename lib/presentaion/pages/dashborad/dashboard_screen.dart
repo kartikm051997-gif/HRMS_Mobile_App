@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
-
 import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 
