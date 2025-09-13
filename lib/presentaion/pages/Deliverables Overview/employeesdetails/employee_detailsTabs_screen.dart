@@ -94,15 +94,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             : defaultPhoto;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       drawer: const TabletMobileDrawer(),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(
-          95,
-        ), // AppBar + TabBar combined height
+        preferredSize: const Size.fromHeight(95),
         child: AppBar(
-          iconTheme: IconThemeData(
-            color: AppColor.whiteColor, // ✅ Makes drawer icon white
-          ),
+          iconTheme: IconThemeData(color: AppColor.whiteColor),
           centerTitle: true,
           elevation: 0,
           backgroundColor: AppColor.primaryColor2,
@@ -110,7 +107,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             "Deliverables Overview",
             style: TextStyle(
               fontFamily: AppFonts.poppins,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
               color: AppColor.whiteColor,
             ),
           ),
@@ -123,7 +121,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             unselectedLabelColor: Colors.white70,
             labelStyle: const TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: 14,
+              fontFamily: AppFonts.poppins,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 14,
               fontFamily: AppFonts.poppins,
             ),
             labelPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -133,7 +136,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       ),
       body: MediaQuery.removePadding(
         context: context,
-        removeTop: true, // ✅ Removes the extra white space below TabBar
+        removeTop: true,
         child: TabBarView(
           controller: _tabController,
           children: [
@@ -228,7 +231,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     );
   }
 
-  /// EMPLOYEE DETAILS TAB UI
+  /// EMPLOYEE DETAILS TAB UI - REDESIGNED
   Widget _buildEmployeeDetailsTab(
     EmployeeDetailsProvider provider,
     Map<String, dynamic> data,
@@ -238,142 +241,324 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Center(
+          // Modern Profile Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
             child: Column(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(avatarUrl),
+                // Profile Image with Status Ring
+                Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColor.primaryColor2,
+                            AppColor.primaryColor2.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 46,
+                        backgroundColor: Colors.white,
+                        child: CircleAvatar(
+                          radius: 42,
+                          backgroundImage: NetworkImage(avatarUrl),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                // Employee Name
                 Text(
                   widget.empName.isNotEmpty
                       ? widget.empName
                       : (data["name"] ?? "John Doe"),
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
                     fontFamily: AppFonts.poppins,
+                    color: Color(0xFF1A202C),
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  "Designation: ${widget.empDesignation.isNotEmpty ? widget.empDesignation : (data["designation"] ?? "Software Engineer")}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.poppins,
+                // Designation
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor2.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    widget.empDesignation.isNotEmpty
+                        ? widget.empDesignation
+                        : (data["designation"] ?? "Software Engineer"),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColor.primaryColor2,
+                      fontFamily: AppFonts.poppins,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
+                // Branch
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.empBranch.isNotEmpty
+                          ? widget.empBranch
+                          : (data["branch"] ?? "Chennai Branch"),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Information Sections
+          if (provider.isLoading)
+            const Padding(
+              padding: EdgeInsets.only(top: 40),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            Column(
+              children: [
+                // Basic Information Section
+                _buildSection("Basic Information", Icons.person_outline, [
+                  _buildInfoItem(
+                    "Employee ID",
+                    (data["empId"]?.toString() ?? widget.empId).isNotEmpty
+                        ? (data["empId"]?.toString() ?? widget.empId)
+                        : "EMP12345",
+                  ),
+                  _buildInfoItem(
+                    "Full Name",
+                    widget.empName.isNotEmpty
+                        ? widget.empName
+                        : (data["name"] ?? "John Doe"),
+                  ),
+                  _buildInfoItem(
+                    "Designation",
+                    widget.empDesignation.isNotEmpty
+                        ? widget.empDesignation
+                        : (data["designation"] ?? "Software Engineer"),
+                  ),
+                  _buildInfoItem(
+                    "Branch",
+                    widget.empBranch.isNotEmpty
+                        ? widget.empBranch
+                        : (data["branch"] ?? "Chennai Branch"),
+                  ),
+                  _buildInfoItem(
+                    "Joining Date",
+                    data["joiningDate"] ?? "2024-01-01",
+                  ),
+                ]),
+
+                const SizedBox(height: 16),
+
+                // Contact Information Section
+                _buildSection(
+                  "Contact Information",
+                  Icons.contact_phone_outlined,
+                  [
+                    _buildInfoItem(
+                      "Mobile",
+                      data["mobile"] ?? "+91 98765 43210",
+                    ),
+                    _buildInfoItem(
+                      "Email",
+                      data["email"] ?? "john.doe@example.com",
+                    ),
+                    _buildInfoItem(
+                      "Present Address",
+                      data["present_address"] ?? "Not provided",
+                    ),
+                    _buildInfoItem(
+                      "Permanent Address",
+                      data["permanent_address"] ?? "Not provided",
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Personal Information Section
+                _buildSection("Personal Information", Icons.info_outline, [
+                  _buildInfoItem("Date of Birth", data["dob"] ?? "1995-06-21"),
+                  _buildInfoItem("Gender", data["gender"] ?? "Male"),
+                  _buildInfoItem(
+                    "Marital Status",
+                    data["maritalStatus"] ?? "Single",
+                  ),
+                  _buildInfoItem(
+                    "Aadhar Number",
+                    data["aadhar"] ?? "1234-5678-9012",
+                  ),
+                  _buildInfoItem("PAN Number", data["pan"] ?? "ABCDE1234F"),
+                ]),
+
+                const SizedBox(height: 16),
+
+                // Professional Information Section
+                _buildSection("Professional Information", Icons.work_outline, [
+                  _buildInfoItem(
+                    "Payroll Category",
+                    data["payroll_category"] ?? "Regular",
+                  ),
+                  _buildInfoItem(
+                    "Education",
+                    data["education"] ?? "Not specified",
+                  ),
+                  _buildInfoItem(
+                    "Recruiter",
+                    data["recruiter"] ?? "HR Department",
+                  ),
+                  _buildInfoItem(
+                    "Created By",
+                    data["created_by"] ?? "System Admin",
+                  ),
+                ]),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// BUILD SECTION WIDGET
+  Widget _buildSection(String title, IconData icon, List<Widget> items) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Section Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColor.primaryColor2.withOpacity(0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColor.primaryColor2.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, color: AppColor.primaryColor2, size: 22),
+                ),
+                const SizedBox(width: 14),
                 Text(
-                  "Branch: ${widget.empBranch.isNotEmpty ? widget.empBranch : (data["branch"] ?? "Chennai Branch")}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: AppColor.primaryColor2,
                     fontFamily: AppFonts.poppins,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          provider.isLoading
-              ? const Padding(
-                padding: EdgeInsets.only(top: 24),
-                child: Center(child: CircularProgressIndicator()),
-              )
-              : Card(
-                color: Colors.white,
-                elevation: 2,
-                shadowColor: Colors.grey.withOpacity(0.2),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _row(
-                        "Emp ID",
-                        (data["empId"]?.toString() ?? widget.empId).isNotEmpty
-                            ? (data["empId"]?.toString() ?? widget.empId)
-                            : "EMP12345", // 👈 Dummy Emp ID
-                      ),
-                      _row(
-                        "Name",
-                        widget.empName.isNotEmpty
-                            ? widget.empName
-                            : (data["name"] ?? "John Doe"),
-                      ),
-
-                      _row(
-                        "Designation",
-                        widget.empDesignation.isNotEmpty
-                            ? widget.empDesignation
-                            : (data["designation"] ?? "Software Engineer"),
-                      ),
-                      _row(
-                        "Branch",
-                        widget.empBranch.isNotEmpty
-                            ? widget.empBranch
-                            : (data["branch"] ?? "Chennai Branch"),
-                      ),
-                      _row("Mobile", data["mobile"] ?? "+91 98765 43210"),
-                      _row("Email", data["email"] ?? "john.doe@example.com"),
-                      _row("Aadhar", data["aadhar"] ?? "1234-5678-9012"),
-                      _row("PAN No", data["pan"] ?? "ABCDE1234F"),
-                      _row(
-                        "Payroll Category",
-                        data["payroll_category"] ?? "N/A",
-                      ),
-                      _row(
-                        "Education Qualification",
-                        data["education"] ?? "N/A",
-                      ),
-                      _row("Recruiter", data["recruiter"] ?? "N/A"),
-                      _row("Created By", data["created_by"] ?? "N/A"),
-                      _row("Joining Date", data["joiningDate"] ?? "2024-01-01"),
-                      _row("Present Address", data["present_address"] ?? "-"),
-                      _row(
-                        "Permanent Address",
-                        data["permanent_address"] ?? "-",
-                      ),
-                      _row("DOB", data["dob"] ?? "1995-06-21"),
-                      _row("Gender", data["gender"] ?? "Male"),
-                      _row("Marital Status", data["maritalStatus"] ?? "Single"),
-                    ],
-                  ),
-                ),
-              ),
+          // Section Content
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(children: items),
+          ),
         ],
       ),
     );
   }
 
-  /// COMMON ROW WIDGET
-  Widget _row(String title, String value) {
+  /// BUILD INFO ITEM WIDGET
+  Widget _buildInfoItem(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "$title: ",
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              fontFamily: AppFonts.poppins,
-              color: Color(0xFF1A237E),
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                fontFamily: AppFonts.poppins,
+                color: Color(0xFF718096),
+              ),
             ),
           ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               value,
-              textAlign: TextAlign.right,
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF37474F),
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF2D3748),
                 fontFamily: AppFonts.poppins,
               ),
             ),
