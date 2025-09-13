@@ -41,7 +41,8 @@ class PaySlipProvider extends ChangeNotifier {
           "date": "11-02-2025",
           "salary_month": "2025-01",
           "salary": "31612.00",
-          "document_url": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+          "document_url":
+              "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
           "file_name": "payslip_jan_2025.pdf",
         },
       ];
@@ -51,7 +52,6 @@ class PaySlipProvider extends ChangeNotifier {
       if (kDebugMode) {
         print("Fetched ${_payslip.length} payslip documents");
       }
-
     } catch (e) {
       debugPrint("Error fetching payslip documents: $e");
       _payslip = [];
@@ -66,7 +66,6 @@ class PaySlipProvider extends ChangeNotifier {
 
       // Check and request storage permission
       if (await _requestStoragePermission()) {
-
         final dio = Dio();
         Directory? directory;
 
@@ -104,7 +103,9 @@ class PaySlipProvider extends ChangeNotifier {
           onReceiveProgress: (received, total) {
             if (total != -1) {
               final progress = received / total;
-              debugPrint('Payslip download progress: ${(progress * 100).toStringAsFixed(0)}%');
+              debugPrint(
+                'Payslip download progress: ${(progress * 100).toStringAsFixed(0)}%',
+              );
             }
           },
         );
@@ -128,12 +129,10 @@ class PaySlipProvider extends ChangeNotifier {
           debugPrint("Payslip file was not created at expected location");
           return false;
         }
-
       } else {
         debugPrint("Storage permission denied");
         return false;
       }
-
     } catch (e) {
       debugPrint("Error downloading payslip: $e");
       return false;
@@ -177,4 +176,3 @@ class PaySlipProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

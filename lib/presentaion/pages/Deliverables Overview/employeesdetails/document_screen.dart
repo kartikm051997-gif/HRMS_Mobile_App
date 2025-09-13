@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/constants/appcolor_dart.dart';
+import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/document_provider.dart';
-import '../../../../widgets/custom_botton/custom_gradient_button.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
 
 class DocumentsScreen extends StatefulWidget {
@@ -28,7 +26,6 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize documents when screen loads
     Future.microtask(() {
       context.read<DocumentProvider>().initializeDocuments();
     });
@@ -46,9 +43,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       SnackBar(
         content: Text(
           message,
-          style: TextStyle(
+          style: const TextStyle(
             fontFamily: AppFonts.poppins,
             fontWeight: FontWeight.w500,
+            color: Colors.white,
           ),
         ),
         backgroundColor: backgroundColor,
@@ -59,17 +57,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _handleDownload(
-    DocumentProvider provider,
-    String docId,
-    String url,
-    String title,
-    String fileExtension,
-  ) async {
-    String fileName =
-        "${title.replaceAll(' ', '_').replaceAll('-', '_')}.$fileExtension";
+      DocumentProvider provider,
+      String docId,
+      String url,
+      String title,
+      String fileExtension,
+      ) async {
+    String fileName = "${title.replaceAll(' ', '_').replaceAll('-', '_')}.$fileExtension";
     final result = await provider.downloadFile(docId, url, fileName);
-
-    // Show result message
     final isSuccess = result.contains('✅');
     _showSnackBar(result, isSuccess ? Colors.green : Colors.red);
   }
@@ -79,253 +74,245 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     return Scaffold(
       body: Consumer<DocumentProvider>(
         builder: (context, provider, child) {
-          if (provider.documents.isEmpty) {
-          }
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 10),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 Expanded(
-                  child:
-                  provider.isLoading
-                      ? const CustomCardShimmer(
-                    itemCount: 4,
-                  ) // ✅ Show shimmer when loading
+                  child: provider.isLoading
+                      ? const CustomCardShimmer(itemCount: 4)
                       : provider.documents.isEmpty
-                      ? const Center(
-                    child: Text(
-                      "No PF details found.",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: AppFonts.poppins,
-                        color: Colors.black54,
-                      ),
+                      ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No documents available",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: AppFonts.poppins,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   )
-                      : ListView.builder(
-                    padding: const EdgeInsets.all(16),
+                      : ListView.separated(
                     itemCount: provider.documents.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final doc = provider.documents[index];
-                      final isDownloading = provider.isDocumentDownloading(
-                        doc["id"],
-                      );
+                      final isDownloading = provider.isDocumentDownloading(doc["id"]);
 
                       return Card(
                         color: Colors.white,
-                        elevation: 4,
-                        shadowColor: Colors.black12,
+                        elevation: 2,
+                        shadowColor: Colors.grey.withOpacity(0.2),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        margin: const EdgeInsets.only(bottom: 16),
                         child: Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Document header
+                              // Document Title
                               Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: provider
-                                          .getTypeColor(doc["type"])
-                                          .withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      provider.getFileIcon(doc["type"]),
-                                      style: const TextStyle(fontSize: 28),
+                                  const Text(
+                                    "Document Name :",
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1A237E),
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          doc["title"] ?? "Document",
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontFamily: AppFonts.poppins,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF1A237E),
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            // Container(
-                                            //   padding: const EdgeInsets.symmetric(
-                                            //     horizontal: 8,
-                                            //     vertical: 4,
-                                            //   ),
-                                            //   decoration: BoxDecoration(
-                                            //     color: provider.getTypeColor(doc["type"]),
-                                            //     borderRadius: BorderRadius.circular(12),
-                                            //   ),
-                                            //   child: Text(
-                                            //     doc["type"].toString().toUpperCase(),
-                                            //     style: const TextStyle(
-                                            //       fontSize: 10,
-                                            //       fontFamily: AppFonts.poppins,
-                                            //       fontWeight: FontWeight.w600,
-                                            //       color: Colors.white,
-                                            //     ),
-                                            //   ),
-                                            // ),
-                                            Text(
-                                              doc["size"] ?? "",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontFamily: AppFonts.poppins,
-                                                color: Color(0xFF37474F),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Uploaded: ${doc["uploadDate"] ?? "Unknown"}",
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontFamily: AppFonts.poppins,
-                                            color: Color(0xFF37474F),
-                                          ),
-                                        ),
-                                      ],
+                                  Flexible(
+                                    child: Text(
+                                      doc["title"] ?? "Document",
+                                      textAlign: TextAlign.right,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                        fontSize: 15,
+                                        color: Colors.black87,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 8),
 
-                              // Action buttons
+                              // Upload Date
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "Upload Date :",
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1A237E),
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      doc["uploadDate"] ?? "Unknown",
+                                      textAlign: TextAlign.right,
+                                      style: const TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                        fontSize: 15,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 15),
+
+                              // Action Buttons
                               Row(
                                 children: [
                                   // View Button
                                   Expanded(
-                                    child: Ink(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF42A5F5),
-                                            Color(0xFF1565C0),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
+                                    child: InkWell(
+                                      onTap: () => _openDocument(doc["url"]),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 25,
+                                          vertical: 6,
                                         ),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: ElevatedButton.icon(
-                                        onPressed:
-                                            () => _openDocument(doc["url"]),
-                                        icon: const Icon(
-                                          Icons.visibility,
-                                          color: Colors.white,
-                                          size: 18,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
-                                        label: const Text(
-                                          "View",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: AppFonts.poppins,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              Colors
-                                                  .transparent, // 👈 Transparent to show gradient
-                                          shadowColor:
-                                              Colors
-                                                  .transparent, // 👈 Remove default shadow
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.visibility,
+                                              color: Colors.white,
+                                              size: 20,
                                             ),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
-                                          ),
-                                          elevation:
-                                              0, // Optional: Remove default elevation
+                                            SizedBox(width: 6),
+                                            Text(
+                                              "View",
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                fontFamily: AppFonts.poppins,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 12),
 
-                                  // Download Button
-                                  if (doc["isDownloadable"] == true)
+                                  if (doc["isDownloadable"] == true) ...[
+                                    const SizedBox(width: 12),
+                                    // Download Button
                                     Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed:
-                                            isDownloading
-                                                ? null
-                                                : () => _handleDownload(
-                                                  provider,
-                                                  doc["id"],
-                                                  doc["url"],
-                                                  doc["title"] ?? 'document',
-                                                  doc["fileExtension"] ?? 'pdf',
-                                                ),
-                                        icon:
-                                            isDownloading
-                                                ? SizedBox(
-                                                  width: 18,
-                                                  height: 18,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                          Color
-                                                        >(Colors.green.shade700),
-                                                  ),
-                                                )
-                                                : const Icon(
-                                                  Icons.download,
-                                                  color: Colors.white,
-                                                  size: 18,
-                                                ),
-                                        label: Text(
-                                          isDownloading
-                                              ? provider
-                                                      .downloadProgress
-                                                      .isNotEmpty
-                                                  ? provider.downloadProgress
-                                                  : "Downloading..."
-                                              : "Download",
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: AppFonts.poppins,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                          ),
+                                      child: isDownloading
+                                          ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 6,
                                         ),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              isDownloading
-                                                  ? Colors.grey
-                                                  : Colors.green,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey,
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor: AlwaysStoppedAnimation<Color>(
+                                                  Colors.white,
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                            SizedBox(width: 6),
+                                            Flexible(
+                                              child: Text(
+                                                "Downloading",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  fontFamily: AppFonts.poppins,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                          : InkWell(
+                                        onTap: () => _handleDownload(
+                                          provider,
+                                          doc["id"],
+                                          doc["url"],
+                                          doc["title"] ?? 'document',
+                                          doc["fileExtension"] ?? 'pdf',
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 14,
+                                            horizontal: 20,
+                                            vertical: 6,
                                           ),
-                                          elevation: 2,
+                                          decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.download,
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
+                                              SizedBox(width: 6),
+                                              Flexible(
+                                                child: Text(
+                                                  "Download",
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w500,
+                                                    fontFamily: AppFonts.poppins,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
+                                  ],
                                 ],
                               ),
                             ],
@@ -335,16 +322,35 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     },
                   ),
                 ),
-                SizedBox(height: 5),
-                CustomGradientButton(
-                  width: MediaQuery.of(context).size.width / 3,
-                  height: 40,
-                  text: "Approved",
-                  gradientColors: const [Color(0xFF42A5F5), Color(0xFF1565C0)],
-                  onPressed: () {},
-                ),
 
-                SizedBox(height: 10),
+                const SizedBox(height: 16),
+
+                // Approve Button
+                InkWell(
+                  onTap: () {
+                    _showSnackBar("Documents approved successfully!", Colors.green);
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColor.primaryColor2,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      "Approve Documents",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
               ],
             ),
           );
