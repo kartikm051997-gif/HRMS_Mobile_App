@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/widgets/custom_botton/custom_gradient_button.dart';
 import 'package:provider/provider.dart';
 import '../../../core/components/appbar/appbar.dart';

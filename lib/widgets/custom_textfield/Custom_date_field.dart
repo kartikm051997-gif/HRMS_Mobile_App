@@ -10,6 +10,7 @@ class CustomDateField extends StatelessWidget {
   final String labelText;
   final bool isMandatory;
   final String? Function(String?)? validator;
+  final VoidCallback? onTap; // 👈 added
 
   const CustomDateField({
     super.key,
@@ -18,6 +19,7 @@ class CustomDateField extends StatelessWidget {
     this.labelText = "",
     this.isMandatory = false,
     this.validator,
+    this.onTap, // 👈 added
   });
 
   @override
@@ -46,7 +48,6 @@ class CustomDateField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
 
-        // FormField (same style as your textfield)
         FormField<String>(
           validator: (value) {
             if (isMandatory && (controller.text.isEmpty)) {
@@ -63,7 +64,12 @@ class CustomDateField extends StatelessWidget {
               children: [
                 TextFormField(
                   controller: controller,
-                  readOnly: true, // important for date field
+                  readOnly: true,
+                  style: const TextStyle( // 👈 selected text inside field
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 14,
+                    color: AppColor.blackColor,
+                  ),
                   decoration: InputDecoration(
                     hintText: hintText,
                     hintStyle: const TextStyle(
@@ -85,27 +91,20 @@ class CustomDateField extends StatelessWidget {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color:
-                            state.hasError ? Colors.red : AppColor.blackColor,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color:
-                            state.hasError ? Colors.red : AppColor.blackColor,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                        color: Colors.blue,
-                        width: 1.5,
+                        color: state.hasError ? Colors.red : AppColor.blackColor,
                       ),
                     ),
                   ),
                   onTap: () async {
                     FocusScope.of(context).requestFocus(FocusNode());
+
+                    // 👇 If custom onTap is passed, use it
+                    if (onTap != null) {
+                      onTap!();
+                      return;
+                    }
+
+                    // 👇 else, fallback to default date picker
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
                       initialDate: DateTime.now(),
@@ -113,22 +112,24 @@ class CustomDateField extends StatelessWidget {
                       lastDate: DateTime(2100),
                     );
                     if (pickedDate != null) {
-                      String formattedDate = DateFormat(
-                        "dd-MM-yyyy",
-                      ).format(pickedDate);
+                      String formattedDate =
+                      DateFormat("dd-MM-yyyy").format(pickedDate);
                       controller.text = formattedDate;
                       state.didChange(formattedDate);
                     }
                   },
                 ),
 
-                // Error message
                 if (state.hasError)
                   Padding(
                     padding: const EdgeInsets.only(top: 5, left: 8),
                     child: Text(
                       state.errorText!,
-                      style: const TextStyle(color: Colors.red, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 12,
+                        fontFamily: AppFonts.poppins,
+                      ),
                     ),
                   ),
               ],

@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/dashborad/dashboard_screen.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
@@ -27,6 +28,7 @@ import 'package:hrms_mobile_app/provider/forget_password_provider/forget_passwor
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authentication/login/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.dart';
+import 'package:hrms_mobile_app/provider/payroll_provider/Attendance_Log_provider.dart';
 import 'package:provider/provider.dart';
 import 'controller/ui_controller/appbar_controllers.dart';
 import 'core/routes/app_route_observer.dart';
@@ -68,6 +70,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AssetsDetailsProvider()),
         ChangeNotifierProvider(create: (_) => CircularProvider()),
         ChangeNotifierProvider(create: (_) => TaskDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => AttendanceLogProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -119,6 +122,8 @@ class MyApp extends StatelessWidget {
         return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
         return AddDeliverableScreen();
+      case AppRoutes.attendanceLog:
+        return AttendanceLogScreen();
 
       default:
         return const NotFoundPage();
