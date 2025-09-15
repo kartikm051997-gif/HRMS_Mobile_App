@@ -452,17 +452,18 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                     "Payroll Category",
                     data["payroll_category"] ?? "Regular",
                   ),
-                  _buildInfoItem(
-                    "Education",
-                    data["education"] ?? "Not specified",
-                  ),
+                  _buildInfoItem("Education", data["education"] ?? "MBA"),
                   _buildInfoItem(
                     "Recruiter",
-                    data["recruiter"] ?? "HR Department",
+                    data["recruiter"] ?? "",
+                    imageUrl:
+                        "https://i.pravatar.cc/150?img=3", // Dummy recruiter image
                   ),
                   _buildInfoItem(
                     "Created By",
-                    data["created_by"] ?? "System Admin",
+                    data["created_by"] ?? "",
+                    imageUrl:
+                        "https://i.pravatar.cc/150?img=7", // Dummy created_by image
                   ),
                 ]),
               ],
@@ -533,34 +534,51 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   }
 
   /// BUILD INFO ITEM WIDGET
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoItem(String label, String value, {String? imageUrl}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 120,
+          // Label
+          Expanded(
+            flex: 2,
             child: Text(
               label,
               style: const TextStyle(
-                fontWeight: FontWeight.w600,
                 fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
                 fontFamily: AppFonts.poppins,
-                color: Color(0xFF718096),
               ),
             ),
           ),
-          const SizedBox(width: 12),
+
+          // Value + optional image
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF2D3748),
-                fontFamily: AppFonts.poppins,
-              ),
+            flex: 3,
+            child: Row(
+              children: [
+                if (imageUrl != null && imageUrl.isNotEmpty)
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundImage: NetworkImage(imageUrl),
+                    backgroundColor: Colors.grey[200],
+                  ),
+                if (imageUrl != null && imageUrl.isNotEmpty)
+                  const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

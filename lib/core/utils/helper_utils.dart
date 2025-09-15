@@ -1,4 +1,3 @@
-
 import '../routes/routes.dart';
 
 class HelperUtil {
@@ -10,8 +9,16 @@ class HelperUtil {
       AppRoutes.loginScreen,
       AppRoutes.dashboardScreen,
       AppRoutes.deliverablesOverview,
-
-
+      AppRoutes.attendanceLog,
+      AppRoutes.remoteAttendance,
+      AppRoutes.mispunchReports,
+      AppRoutes.employeeManualPunches,
+      AppRoutes.pf,
+      AppRoutes.payrollReview,
+      AppRoutes.esi,
+      AppRoutes.neft,
+      AppRoutes.latePunchReports,
+      AppRoutes.salaryReport,
     ];
 
     return validRoutes.contains(route);
