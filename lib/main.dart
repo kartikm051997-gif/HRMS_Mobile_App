@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/activescreens/Active_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/Employee_Management_Tabview.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
@@ -26,6 +28,9 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/payslip_
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/pf_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/reference_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/Active_Provider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authentication/login/login_screen.dart';
@@ -77,6 +82,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AttendanceLogProvider()),
         ChangeNotifierProvider(create: (_) => RemoteAttendanceProvider()),
         ChangeNotifierProvider(create: (_) => MisPunchReportsProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeTabviewProvider()),
+        ChangeNotifierProvider(create: (_) => ActiveProvider()),
+        ChangeNotifierProvider(create: (_) => ManagementApprovalProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -134,6 +142,8 @@ class MyApp extends StatelessWidget {
         return RemoteAttendanceScreen();
       case AppRoutes.mispunchReports:
         return MisPunchReportsScreen();
+      case AppRoutes.EmployeeTabviewScreen:
+        return EmployeeManagementTabviewScreen();
 
       default:
         return const NotFoundPage();
