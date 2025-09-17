@@ -97,6 +97,12 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                           targetPage: AppRoutes.deliverablesOverview,
                           fontSize: navItemFontSize,
                         ),
+                        TabletAppbarNavigationBtn(
+                          leadingIcon: Icons.message_outlined,
+                          title: 'Employee Management',
+                          targetPage: AppRoutes.EmployeeTabviewScreen,
+                          fontSize: navItemFontSize,
+                        ),
 
                         // Payroll with Submenu
                         _buildPayrollSection(navItemFontSize, appBarController),

@@ -16,4 +16,5 @@ class AppRoutes {
   static const neft = '/neft'; // ✅ Lowercase here
   static const latePunchReports = '/latePunchReports'; // ✅ Lowercase here
   static const salaryReport = '/salaryReport'; // ✅ Lowercase here
+  static const EmployeeTabviewScreen = '/activeScreen'; // ✅ Lowercase here
 }

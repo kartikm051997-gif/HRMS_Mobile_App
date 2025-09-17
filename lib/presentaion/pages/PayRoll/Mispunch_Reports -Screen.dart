@@ -84,84 +84,84 @@ class _MisPunchReportsScreenState extends State<MisPunchReportsScreen>
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          children: [
-            // 🔹 Location Dropdown + Go Button
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Consumer<MisPunchReportsProvider>(
-                    builder: (context, provider, child) {
-                      return CustomSearchDropdownWithSearch(
-                        isMandatory: true,
-                        labelText: "Location",
-                        items: provider.locations,
-                        selectedValue: provider.selectedLocation,
-                        onChanged: (value) {
-                          if (value != null) {
-                            provider.setSelectedLocation(value);
-                            provider.setHasSearched(
-                              false,
-                            ); // reset when location changes
-                          }
-                        },
-                        hintText: "Please select location",
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _searchFocusNode.unfocus();
-                        final provider =
-                            context.read<MisPunchReportsProvider>();
-
-                        if (provider.selectedLocation == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Please select a location first"),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                          return;
-                        }
-
-                        final dayFilter = _getDayFilterFromIndex(
-                          _tabController.index,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // 🔹 Location Dropdown + Go Button
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Consumer<MisPunchReportsProvider>(
+                      builder: (context, provider, child) {
+                        return CustomSearchDropdownWithSearch(
+                          isMandatory: true,
+                          labelText: "Location",
+                          items: provider.locations,
+                          selectedValue: provider.selectedLocation,
+                          onChanged: (value) {
+                            if (value != null) {
+                              provider.setSelectedLocation(value);
+                              provider.setHasSearched(
+                                false,
+                              ); // reset when location changes
+                            }
+                          },
+                          hintText: "Please select location",
                         );
-                        provider.fetchReports(dayFilter);
-                        provider.setHasSearched(true);
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _searchFocusNode.unfocus();
+                          final provider =
+                              context.read<MisPunchReportsProvider>();
+          
+                          if (provider.selectedLocation == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Please select a location first"),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+          
+                          final dayFilter = _getDayFilterFromIndex(
+                            _tabController.index,
+                          );
+                          provider.fetchReports(dayFilter);
+                          provider.setHasSearched(true);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        "Go",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
+                        child: const Text(
+                          "Go",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-
-            // 🔹 Conditional content
-            Expanded(
-              child: Consumer<MisPunchReportsProvider>(
+          
+              // 🔹 Conditional content
+              Consumer<MisPunchReportsProvider>(
                 builder: (context, provider, child) {
                   if (!provider.hasSearched) {
                     return const Center(
@@ -176,7 +176,7 @@ class _MisPunchReportsScreenState extends State<MisPunchReportsScreen>
                       ),
                     );
                   }
-
+          
                   return SingleChildScrollView(
                     controller: _scrollController,
                     physics: const ClampingScrollPhysics(),
@@ -316,7 +316,7 @@ class _MisPunchReportsScreenState extends State<MisPunchReportsScreen>
                             },
                           ),
                         ),
-
+          
                         // 🔹 Search Bar
                         Container(
                           color: Colors.white,
@@ -377,7 +377,7 @@ class _MisPunchReportsScreenState extends State<MisPunchReportsScreen>
                             ),
                           ),
                         ),
-
+          
                         // 🔹 Reports Content
                         SizedBox(
                           height:
@@ -399,8 +399,8 @@ class _MisPunchReportsScreenState extends State<MisPunchReportsScreen>
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
