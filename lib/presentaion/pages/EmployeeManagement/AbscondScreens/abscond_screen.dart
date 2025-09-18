@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/fonts/fonts.dart';
-import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
-import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
-import 'Emp_management_details.dart';
 
-class ManagementApprovalScreen extends StatefulWidget {
-  const ManagementApprovalScreen({super.key});
+import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/Employee_management_Provider/Abscond_Provider.dart';
+import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import 'Abscond_Emp_Deatils_Screen.dart';
+
+class AbscondScreen extends StatefulWidget {
+  const AbscondScreen({super.key});
 
   @override
-  State<ManagementApprovalScreen> createState() =>
-      _ManagementApprovalScreenState();
+  State<AbscondScreen> createState() => _AbscondScreenState();
 }
 
-class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
+class _AbscondScreenState extends State<AbscondScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize employee data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ManagementApprovalProvider>(
+      Provider.of<AbscondProvider>(
         context,
         listen: false,
       ).initializeEmployees();
     });
   }
 
-  @override
   Widget build(BuildContext context) {
-    final managementApprovalProvider = Provider.of<ManagementApprovalProvider>(
-      context,
-    );
+    final abscondProvider = Provider.of<AbscondProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -63,7 +59,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                           // Filter Toggle
                           Expanded(
                             child: InkWell(
-                              onTap: managementApprovalProvider.toggleFilters,
+                              onTap: abscondProvider.toggleFilters,
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -96,7 +92,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                                     ),
                                     const Spacer(),
                                     Icon(
-                                      managementApprovalProvider.showFilters
+                                      abscondProvider.showFilters
                                           ? Icons.expand_less
                                           : Icons.expand_more,
                                       color: const Color(0xFF475569),
@@ -120,24 +116,24 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<int>(
-                                value: managementApprovalProvider.pageSize,
+                                value: abscondProvider.pageSize,
                                 items:
-                                    [5, 10, 15, 20].map((e) {
-                                      return DropdownMenuItem(
-                                        value: e,
-                                        child: Text(
-                                          "$e per page",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF475569),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
+                                [5, 10, 15, 20].map((e) {
+                                  return DropdownMenuItem(
+                                    value: e,
+                                    child: Text(
+                                      "$e per page",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontFamily: AppFonts.poppins,
+                                        color: const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
-                                    managementApprovalProvider.setPageSize(val);
+                                    abscondProvider.setPageSize(val);
                                   }
                                 },
                               ),
@@ -163,9 +159,9 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                         ),
                         child: TextField(
                           controller:
-                              managementApprovalProvider.searchController,
+                          abscondProvider.searchController,
                           onChanged: (value) {
-                            managementApprovalProvider.onSearchChanged(value);
+                            abscondProvider.onSearchChanged(value);
                           },
                           style: TextStyle(
                             fontSize: 16,
@@ -174,7 +170,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText:
-                                "Search employees by name, ID, designation...",
+                            "Search employees by name, ID, designation...",
                             hintStyle: TextStyle(
                               fontSize: 14,
                               fontFamily: AppFonts.poppins,
@@ -189,22 +185,22 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                               ),
                             ),
                             suffixIcon:
-                                managementApprovalProvider
-                                        .searchController
-                                        .text
-                                        .isNotEmpty
-                                    ? IconButton(
-                                      onPressed: () {
-                                        managementApprovalProvider
-                                            .clearSearch();
-                                      },
-                                      icon: const Icon(
-                                        Icons.clear_rounded,
-                                        color: Color(0xFF94A3B8),
-                                        size: 20,
-                                      ),
-                                    )
-                                    : null,
+                            abscondProvider
+                                .searchController
+                                .text
+                                .isNotEmpty
+                                ? IconButton(
+                              onPressed: () {
+                                abscondProvider
+                                    .clearSearch();
+                              },
+                              icon: const Icon(
+                                Icons.clear_rounded,
+                                color: Color(0xFF94A3B8),
+                                size: 20,
+                              ),
+                            )
+                                : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -221,7 +217,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
           ),
 
           // Filter Section - Only shows when expanded
-          if (managementApprovalProvider.showFilters)
+          if (abscondProvider.showFilters)
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
@@ -236,11 +232,11 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Zone",
-                            items: managementApprovalProvider.zone,
+                            items: abscondProvider.zone,
                             selectedValue:
-                                managementApprovalProvider.selectedZone,
+                            abscondProvider.selectedZone,
                             onChanged:
-                                managementApprovalProvider.setSelectedZone,
+                            abscondProvider.setSelectedZone,
                             hintText: "Select Zone",
                           ),
                         ),
@@ -254,11 +250,11 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Branch",
-                            items: managementApprovalProvider.branch,
+                            items: abscondProvider.branch,
                             selectedValue:
-                                managementApprovalProvider.selectedBranch,
+                            abscondProvider.selectedBranch,
                             onChanged:
-                                managementApprovalProvider.setSelectedBranch,
+                            abscondProvider.setSelectedBranch,
                             hintText: "Select Branch",
                           ),
                         ),
@@ -266,12 +262,12 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Designation",
-                            items: managementApprovalProvider.designation,
+                            items: abscondProvider.designation,
                             selectedValue:
-                                managementApprovalProvider.selectedDesignation,
+                            abscondProvider.selectedDesignation,
                             onChanged:
-                                managementApprovalProvider
-                                    .setSelectedDesignation,
+                            abscondProvider
+                                .setSelectedDesignation,
                             hintText: "Select Designation",
                           ),
                         ),
@@ -284,7 +280,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              managementApprovalProvider
+                              abscondProvider
                                   .clearAllFilters(); // You'll need to implement this
                             },
                             style: OutlinedButton.styleFrom(
@@ -311,7 +307,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               // Apply filters but keep filters section open
-                              managementApprovalProvider.searchEmployees();
+                              abscondProvider.searchEmployees();
                               // Don't close filters - keep them open for user convenience
                             },
                             style: ElevatedButton.styleFrom(
@@ -348,7 +344,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "${managementApprovalProvider.filteredEmployees.length} Employees Found",
+                    "${abscondProvider.filteredEmployees.length} Employees Found",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -357,10 +353,10 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                     ),
                   ),
                   // Optional: Add a collapse filters button here
-                  if (managementApprovalProvider.showFilters)
+                  if (abscondProvider.showFilters)
                     TextButton.icon(
                       onPressed: () {
-                        managementApprovalProvider.toggleFilters();
+                        abscondProvider.toggleFilters();
                       },
                       icon: const Icon(Icons.keyboard_arrow_up, size: 18),
                       label: Text(
@@ -380,228 +376,229 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
           ),
 
           // Employee List
-          managementApprovalProvider.isLoading
+          abscondProvider.isLoading
               ? const SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
-                        strokeWidth: 3,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "Loading employees...",
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(
+                    color: Color(0xFF3B82F6),
+                    strokeWidth: 3,
                   ),
-                ),
-              )
-              : managementApprovalProvider.filteredEmployees.isEmpty
+                  SizedBox(height: 16),
+                  Text(
+                    "Loading employees...",
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+              : abscondProvider.filteredEmployees.isEmpty
               ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 64,
-                        color: Color(0xFFCBD5E1),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No employees found",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Try adjusting your filters or search criteria",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: Color(0xFFCBD5E1),
                   ),
-                ),
-              )
+                  const SizedBox(height: 16),
+                  Text(
+                    "No employees found",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.poppins,
+                      color: Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Try adjusting your filters or search criteria",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontFamily: AppFonts.poppins,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
               : SliverPadding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      final employee =
-                          managementApprovalProvider.filteredEmployees[index];
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.08),
-                              spreadRadius: 0,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
+                  final employee =
+                  abscondProvider.filteredEmployees[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.08),
+                          spreadRadius: 0,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) =>
-                                          EmploManagementApprovalDetailsScreen(
-                                            empId: employee.employeeId,
-                                            employee: employee,
-                                          ),
-                                ),
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Row(
-                                children: [
-                                  // Employee Avatar
-                                  CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: const Color(0xFF6366F1),
-                                    backgroundImage:
-                                        employee.photoUrl != null &&
-                                                employee.photoUrl!.isNotEmpty &&
-                                                employee.photoUrl !=
-                                                    "https://example.com/photo1.jpg"
-                                            ? NetworkImage(employee.photoUrl!)
-                                            : null,
-                                    child:
-                                        employee.photoUrl == null ||
-                                                employee.photoUrl!.isEmpty ||
-                                                employee.photoUrl ==
-                                                    "https://example.com/photo1.jpg"
-                                            ? Text(
-                                              employee.name.isNotEmpty
-                                                  ? employee.name[0]
-                                                      .toUpperCase()
-                                                  : "E",
-                                              style: const TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                            : null,
+                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) =>
+                                      AbscondEmpDetailsScreen(
+                                    empId: employee.employeeId,
+                                    employee: employee,
                                   ),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            children: [
+                              // Employee Avatar
+                              CircleAvatar(
+                                radius: 28,
+                                backgroundColor: const Color(0xFF6366F1),
+                                backgroundImage:
+                                employee.photoUrl != null &&
+                                    employee.photoUrl!.isNotEmpty &&
+                                    employee.photoUrl !=
+                                        "https://example.com/photo1.jpg"
+                                    ? NetworkImage(employee.photoUrl!)
+                                    : null,
+                                child:
+                                employee.photoUrl == null ||
+                                    employee.photoUrl!.isEmpty ||
+                                    employee.photoUrl ==
+                                        "https://example.com/photo1.jpg"
+                                    ? Text(
+                                  employee.name.isNotEmpty
+                                      ? employee.name[0]
+                                      .toUpperCase()
+                                      : "E",
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                )
+                                    : null,
+                              ),
 
-                                  const SizedBox(width: 16),
+                              const SizedBox(width: 16),
 
-                                  // Employee Information
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                              // Employee Information
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      employee.name,
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: AppFonts.poppins,
+                                        color: const Color(0xFF111827),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      "ID: ${employee.employeeId}",
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        fontFamily: AppFonts.poppins,
+                                        color: const Color(0xFF6B7280),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
                                       children: [
-                                        Text(
-                                          employee.name,
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF111827),
+                                        Expanded(
+                                          child: Text(
+                                            employee.designation,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              fontFamily: AppFonts.poppins,
+                                              color: const Color(
+                                                0xFF374151,
+                                              ),
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        Container(
+                                          width: 4,
+                                          height: 4,
+                                          margin:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFD1D5DB),
+                                            borderRadius:
+                                            BorderRadius.circular(2),
+                                          ),
+                                        ),
                                         Text(
-                                          "ID: ${employee.employeeId}",
+                                          employee.branch,
                                           style: TextStyle(
-                                            fontSize: 13,
+                                            fontSize: 14,
                                             fontWeight: FontWeight.w500,
                                             fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF6B7280),
+                                            color: const Color(0xFF374151),
                                           ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                employee.designation,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontFamily: AppFonts.poppins,
-                                                  color: const Color(
-                                                    0xFF374151,
-                                                  ),
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            Container(
-                                              width: 4,
-                                              height: 4,
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFD1D5DB),
-                                                borderRadius:
-                                                    BorderRadius.circular(2),
-                                              ),
-                                            ),
-                                            Text(
-                                              employee.branch,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w500,
-                                                fontFamily: AppFonts.poppins,
-                                                color: const Color(0xFF374151),
-                                              ),
-                                            ),
-                                          ],
                                         ),
                                       ],
                                     ),
-                                  ),
-
-                                  const SizedBox(width: 12),
-
-                                  // Arrow Icon
-                                  const Icon(
-                                    Icons.chevron_right,
-                                    color: Color(0xFF9CA3AF),
-                                    size: 24,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
+
+                              const SizedBox(width: 12),
+
+                              // Arrow Icon
+                              const Icon(
+                                Icons.chevron_right,
+                                color: Color(0xFF9CA3AF),
+                                size: 24,
+                              ),
+                            ],
                           ),
                         ),
-                      );
-                    },
-                    childCount:
-                        managementApprovalProvider.filteredEmployees.length,
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
+                childCount:
+                abscondProvider.filteredEmployees.length,
               ),
+            ),
+          ),
         ],
       ),
     );
+
   }
 }

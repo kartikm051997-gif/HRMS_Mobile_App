@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/Material.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/InActiveProvider.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
-import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 
-class EmploManagementApprovalDetailsScreen extends StatelessWidget {
+class InActiveDetailsScreen extends StatelessWidget {
   final String empId;
   final Employee employee;
-  const EmploManagementApprovalDetailsScreen({
+  const InActiveDetailsScreen({
     super.key,
     required this.empId,
     required this.employee,
@@ -56,16 +57,16 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child:
-                              employee.photoUrl != null &&
-                                      employee.photoUrl!.isNotEmpty
-                                  ? Image.network(
-                                    employee.photoUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(employee.name);
-                                    },
-                                  )
-                                  : _buildDefaultAvatar(employee.name),
+                          employee.photoUrl != null &&
+                              employee.photoUrl!.isNotEmpty
+                              ? Image.network(
+                            employee.photoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return _buildDefaultAvatar(employee.name);
+                            },
+                          )
+                              : _buildDefaultAvatar(employee.name),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -121,6 +122,37 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Status and Action Button Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Status Badge
+                      // Activate Button
+                      ElevatedButton.icon(
+                        onPressed: () => _showActivateDialog(context),
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: Text(
+                          "Activate",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF16A34A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -161,7 +193,11 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   ),
                   _buildDetailRow("Branch", employee.branch, Icons.location_on),
                   _buildDetailRow(
-                    "Date of Joining",
+                    "DOJ",
+                    employee.doj,
+                    Icons.calendar_today,
+                  ), _buildDetailRow(
+                    "Relieving Date",
                     employee.doj,
                     Icons.calendar_today,
                   ),
@@ -234,6 +270,80 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
     );
   }
 
+  void _showActivateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+        title: Text(
+          "Activate Employee",
+          style: TextStyle(
+            fontFamily: AppFonts.poppins,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        content: Text(
+          "Are you sure you want to activate ${employee.name}?",
+          style: TextStyle(fontFamily: AppFonts.poppins),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Cancel",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _activateEmployee(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF16A34A),
+            ),
+            child: Text(
+              "Activate",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _activateEmployee(BuildContext context) {
+    // Call your provider method here
+    final provider = Provider.of<InActiveProvider>(context, listen: false);
+    provider.activateEmployee(employee.employeeId).then((success) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Employee activated successfully",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+        Navigator.pop(context); // Go back to previous screen
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Failed to activate employee",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    });
+  }
+
   Widget _buildDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
@@ -302,11 +412,11 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildTeamMemberCard(
-    String role,
-    String name,
-    String? photoUrl,
-    IconData icon,
-  ) {
+      String role,
+      String name,
+      String? photoUrl,
+      IconData icon,
+      ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -326,15 +436,15 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
             ),
             child: ClipOval(
               child:
-                  photoUrl != null && photoUrl.isNotEmpty
-                      ? Image.network(
-                        photoUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildSmallDefaultAvatar(name);
-                        },
-                      )
-                      : _buildSmallDefaultAvatar(name),
+              photoUrl != null && photoUrl.isNotEmpty
+                  ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildSmallDefaultAvatar(name);
+                },
+              )
+                  : _buildSmallDefaultAvatar(name),
             ),
           ),
           const SizedBox(width: 16),
@@ -395,152 +505,6 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showStatusChangeDialog(
-    BuildContext context,
-    Employee employee,
-    ActiveProvider provider,
-  ) {
-    final bool isActive = employee.status.toLowerCase() == 'active';
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          isActive
-                              ? const Color(0xFFFEF2F2)
-                              : const Color(0xFFECFDF5),
-                    ),
-                    child: Icon(
-                      isActive ? Icons.person_remove : Icons.person_add,
-                      size: 32,
-                      color:
-                          isActive
-                              ? const Color(0xFFDC2626)
-                              : const Color(0xFF059669),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isActive ? "Deactivate Employee" : "Activate Employee",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    isActive
-                        ? "Are you sure you want to deactivate ${employee.name}? This will change their status to inactive."
-                        : "Are you sure you want to activate ${employee.name}? This will change their status to active.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                              color: const Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            provider.toggleEmployeeStatus(employee.employeeId);
-                            Navigator.pop(context);
-                            Navigator.pop(context); // Return to previous screen
-
-                            // Show success message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  isActive
-                                      ? "${employee.name} has been deactivated"
-                                      : "${employee.name} has been activated",
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                backgroundColor:
-                                    isActive
-                                        ? const Color(0xFFDC2626)
-                                        : const Color(0xFF059669),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                isActive
-                                    ? const Color(0xFFDC2626)
-                                    : const Color(0xFF059669),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            isActive ? "Deactivate" : "Activate",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
     );
   }
 }

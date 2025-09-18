@@ -23,6 +23,17 @@ class ManagementApprovalProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearAllFilters() {
+
+    dojFromController.clear();
+    fojToController.clear();
+    searchController.clear();
+
+    // Refresh the employee list
+    searchEmployees();
+    notifyListeners();
+  }
+
   /// Dropdown data
   final List<String> _company = ["Dr.Aravind's", "The MindMax"];
   final List<String> _zone = ["North", "South", "East", "West"];
