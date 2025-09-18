@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../model/Employee_management/Employee_management.dart';
 
-class ActiveProvider extends ChangeNotifier {
-  /// Toggle filter section
+class AllEmployeesProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
   int pageSize = 10;
@@ -22,9 +21,7 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add this method to your ActiveProvider class
   void clearAllFilters() {
-
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
@@ -32,6 +29,19 @@ class ActiveProvider extends ChangeNotifier {
     // Refresh the employee list
     searchEmployees();
     notifyListeners();
+  }
+
+  Future<bool> activateEmployee(String employeeId) async {
+    try {
+      // Replace with your actual API call
+      // Example:
+      // final response = await http.post('/activate-employee', body: {'id': employeeId});
+      // return response.statusCode == 200;
+
+      return true; // Temporary - replace with actual API call
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Dropdown data
@@ -93,6 +103,20 @@ class ActiveProvider extends ChangeNotifier {
   void clearSearch() {
     searchController.clear();
     // Reset the employee list to show all employees
+  }
+
+  Future<bool> updateEmployeeStatus(
+    String employeeId,
+    String status,
+    DateTime date,
+  ) async {
+    try {
+      // Your API call here
+      // Send employeeId, status, and date to backend
+      return true; // Replace with actual API result
+    } catch (e) {
+      return false;
+    }
   }
 
   /// Initialize with sample data (replace with API call)
@@ -349,65 +373,9 @@ class ActiveProvider extends ChangeNotifier {
 
   final dojFromController = TextEditingController();
   final fojToController = TextEditingController();
+  final dateController = TextEditingController();
 
   /// Toggle employee status between active and inactive
-  Future<void> toggleEmployeeStatus(String employeeId) async {
-    try {
-      // Find the employee in the list
-      final employeeIndex = _allEmployees.indexWhere(
-        (emp) => emp.employeeId == employeeId,
-      );
-
-      if (employeeIndex != -1) {
-        // Update the status locally first for immediate UI feedback
-        final currentEmployee = _allEmployees[employeeIndex];
-        final currentStatus = currentEmployee.status.toLowerCase();
-        final newStatus = currentStatus == 'active' ? 'Inactive' : 'Active';
-
-        // Create updated employee object
-        final updatedEmployee = Employee(
-          employeeId: currentEmployee.employeeId,
-          name: currentEmployee.name,
-          branch: currentEmployee.branch,
-          doj: currentEmployee.doj,
-          department: currentEmployee.department,
-          designation: currentEmployee.designation,
-          monthlyCTC: currentEmployee.monthlyCTC,
-          payrollCategory: currentEmployee.payrollCategory,
-          status: newStatus,
-          photoUrl: currentEmployee.photoUrl,
-          recruiterName: currentEmployee.recruiterName,
-          recruiterPhotoUrl: currentEmployee.recruiterPhotoUrl,
-          createdByName: currentEmployee.createdByName,
-          createdByPhotoUrl: currentEmployee.createdByPhotoUrl,
-        );
-
-        // Update the employee in the list
-        _allEmployees[employeeIndex] = updatedEmployee;
-
-        // Update filtered employees as well
-        final filteredIndex = _filteredEmployees.indexWhere(
-          (emp) => emp.employeeId == employeeId,
-        );
-        if (filteredIndex != -1) {
-          _filteredEmployees[filteredIndex] = updatedEmployee;
-        }
-
-        // Notify listeners to update UI
-        notifyListeners();
-
-        // Here you would typically make an API call to update the status on the server
-        // Example:
-        // await _apiService.updateEmployeeStatus(employeeId, newStatus);
-
-        print('Employee $employeeId status changed to: $newStatus');
-      }
-    } catch (e) {
-      print('Error toggling employee status: $e');
-      // You might want to revert the local changes and show an error message
-      // or handle the error appropriately based on your app's error handling strategy
-    }
-  }
 
   @override
   void dispose() {

@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/fonts/fonts.dart';
-import '../../../../widgets/custom_textfield/Custom_date_field.dart';
-import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
-import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
-import 'active_employee_details_screen.dart';
 
-class ActiveScreen extends StatefulWidget {
-  const ActiveScreen({super.key});
+import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
+import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import 'Notice_Period_details_screen.dart';
+
+class NoticePeriodScreen extends StatefulWidget {
+  const NoticePeriodScreen({super.key});
 
   @override
-  State<ActiveScreen> createState() => _ActiveScreenState();
+  State<NoticePeriodScreen> createState() => _NoticePeriodScreenState();
 }
 
-class _ActiveScreenState extends State<ActiveScreen> {
+class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ActiveProvider>(context, listen: false).initializeEmployees();
+      Provider.of<NoticePeriodProvider>(
+        context,
+        listen: false,
+      ).initializeEmployees();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final activeProvider = Provider.of<ActiveProvider>(context);
+    final noticePeriodScreen = Provider.of<NoticePeriodProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -57,7 +60,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                           // Filter Toggle
                           Expanded(
                             child: InkWell(
-                              onTap: activeProvider.toggleFilters,
+                              onTap: noticePeriodScreen.toggleFilters,
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -90,7 +93,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                                     ),
                                     const Spacer(),
                                     Icon(
-                                      activeProvider.showFilters
+                                      noticePeriodScreen.showFilters
                                           ? Icons.expand_less
                                           : Icons.expand_more,
                                       color: const Color(0xFF475569),
@@ -114,7 +117,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<int>(
-                                value: activeProvider.pageSize,
+                                value: noticePeriodScreen.pageSize,
                                 items:
                                     [5, 10, 15, 20].map((e) {
                                       return DropdownMenuItem(
@@ -131,7 +134,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                                     }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
-                                    activeProvider.setPageSize(val);
+                                    noticePeriodScreen.setPageSize(val);
                                   }
                                 },
                               ),
@@ -156,9 +159,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
                           ],
                         ),
                         child: TextField(
-                          controller: activeProvider.searchController,
+                          controller: noticePeriodScreen.searchController,
                           onChanged: (value) {
-                            activeProvider.onSearchChanged(value);
+                            noticePeriodScreen.onSearchChanged(value);
                           },
                           style: TextStyle(
                             fontSize: 16,
@@ -182,10 +185,13 @@ class _ActiveScreenState extends State<ActiveScreen> {
                               ),
                             ),
                             suffixIcon:
-                                activeProvider.searchController.text.isNotEmpty
+                                noticePeriodScreen
+                                        .searchController
+                                        .text
+                                        .isNotEmpty
                                     ? IconButton(
                                       onPressed: () {
-                                        activeProvider.clearSearch();
+                                        noticePeriodScreen.clearSearch();
                                       },
                                       icon: const Icon(
                                         Icons.clear_rounded,
@@ -210,7 +216,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
           ),
 
           // Filter Section - Only shows when expanded
-          if (activeProvider.showFilters)
+          if (noticePeriodScreen.showFilters)
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
@@ -218,28 +224,16 @@ class _ActiveScreenState extends State<ActiveScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 child: Column(
                   children: [
-                    const Divider(color: Color(0xFFE2E8F0)),
                     const SizedBox(height: 16),
-
                     // First Row - Company and Zone
                     Row(
                       children: [
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
-                            labelText: "Company",
-                            items: activeProvider.company,
-                            selectedValue: activeProvider.selectedCompany,
-                            onChanged: activeProvider.setSelectedCompany,
-                            hintText: "Select Company",
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
                             labelText: "Zone",
-                            items: activeProvider.zone,
-                            selectedValue: activeProvider.selectedZone,
-                            onChanged: activeProvider.setSelectedZone,
+                            items: noticePeriodScreen.zone,
+                            selectedValue: noticePeriodScreen.selectedZone,
+                            onChanged: noticePeriodScreen.setSelectedZone,
                             hintText: "Select Zone",
                           ),
                         ),
@@ -253,9 +247,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Branch",
-                            items: activeProvider.branch,
-                            selectedValue: activeProvider.selectedBranch,
-                            onChanged: activeProvider.setSelectedBranch,
+                            items: noticePeriodScreen.branch,
+                            selectedValue: noticePeriodScreen.selectedBranch,
+                            onChanged: noticePeriodScreen.setSelectedBranch,
                             hintText: "Select Branch",
                           ),
                         ),
@@ -263,65 +257,24 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Designation",
-                            items: activeProvider.designation,
-                            selectedValue: activeProvider.selectedDesignation,
-                            onChanged: activeProvider.setSelectedDesignation,
+                            items: noticePeriodScreen.designation,
+                            selectedValue:
+                                noticePeriodScreen.selectedDesignation,
+                            onChanged:
+                                noticePeriodScreen.setSelectedDesignation,
                             hintText: "Select Designation",
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-
-                    // Third Row - Date Fields
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomDateField(
-                            controller: activeProvider.dojFromController,
-                            hintText: "From Date",
-                            labelText: "DOJ From",
-                            isMandatory: false,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: CustomDateField(
-                            controller: activeProvider.fojToController,
-                            hintText: "To Date",
-                            labelText: "DOJ To",
-                            isMandatory: false,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Fourth Row - CTC Range
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
-                            labelText: "CTC Range",
-                            items: activeProvider.ctc,
-                            selectedValue: activeProvider.selectedCTC,
-                            onChanged: activeProvider.setSelectedCTC,
-                            hintText: "Select CTC Range",
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(child: Container()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
+                    const SizedBox(height: 20),
                     // Go and Clear Buttons
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              activeProvider
+                              noticePeriodScreen
                                   .clearAllFilters(); // You'll need to implement this
                             },
                             style: OutlinedButton.styleFrom(
@@ -348,7 +301,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               // Apply filters but keep filters section open
-                              activeProvider.searchEmployees();
+                              noticePeriodScreen.searchEmployees();
                               // Don't close filters - keep them open for user convenience
                             },
                             style: ElevatedButton.styleFrom(
@@ -385,7 +338,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "${activeProvider.filteredEmployees.length} Employees Found",
+                    "${noticePeriodScreen.filteredEmployees.length} Employees Found",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -394,10 +347,10 @@ class _ActiveScreenState extends State<ActiveScreen> {
                     ),
                   ),
                   // Optional: Add a collapse filters button here
-                  if (activeProvider.showFilters)
+                  if (noticePeriodScreen.showFilters)
                     TextButton.icon(
                       onPressed: () {
-                        activeProvider.toggleFilters();
+                        noticePeriodScreen.toggleFilters();
                       },
                       icon: const Icon(Icons.keyboard_arrow_up, size: 18),
                       label: Text(
@@ -417,7 +370,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
           ),
 
           // Employee List
-          activeProvider.isLoading
+          noticePeriodScreen.isLoading
               ? const SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -439,7 +392,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                   ),
                 ),
               )
-              : activeProvider.filteredEmployees.isEmpty
+              : noticePeriodScreen.filteredEmployees.isEmpty
               ? SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -477,7 +430,8 @@ class _ActiveScreenState extends State<ActiveScreen> {
                 padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    final employee = activeProvider.filteredEmployees[index];
+                    final employee =
+                        noticePeriodScreen.filteredEmployees[index];
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
@@ -501,7 +455,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (_) => EmployeeManagementDetailsScreen(
+                                    (_) => NoticePeriodDetailsScreen(
                                       empId: employee.employeeId,
                                       employee: employee,
                                     ),
@@ -624,7 +578,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         ),
                       ),
                     );
-                  }, childCount: activeProvider.filteredEmployees.length),
+                  }, childCount: noticePeriodScreen.filteredEmployees.length),
                 ),
               ),
         ],

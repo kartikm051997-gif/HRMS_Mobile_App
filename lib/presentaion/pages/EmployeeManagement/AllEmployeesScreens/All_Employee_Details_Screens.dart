@@ -1,15 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/Material.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/All_Employees_Provider.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
-import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 
-class EmploManagementApprovalDetailsScreen extends StatelessWidget {
+class AllEmployeeDetailsScreens extends StatelessWidget {
   final String empId;
   final Employee employee;
-  const EmploManagementApprovalDetailsScreen({
+  const AllEmployeeDetailsScreens({
     super.key,
     required this.empId,
     required this.employee,
@@ -121,6 +123,57 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Status and Action Button Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Status Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 25,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF16A34A),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "Active",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                            color: AppColor.whiteColor,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      // Change Status Button
+                      ElevatedButton.icon(
+                        onPressed: () => _showChangeStatusDialog(context),
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: Text(
+                          "Change Status",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B82F6),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -160,11 +213,8 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                     Icons.business,
                   ),
                   _buildDetailRow("Branch", employee.branch, Icons.location_on),
-                  _buildDetailRow(
-                    "Date of Joining",
-                    employee.doj,
-                    Icons.calendar_today,
-                  ),
+                  _buildDetailRow("DOJ", employee.doj, Icons.calendar_today),
+
                   _buildDetailRow(
                     "Payroll Category",
                     employee.payrollCategory,
@@ -232,6 +282,247 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _showChangeStatusDialog(BuildContext context) {
+    String selectedStatus = "InActive";
+    DateTime? selectedDate;
+    final TextEditingController dateController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Text(
+                    "Change Status",
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Type: *",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Radio buttons
+                      Column(
+                        children: [
+                          RadioListTile<String>(
+                            title: Text(
+                              "InActive",
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 14,
+                              ),
+                            ),
+                            value: "InActive",
+                            groupValue: selectedStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedStatus = value!;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                          RadioListTile<String>(
+                            title: Text(
+                              "Abscond",
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 14,
+                              ),
+                            ),
+                            value: "Abscond",
+                            groupValue: selectedStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedStatus = value!;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                          RadioListTile<String>(
+                            title: Text(
+                              "Notice Period",
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 14,
+                              ),
+                            ),
+                            value: "Notice Period",
+                            groupValue: selectedStatus,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedStatus = value!;
+                              });
+                            },
+                            contentPadding: EdgeInsets.zero,
+                            dense: true,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        "Last Date: *",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: const Color(0xFF374151),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Date picker field
+                      TextFormField(
+                        controller: dateController,
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedDate = picked;
+                              dateController.text =
+                                  "${picked.day}/${picked.month}/${picked.year}";
+                            });
+                          }
+                        },
+                        decoration: InputDecoration(
+                          hintText: "Select Date",
+                          hintStyle: TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 14,
+                            color: const Color(0xFF9CA3AF),
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFD1D5DB),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF3B82F6),
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        "Cancel",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (selectedDate != null) {
+                          Navigator.pop(context);
+                          _updateEmployeeStatus(
+                            context,
+                            selectedStatus,
+                            selectedDate!,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3B82F6),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        "Update",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+          ),
+    );
+  }
+
+  void _updateEmployeeStatus(
+    BuildContext context,
+    String status,
+    DateTime date,
+  ) {
+    final provider = Provider.of<AllEmployeesProvider>(context, listen: false);
+    provider.updateEmployeeStatus(employee.employeeId, status, date).then((
+      success,
+    ) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Employee status updated successfully",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Failed to update employee status",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    });
   }
 
   Widget _buildDefaultAvatar(String name) {
@@ -395,152 +686,6 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showStatusChangeDialog(
-    BuildContext context,
-    Employee employee,
-    ActiveProvider provider,
-  ) {
-    final bool isActive = employee.status.toLowerCase() == 'active';
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color:
-                          isActive
-                              ? const Color(0xFFFEF2F2)
-                              : const Color(0xFFECFDF5),
-                    ),
-                    child: Icon(
-                      isActive ? Icons.person_remove : Icons.person_add,
-                      size: 32,
-                      color:
-                          isActive
-                              ? const Color(0xFFDC2626)
-                              : const Color(0xFF059669),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isActive ? "Deactivate Employee" : "Activate Employee",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    isActive
-                        ? "Are you sure you want to deactivate ${employee.name}? This will change their status to inactive."
-                        : "Are you sure you want to activate ${employee.name}? This will change their status to active.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(context),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          ),
-                          child: Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                              color: const Color(0xFF475569),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            provider.toggleEmployeeStatus(employee.employeeId);
-                            Navigator.pop(context);
-                            Navigator.pop(context); // Return to previous screen
-
-                            // Show success message
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  isActive
-                                      ? "${employee.name} has been deactivated"
-                                      : "${employee.name} has been activated",
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                backgroundColor:
-                                    isActive
-                                        ? const Color(0xFFDC2626)
-                                        : const Color(0xFF059669),
-                                behavior: SnackBarBehavior.floating,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                isActive
-                                    ? const Color(0xFFDC2626)
-                                    : const Color(0xFF059669),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            isActive ? "Deactivate" : "Activate",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
     );
   }
 }
