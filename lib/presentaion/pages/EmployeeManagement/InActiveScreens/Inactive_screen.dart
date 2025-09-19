@@ -461,118 +461,214 @@ class _InActiveScreenState extends State<InActiveScreen> {
                           ),
                         );
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          children: [
-                            // Employee Avatar
-                            CircleAvatar(
-                              radius: 28,
-                              backgroundColor: const Color(0xFF6366F1),
-                              backgroundImage:
-                              employee.photoUrl != null &&
-                                  employee.photoUrl!.isNotEmpty &&
-                                  employee.photoUrl !=
-                                      "https://example.com/photo1.jpg"
-                                  ? NetworkImage(employee.photoUrl!)
-                                  : null,
-                              child:
-                              employee.photoUrl == null ||
-                                  employee.photoUrl!.isEmpty ||
-                                  employee.photoUrl ==
-                                      "https://example.com/photo1.jpg"
-                                  ? Text(
-                                employee.name.isNotEmpty
-                                    ? employee.name[0].toUpperCase()
-                                    : "E",
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              )
-                                  : null,
+                      child:Column(
+                        children: [
+                          // Top Half - Purple Section
+                          Container(
+                            width: double.infinity,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Color(0xffa14876),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                topRight: Radius.circular(16),
+                              ),
                             ),
-
-                            const SizedBox(width: 16),
-
-                            // Employee Information
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                CrossAxisAlignment.start,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    employee.name,
-                                    style: TextStyle(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: AppFonts.poppins,
-                                      color: const Color(0xFF111827),
+                                  // Employee Avatar
+                                  CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: Colors.white
+                                        .withOpacity(0.2),
+                                    backgroundImage: NetworkImage(
+                                      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
                                     ),
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "ID: ${employee.employeeId}",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: AppFonts.poppins,
-                                      color: const Color(0xFF6B7280),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          employee.designation,
+                                  const SizedBox(width: 12),
+
+                                  // Employee Name and ID
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          employee.name,
                                           style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
                                             fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF374151),
+                                            color: Colors.white,
                                           ),
+                                          maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                      ),
-                                      Container(
-                                        width: 4,
-                                        height: 4,
-                                        margin: const EdgeInsets.symmetric(
-                                          horizontal: 8,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "ID: ${employee.employeeId}",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            fontFamily: AppFonts.poppins,
+                                            color: Colors.white.withOpacity(
+                                              0.8,
+                                            ),
+                                          ),
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFD1D5DB),
-                                          borderRadius:
-                                          BorderRadius.circular(2),
-                                        ),
-                                      ),
-                                      Text(
-                                        employee.branch,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: AppFonts.poppins,
-                                          color: const Color(0xFF374151),
-                                        ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Arrow Icon
+                                  const Icon(
+                                    Icons.chevron_right,
+                                    color: Colors.white,
+                                    size: 20,
                                   ),
                                 ],
                               ),
                             ),
+                          ),
 
-                            const SizedBox(width: 12),
-
-                            // Arrow Icon
-                            const Icon(
-                              Icons.chevron_right,
-                              color: Color(0xFF9CA3AF),
-                              size: 24,
+                          // Bottom Half - White Section
+                          Container(
+                            width: double.infinity,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF5F3FF),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
                             ),
-                          ],
-                        ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  // Designation Section
+                                  Expanded(
+                                    flex: 3,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue[50],
+                                            borderRadius:
+                                            BorderRadius.circular(6),
+                                          ),
+                                          child: Icon(
+                                            Icons.work_outline,
+                                            size: 14,
+                                            color: Colors.blue[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "DESIGNATION",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight:
+                                                  FontWeight.w600,
+                                                  color: Colors.grey[500],
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                employee.designation,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                  FontWeight.w500,
+                                                  fontFamily:
+                                                  AppFonts.poppins,
+                                                  color: const Color(
+                                                    0xFF374151,
+                                                  ),
+                                                ),
+                                                overflow:
+                                                TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 16),
+
+                                  // Branch Section
+                                  Expanded(
+                                    flex: 2,
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green[50],
+                                            borderRadius:
+                                            BorderRadius.circular(6),
+                                          ),
+                                          child: Icon(
+                                            Icons.location_on_outlined,
+                                            size: 14,
+                                            color: Colors.green[600],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "BRANCH",
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight:
+                                                  FontWeight.w600,
+                                                  color: Colors.grey[500],
+                                                  letterSpacing: 0.5,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                employee.branch,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                  FontWeight.w500,
+                                                  fontFamily:
+                                                  AppFonts.poppins,
+                                                  color: const Color(
+                                                    0xFF374151,
+                                                  ),
+                                                ),
+                                                overflow:
+                                                TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

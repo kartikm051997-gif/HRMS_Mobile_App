@@ -262,8 +262,7 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider
-                          .permanentAddressController,
+                      employeeInformationProvider.permanentAddressController,
                   hintText: "",
                   labelText: "Permanent Address",
                   isMandatory: true,
@@ -272,8 +271,7 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider
-                          .presentAddressController,
+                      employeeInformationProvider.presentAddressController,
                   hintText: "",
                   labelText: "Present Address",
                   isMandatory: true,
@@ -361,7 +359,6 @@ class _EmployeePersonalDetailsScreenState
                   ],
                 ),
                 SizedBox(height: 10),
-
               ],
             ),
           ],

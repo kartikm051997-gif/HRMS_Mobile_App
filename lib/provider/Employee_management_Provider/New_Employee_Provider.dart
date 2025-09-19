@@ -1,7 +1,20 @@
+import 'dart:io';
+
 import 'package:flutter/Material.dart';
 import 'package:flutter/foundation.dart';
 
 class NewEmployeeProvider extends ChangeNotifier {
+  String _selectedApprovalUser = "No";
+
+
+  String get selectedApprovalUser => _selectedApprovalUser;
+
+  void setApprovalUser(String value) {
+    _selectedApprovalUser = value;
+    notifyListeners();
+  }
+
+
   final List<String> _jobApplicationID = [
     "Karthik - JA00414",
     "Abi - JA00164",
@@ -34,6 +47,83 @@ class NewEmployeeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  final List<String> _gender = ["Male", "Female", "Other"];
+  List<String> get gender => _gender;
+
+  String? _selectedGender;
+  String? get selectedGender => _selectedGender;
+
+  void setSelectedGender(String? value) {
+    _selectedGender = value;
+    if (kDebugMode) {
+      print(_selectedGender);
+    }
+    notifyListeners();
+  }
+
+  final List<String> _marriedStatus = [
+    "unmarried",
+    "married",
+    "Divorced",
+    "Widowed",
+  ];
+  List<String> get marriedStatus => _marriedStatus;
+
+  String? _selectedMarriedStatus;
+  String? get selectedMarriedStatus => _selectedMarriedStatus;
+
+  void setSelectedMarriedStatus(String? value) {
+    _selectedMarriedStatus = value;
+    if (kDebugMode) {
+      print(_selectedMarriedStatus);
+    }
+    notifyListeners();
+  }
+
+  final List<String> _nomineeRelationship = ["father", "mother"];
+  List<String> get nomineeRelationship => _nomineeRelationship;
+
+  String? _selectedNomineeRelationship;
+  String? get selectedNomineeRelationship => _selectedNomineeRelationship;
+
+  void setSelectedNomineeRelationship(String? value) {
+    _selectedNomineeRelationship = value;
+    if (kDebugMode) {
+      print(_selectedNomineeRelationship);
+    }
+    notifyListeners();
+  }
+
+  final List<String> _designation = ["SoftWare Developer", "Accounts"];
+  List<String> get designation => _designation;
+
+  String? _selectedDesignation;
+  String? get selectedDesignation => _selectedDesignation;
+
+  void setSelectedDesignation(String? value) {
+    _selectedDesignation = value;
+    if (kDebugMode) {
+      print(_selectedDesignation);
+    }
+    notifyListeners();
+  }
+
+  final List<String> _loginAccessFor = ["HRM", "HIS", "Referral"];
+  List<String> get loginAccessFor => _loginAccessFor;
+
+
+
+  String? _selectedLoginAccessFor;
+  String? get selectedLoginAccessFor => _selectedLoginAccessFor;
+
+  void setSelectedLoginAccessFor(String? value) {
+    _selectedLoginAccessFor = value;
+    if (kDebugMode) {
+      print(_selectedLoginAccessFor);
+    }
+    notifyListeners();
+  }
+
   Future<void> fetchEmployeeDetails(String empId) async {
     try {
       // Dummy API response (replace with real API)
@@ -46,6 +136,19 @@ class NewEmployeeProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("Error fetching employee details: $e");
     }
+  }
+
+  File? _selectedFile;
+
+  File? get selectedFile => _selectedFile;
+  void setFile(File file) {
+    _selectedFile = file;
+    notifyListeners();
+  }
+
+  void clearFile() {
+    _selectedFile = null;
+    notifyListeners();
   }
 
   @override
@@ -67,4 +170,7 @@ class NewEmployeeProvider extends ChangeNotifier {
   final permanentAddressController = TextEditingController();
   final dateController = TextEditingController();
   final dateOfJoiningController = TextEditingController();
+  final nomineeNameController = TextEditingController();
+  final officialEmailIdController = TextEditingController();
+  final allowedLeaveController = TextEditingController();
 }

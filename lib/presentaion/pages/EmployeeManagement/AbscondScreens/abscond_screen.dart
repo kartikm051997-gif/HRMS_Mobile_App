@@ -118,19 +118,19 @@ class _AbscondScreenState extends State<AbscondScreen> {
                               child: DropdownButton<int>(
                                 value: abscondProvider.pageSize,
                                 items:
-                                [5, 10, 15, 20].map((e) {
-                                  return DropdownMenuItem(
-                                    value: e,
-                                    child: Text(
-                                      "$e per page",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontFamily: AppFonts.poppins,
-                                        color: const Color(0xFF475569),
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
+                                    [5, 10, 15, 20].map((e) {
+                                      return DropdownMenuItem(
+                                        value: e,
+                                        child: Text(
+                                          "$e per page",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontFamily: AppFonts.poppins,
+                                            color: const Color(0xFF475569),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
                                     abscondProvider.setPageSize(val);
@@ -158,8 +158,7 @@ class _AbscondScreenState extends State<AbscondScreen> {
                           ],
                         ),
                         child: TextField(
-                          controller:
-                          abscondProvider.searchController,
+                          controller: abscondProvider.searchController,
                           onChanged: (value) {
                             abscondProvider.onSearchChanged(value);
                           },
@@ -170,7 +169,7 @@ class _AbscondScreenState extends State<AbscondScreen> {
                           ),
                           decoration: InputDecoration(
                             hintText:
-                            "Search employees by name, ID, designation...",
+                                "Search employees by name, ID, designation...",
                             hintStyle: TextStyle(
                               fontSize: 14,
                               fontFamily: AppFonts.poppins,
@@ -185,22 +184,18 @@ class _AbscondScreenState extends State<AbscondScreen> {
                               ),
                             ),
                             suffixIcon:
-                            abscondProvider
-                                .searchController
-                                .text
-                                .isNotEmpty
-                                ? IconButton(
-                              onPressed: () {
-                                abscondProvider
-                                    .clearSearch();
-                              },
-                              icon: const Icon(
-                                Icons.clear_rounded,
-                                color: Color(0xFF94A3B8),
-                                size: 20,
-                              ),
-                            )
-                                : null,
+                                abscondProvider.searchController.text.isNotEmpty
+                                    ? IconButton(
+                                      onPressed: () {
+                                        abscondProvider.clearSearch();
+                                      },
+                                      icon: const Icon(
+                                        Icons.clear_rounded,
+                                        color: Color(0xFF94A3B8),
+                                        size: 20,
+                                      ),
+                                    )
+                                    : null,
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -233,10 +228,8 @@ class _AbscondScreenState extends State<AbscondScreen> {
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Zone",
                             items: abscondProvider.zone,
-                            selectedValue:
-                            abscondProvider.selectedZone,
-                            onChanged:
-                            abscondProvider.setSelectedZone,
+                            selectedValue: abscondProvider.selectedZone,
+                            onChanged: abscondProvider.setSelectedZone,
                             hintText: "Select Zone",
                           ),
                         ),
@@ -251,10 +244,8 @@ class _AbscondScreenState extends State<AbscondScreen> {
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Branch",
                             items: abscondProvider.branch,
-                            selectedValue:
-                            abscondProvider.selectedBranch,
-                            onChanged:
-                            abscondProvider.setSelectedBranch,
+                            selectedValue: abscondProvider.selectedBranch,
+                            onChanged: abscondProvider.setSelectedBranch,
                             hintText: "Select Branch",
                           ),
                         ),
@@ -263,11 +254,8 @@ class _AbscondScreenState extends State<AbscondScreen> {
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Designation",
                             items: abscondProvider.designation,
-                            selectedValue:
-                            abscondProvider.selectedDesignation,
-                            onChanged:
-                            abscondProvider
-                                .setSelectedDesignation,
+                            selectedValue: abscondProvider.selectedDesignation,
+                            onChanged: abscondProvider.setSelectedDesignation,
                             hintText: "Select Designation",
                           ),
                         ),
@@ -378,227 +366,312 @@ class _AbscondScreenState extends State<AbscondScreen> {
           // Employee List
           abscondProvider.isLoading
               ? const SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    color: Color(0xFF3B82F6),
-                    strokeWidth: 3,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Color(0xFF3B82F6),
+                        strokeWidth: 3,
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        "Loading employees...",
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 16),
-                  Text(
-                    "Loading employees...",
-                    style: TextStyle(
-                      color: Color(0xFF64748B),
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
+                ),
+              )
               : abscondProvider.filteredEmployees.isEmpty
               ? SliverFillRemaining(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.people_outline,
-                    size: 64,
-                    color: Color(0xFFCBD5E1),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "No employees found",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: Color(0xFF475569),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Try adjusting your filters or search criteria",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-              : SliverPadding(
-            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  final employee =
-                  abscondProvider.filteredEmployees[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.08),
-                          spreadRadius: 0,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.people_outline,
+                        size: 64,
+                        color: Color(0xFFCBD5E1),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No employees found",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                          color: Color(0xFF475569),
                         ),
-                      ],
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Try adjusting your filters or search criteria",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: AppFonts.poppins,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              : SliverPadding(
+                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final employee = abscondProvider.filteredEmployees[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.08),
+                            spreadRadius: 0,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) =>
-                                      AbscondEmpDetailsScreen(
-                                    empId: employee.employeeId,
-                                    employee: employee,
-                                  ),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Row(
-                            children: [
-                              // Employee Avatar
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundColor: const Color(0xFF6366F1),
-                                backgroundImage:
-                                employee.photoUrl != null &&
-                                    employee.photoUrl!.isNotEmpty &&
-                                    employee.photoUrl !=
-                                        "https://example.com/photo1.jpg"
-                                    ? NetworkImage(employee.photoUrl!)
-                                    : null,
-                                child:
-                                employee.photoUrl == null ||
-                                    employee.photoUrl!.isEmpty ||
-                                    employee.photoUrl ==
-                                        "https://example.com/photo1.jpg"
-                                    ? Text(
-                                  employee.name.isNotEmpty
-                                      ? employee.name[0]
-                                      .toUpperCase()
-                                      : "E",
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                )
-                                    : null,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => AbscondEmpDetailsScreen(
+                                      empId: employee.employeeId,
+                                      employee: employee,
+                                    ),
                               ),
-
-                              const SizedBox(width: 16),
-
-                              // Employee Information
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      employee.name,
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: AppFonts.poppins,
-                                        color: const Color(0xFF111827),
+                            );
+                          },
+                          child: Column(
+                            children: [
+                              // Top Half - Purple Section
+                              Container(
+                                width: double.infinity,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  color: Color(0xffa14876),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(16),
+                                    topRight: Radius.circular(16),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      // Employee Avatar
+                                      CircleAvatar(
+                                        radius: 24,
+                                        backgroundColor: Colors.white
+                                            .withOpacity(0.2),
+                                        backgroundImage: NetworkImage(
+                                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      "ID: ${employee.employeeId}",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        fontFamily: AppFonts.poppins,
-                                        color: const Color(0xFF6B7280),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            employee.designation,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              fontFamily: AppFonts.poppins,
-                                              color: const Color(
-                                                0xFF374151,
+                                      const SizedBox(width: 12),
+
+                                      // Employee Name and ID
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              employee.name,
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                fontFamily: AppFonts.poppins,
+                                                color: Colors.white,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              "ID: ${employee.employeeId}",
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                fontFamily: AppFonts.poppins,
+                                                color: Colors.white.withOpacity(
+                                                  0.8,
+                                                ),
                                               ),
                                             ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                          ],
                                         ),
-                                        Container(
-                                          width: 4,
-                                          height: 4,
-                                          margin:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFD1D5DB),
-                                            borderRadius:
-                                            BorderRadius.circular(2),
-                                          ),
-                                        ),
-                                        Text(
-                                          employee.branch,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w500,
-                                            fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF374151),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                      ),
+
+                                      // Arrow Icon
+                                      const Icon(
+                                        Icons.chevron_right,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
 
-                              const SizedBox(width: 12),
+                              // Bottom Half - White Section
+                              Container(
+                                width: double.infinity,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFF5F3FF),
+                                  borderRadius: BorderRadius.only(
+                                    bottomLeft: Radius.circular(16),
+                                    bottomRight: Radius.circular(16),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    children: [
+                                      // Designation Section
+                                      Expanded(
+                                        flex: 3,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Icon(
+                                                Icons.work_outline,
+                                                size: 14,
+                                                color: Colors.blue[600],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "DESIGNATION",
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.grey[500],
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    employee.designation,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontFamily:
+                                                          AppFonts.poppins,
+                                                      color: const Color(
+                                                        0xFF374151,
+                                                      ),
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
 
-                              // Arrow Icon
-                              const Icon(
-                                Icons.chevron_right,
-                                color: Color(0xFF9CA3AF),
-                                size: 24,
+                                      const SizedBox(width: 16),
+
+                                      // Branch Section
+                                      Expanded(
+                                        flex: 2,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.green[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Icon(
+                                                Icons.location_on_outlined,
+                                                size: 14,
+                                                color: Colors.green[600],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "BRANCH",
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: Colors.grey[500],
+                                                      letterSpacing: 0.5,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    employee.branch,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      fontFamily:
+                                                          AppFonts.poppins,
+                                                      color: const Color(
+                                                        0xFF374151,
+                                                      ),
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-                childCount:
-                abscondProvider.filteredEmployees.length,
+                    );
+                  }, childCount: abscondProvider.filteredEmployees.length),
+                ),
               ),
-            ),
-          ),
         ],
       ),
     );
-
   }
 }
