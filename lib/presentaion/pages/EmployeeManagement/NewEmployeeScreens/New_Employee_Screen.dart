@@ -1,13 +1,14 @@
 import 'package:flutter/Material.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/New_Employee_Provider.dart';
 import 'package:provider/provider.dart';
-
-import '../../../../core/components/appbar/appbar.dart';
-import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
+import '../../../../core/fonts/fonts.dart';
+import '../../../../widgets/custom_filechooser_field/custom_file_chooser_field.dart';
 import '../../../../widgets/custom_textfield/Custom_date_field.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../widgets/custom_textfield/custom_large_textfield.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
+import 'Photo_Upload_screen.dart';
 
 class NewEmployeeScreen extends StatefulWidget {
   final String empId;
@@ -161,6 +162,176 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                 labelText: "Date of Joining",
                 isMandatory: true,
               ),
+              SizedBox(height: 10),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Gender",
+                items: newEmployeeProvider.gender,
+                selectedValue: newEmployeeProvider.selectedGender,
+                onChanged: newEmployeeProvider.setSelectedGender,
+                hintText: "",
+              ),
+              SizedBox(height: 10),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Married Status",
+                items: newEmployeeProvider.marriedStatus,
+                selectedValue: newEmployeeProvider.selectedMarriedStatus,
+                onChanged: newEmployeeProvider.setSelectedMarriedStatus,
+                hintText: "",
+              ),
+              SizedBox(height: 10),
+              CustomTextField(
+                keyboardType: TextInputType.text,
+                controller: newEmployeeProvider.nomineeNameController,
+                hintText: "",
+                labelText: "Nominee Name",
+                isMandatory: true,
+                readOnly: false,
+              ),
+              SizedBox(height: 10),
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Nominee Relationship",
+                items: newEmployeeProvider.nomineeRelationship,
+                selectedValue: newEmployeeProvider.selectedNomineeRelationship,
+                onChanged: newEmployeeProvider.setSelectedNomineeRelationship,
+                hintText: "",
+              ),
+              SizedBox(height: 10),
+              CustomTextField(
+                keyboardType: TextInputType.emailAddress,
+                controller: newEmployeeProvider.officialEmailIdController,
+                hintText: "",
+                labelText: "Official Email ID",
+                isMandatory: true,
+                readOnly: false,
+              ),
+              SizedBox(height: 10),
+
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Designation",
+                items: newEmployeeProvider.designation,
+                selectedValue: newEmployeeProvider.selectedDesignation,
+                onChanged: newEmployeeProvider.setSelectedDesignation,
+                hintText: "",
+              ),
+              SizedBox(height: 10),
+
+              CustomTextField(
+                keyboardType: TextInputType.text,
+                controller: newEmployeeProvider.allowedLeaveController,
+                hintText: "",
+                labelText: "Allowed Leave",
+                isMandatory: true,
+                readOnly: false,
+              ),
+              SizedBox(height: 10),
+
+              ProfilePhotoField(
+                labelText: "Upload Profile Photo",
+                isMandatory: true,
+                selectedFile: newEmployeeProvider.selectedFile,
+                onFilePicked: (file) {
+                  if (file != null) {
+                    newEmployeeProvider.setFile(file);
+                  }
+                },
+              ),
+              SizedBox(height: 10),
+
+              CustomSearchDropdownWithSearch(
+                isMandatory: true,
+                labelText: "Login Access For",
+                items: newEmployeeProvider.loginAccessFor,
+                selectedValue: newEmployeeProvider.selectedJobLocation,
+                onChanged: newEmployeeProvider.setSelectedLoginAccessFor,
+                hintText: "",
+              ),
+              SizedBox(height: 10),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Are you convicted of any Offence",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                        TextSpan(
+                          text: "*",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      // Yes option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "Yes",
+                            groupValue:
+                            newEmployeeProvider
+                                .selectedApprovalUser,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: null, // Readonly
+                          ),
+                          Text(
+                            "Yes",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+
+                      // No option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "No",
+                            groupValue:
+                            newEmployeeProvider
+                                .selectedApprovalUser,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: null, // Readonly
+                          ),
+                          Text(
+                            "No",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
             ],
           ),
         ),
