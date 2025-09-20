@@ -2,12 +2,14 @@ import 'package:flutter/Material.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/New_Employee_Provider.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/appcolor_dart.dart';
-import '../../../../core/fonts/fonts.dart';
-import '../../../../widgets/custom_filechooser_field/custom_file_chooser_field.dart';
+import '../../../../widgets/custom_botton/custom_gradient_button.dart';
 import '../../../../widgets/custom_textfield/Custom_date_field.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../widgets/custom_textfield/custom_large_textfield.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
+import 'New_Emplo_Bank_Details_Screen.dart';
+import 'New_Employee_document_Screen.dart';
+import 'Payroll_category_type_screen.dart';
 import 'Photo_Upload_screen.dart';
 
 class NewEmployeeScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     final newEmployeeProvider = Provider.of<NewEmployeeProvider>(context);
 
@@ -236,6 +239,8 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                 onFilePicked: (file) {
                   if (file != null) {
                     newEmployeeProvider.setFile(file);
+                  } else {
+                    newEmployeeProvider.clearFile(); // Use clearFile for null
                   }
                 },
               ),
@@ -245,7 +250,7 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                 isMandatory: true,
                 labelText: "Login Access For",
                 items: newEmployeeProvider.loginAccessFor,
-                selectedValue: newEmployeeProvider.selectedJobLocation,
+                selectedValue: newEmployeeProvider.selectedLoginAccessFor,
                 onChanged: newEmployeeProvider.setSelectedLoginAccessFor,
                 hintText: "",
               ),
@@ -258,7 +263,7 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                     text: const TextSpan(
                       children: [
                         TextSpan(
-                          text: "Are you convicted of any Offence",
+                          text: "Do you need approval this user",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -287,10 +292,11 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                           Radio<String>(
                             value: "Yes",
                             groupValue:
-                            newEmployeeProvider
-                                .selectedApprovalUser,
+                                newEmployeeProvider.selectedApprovalUser,
                             activeColor: AppColor.primaryColor2,
-                            onChanged: null, // Readonly
+                            onChanged: (value) {
+                              newEmployeeProvider.setApprovalUser(value!);
+                            },
                           ),
                           Text(
                             "Yes",
@@ -311,10 +317,11 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                           Radio<String>(
                             value: "No",
                             groupValue:
-                            newEmployeeProvider
-                                .selectedApprovalUser,
+                                newEmployeeProvider.selectedApprovalUser,
                             activeColor: AppColor.primaryColor2,
-                            onChanged: null, // Readonly
+                            onChanged: (value) {
+                              newEmployeeProvider.setApprovalUser(value!);
+                            },
                           ),
                           Text(
                             "No",
@@ -329,9 +336,215 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
                       ),
                     ],
                   ),
+                  SizedBox(height: 10),
                 ],
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Training fee available",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                        TextSpan(
+                          text: "*",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
 
+                  Row(
+                    children: [
+                      // Yes option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "Yes",
+                            groupValue:
+                                newEmployeeProvider.trainingFeeAvailable,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: (value) {
+                              newEmployeeProvider.setTrainingFeeAvailable(
+                                value!,
+                              );
+                            },
+                          ),
+                          Text(
+                            "Yes",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 20),
+
+                      // No option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "No",
+                            groupValue:
+                                newEmployeeProvider.trainingFeeAvailable,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: (value) {
+                              newEmployeeProvider.setTrainingFeeAvailable(
+                                value!,
+                              );
+                            },
+                          ),
+                          Text(
+                            "No",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RichText(
+                    text: const TextSpan(
+                      children: [
+                        TextSpan(
+                          text: "Need to Remote Attendance",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                            fontFamily: "Poppins",
+                          ),
+                        ),
+                        TextSpan(
+                          text: "*",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Row(
+                    children: [
+                      // Yes option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "Yes",
+                            groupValue:
+                                newEmployeeProvider.needRemoteAttendance,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: (value) {
+                              newEmployeeProvider.setNeedRemoteAttendance(
+                                value!,
+                              );
+                            },
+                          ),
+                          Text(
+                            "Yes",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // No option
+                      Row(
+                        children: [
+                          Radio<String>(
+                            value: "No",
+                            groupValue:
+                                newEmployeeProvider.needRemoteAttendance,
+                            activeColor: AppColor.primaryColor2,
+                            onChanged: (value) {
+                              newEmployeeProvider.setNeedRemoteAttendance(
+                                value!,
+                              );
+                            },
+                          ),
+                          Text(
+                            "No",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+              SizedBox(height: 10),
+              // Expandable Bank & Others Section
+              SizedBox(height: 10),
+
+              NewEmployeeBankDetailsScreen(empId: '12345'),
+              NewEmployeeDocumentScreen(empId: '12345'),
+              SizedBox(height: 15),
+              Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  "Salary",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontFamily: AppFonts.poppins,
+                    color: AppColor.blackColor,
+                  ),
+                ),
+              ),
+              SizedBox(height: 15),
+
+              // Expandable Employee Documents Section
+              PayrollCategoryTypeScreen(empId: "12345"),
+
+              SizedBox(height: 15),
+
+              CustomGradientButton(
+                gradientColors: const [Color(0xFF1565C0), Color(0xFF0D47A1)],
+                height: 44,
+                width: MediaQuery.of(context).size.width,
+                text: "Create Employee",
+                onPressed: () {},
+              ),
+
+              SizedBox(height: 50),
             ],
           ),
         ),

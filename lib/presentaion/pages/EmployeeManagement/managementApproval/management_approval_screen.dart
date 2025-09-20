@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
@@ -481,7 +482,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                                   width: double.infinity,
                                   height: 80,
                                   decoration: BoxDecoration(
-                                    color: Color(0xffa14876),
+                                    color: Color(0xffb85a89),
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(16),
                                       topRight: Radius.circular(16),
@@ -551,8 +552,8 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen> {
                                 // Bottom Half - White Section
                                 Container(
                                   width: double.infinity,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFF5F3FF),
+                                  decoration:  BoxDecoration(
+                                    color: AppColor.whiteColor,
                                     borderRadius: BorderRadius.only(
                                       bottomLeft: Radius.circular(16),
                                       bottomRight: Radius.circular(16),
