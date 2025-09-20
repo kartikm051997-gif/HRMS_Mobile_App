@@ -1,19 +1,30 @@
 import 'dart:io';
-
 import 'package:flutter/Material.dart';
 import 'package:flutter/foundation.dart';
 
 class NewEmployeeProvider extends ChangeNotifier {
   String _selectedApprovalUser = "No";
-
+  String _trainingFeeAvailable = "No";
+  String _needRemoteAttendance = "No";
 
   String get selectedApprovalUser => _selectedApprovalUser;
+  String get trainingFeeAvailable => _trainingFeeAvailable;
+  String get needRemoteAttendance => _needRemoteAttendance;
 
   void setApprovalUser(String value) {
     _selectedApprovalUser = value;
     notifyListeners();
   }
 
+  void setTrainingFeeAvailable(String value) {
+    _trainingFeeAvailable = value;
+    notifyListeners();
+  }
+
+  void setNeedRemoteAttendance(String value) {
+    _needRemoteAttendance = value;
+    notifyListeners();
+  }
 
   final List<String> _jobApplicationID = [
     "Karthik - JA00414",
@@ -29,6 +40,24 @@ class NewEmployeeProvider extends ChangeNotifier {
     _selectedJobApplicationID = value;
     if (kDebugMode) {
       print(_selectedJobApplicationID);
+    }
+    notifyListeners();
+  }
+
+  final List<String> _payrollCategoryType = [
+    "Karthik - JA00414",
+    "Abi - JA00164",
+    "Viki - JA00417",
+  ];
+  List<String> get payrollCategoryType => _payrollCategoryType;
+
+  String? _selectedPayrollCategoryType;
+  String? get selectedPayrollCategoryType => _selectedPayrollCategoryType;
+
+  void setSelectedPayrollCategoryType(String? value) {
+    _selectedPayrollCategoryType = value;
+    if (kDebugMode) {
+      print(_selectedPayrollCategoryType);
     }
     notifyListeners();
   }
@@ -111,8 +140,6 @@ class NewEmployeeProvider extends ChangeNotifier {
   final List<String> _loginAccessFor = ["HRM", "HIS", "Referral"];
   List<String> get loginAccessFor => _loginAccessFor;
 
-
-
   String? _selectedLoginAccessFor;
   String? get selectedLoginAccessFor => _selectedLoginAccessFor;
 
@@ -150,6 +177,8 @@ class NewEmployeeProvider extends ChangeNotifier {
     _selectedFile = null;
     notifyListeners();
   }
+
+  //  ProfilePhotoField screens function
 
   @override
   void dispose() {

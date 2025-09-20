@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/InActiveProvider.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import 'InActiveDetailsScreen.dart';
@@ -468,7 +469,7 @@ class _InActiveScreenState extends State<InActiveScreen> {
                             width: double.infinity,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Color(0xffa14876),
+                              color: Color(0xffb85a89),
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(16),
                                 topRight: Radius.circular(16),
@@ -538,8 +539,8 @@ class _InActiveScreenState extends State<InActiveScreen> {
                           // Bottom Half - White Section
                           Container(
                             width: double.infinity,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF5F3FF),
+                            decoration:  BoxDecoration(
+                              color: AppColor.whiteColor,
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(16),
                                 bottomRight: Radius.circular(16),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
@@ -469,7 +470,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                 width: double.infinity,
                                 height: 80,
                                 decoration: BoxDecoration(
-                                  color: Color(0xffa14876),
+                                  color: Color(0xffb85a89),
                                   borderRadius: const BorderRadius.only(
                                     topLeft: Radius.circular(16),
                                     topRight: Radius.circular(16),
@@ -494,9 +495,9 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                              CrossAxisAlignment.start,
                                           mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                              MainAxisAlignment.center,
                                           children: [
                                             Text(
                                               employee.name,
@@ -539,8 +540,8 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                               // Bottom Half - White Section
                               Container(
                                 width: double.infinity,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFF5F3FF),
+                                decoration: BoxDecoration(
+                                  color: AppColor.whiteColor,
                                   borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(16),
                                     bottomRight: Radius.circular(16),
@@ -560,7 +561,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                               decoration: BoxDecoration(
                                                 color: Colors.blue[50],
                                                 borderRadius:
-                                                BorderRadius.circular(6),
+                                                    BorderRadius.circular(6),
                                               ),
                                               child: Icon(
                                                 Icons.work_outline,
@@ -572,14 +573,14 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     "DESIGNATION",
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight:
-                                                      FontWeight.w600,
+                                                          FontWeight.w600,
                                                       color: Colors.grey[500],
                                                       letterSpacing: 0.5,
                                                     ),
@@ -590,15 +591,15 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       fontWeight:
-                                                      FontWeight.w500,
+                                                          FontWeight.w500,
                                                       fontFamily:
-                                                      AppFonts.poppins,
+                                                          AppFonts.poppins,
                                                       color: const Color(
                                                         0xFF374151,
                                                       ),
                                                     ),
                                                     overflow:
-                                                    TextOverflow.ellipsis,
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ],
                                               ),
@@ -619,7 +620,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                               decoration: BoxDecoration(
                                                 color: Colors.green[50],
                                                 borderRadius:
-                                                BorderRadius.circular(6),
+                                                    BorderRadius.circular(6),
                                               ),
                                               child: Icon(
                                                 Icons.location_on_outlined,
@@ -631,14 +632,14 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                             Expanded(
                                               child: Column(
                                                 crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     "BRANCH",
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight:
-                                                      FontWeight.w600,
+                                                          FontWeight.w600,
                                                       color: Colors.grey[500],
                                                       letterSpacing: 0.5,
                                                     ),
@@ -649,15 +650,15 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen> {
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       fontWeight:
-                                                      FontWeight.w500,
+                                                          FontWeight.w500,
                                                       fontFamily:
-                                                      AppFonts.poppins,
+                                                          AppFonts.poppins,
                                                       color: const Color(
                                                         0xFF374151,
                                                       ),
                                                     ),
                                                     overflow:
-                                                    TextOverflow.ellipsis,
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ],
                                               ),

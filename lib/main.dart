@@ -32,8 +32,11 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Abscond_Pr
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Active_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/All_Employees_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/InActiveProvider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/NewEmployee_Bank_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/New_Employee_Provider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/New_Employee_document_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Notice_Period_Provider.dart';
+import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Category_Type_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
@@ -95,6 +98,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => InActiveProvider()),
         ChangeNotifierProvider(create: (_) => AllEmployeesProvider()),
         ChangeNotifierProvider(create: (_) => NewEmployeeProvider()),
+        ChangeNotifierProvider(create: (_) => NewEmployeeBankDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => NewEmployeeDocumentProvider()),
+        ChangeNotifierProvider(create: (_) => PayrollCategoryTypeProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
