@@ -19,7 +19,12 @@ class HelperUtil {
       AppRoutes.neft,
       AppRoutes.latePunchReports,
       AppRoutes.salaryReport,
-      AppRoutes.EmployeeTabviewScreen,
+      AppRoutes.employeeManagement,
+      AppRoutes.allEmployees,
+      AppRoutes.professionals,
+      AppRoutes.employees,
+      AppRoutes.students,
+      AppRoutes.f11Employees,
     ];
 
     return validRoutes.contains(route);

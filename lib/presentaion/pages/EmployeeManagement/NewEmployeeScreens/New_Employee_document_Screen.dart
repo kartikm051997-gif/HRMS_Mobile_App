@@ -165,6 +165,113 @@ class _NewEmployeeDocumentScreenState extends State<NewEmployeeDocumentScreen> {
                           }
                         },
                       ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Pan card",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider.selectedPanCard,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider.setPanCard(file);
+                          } else {
+                            newEmployeeBankDetailsProvider.cleaPanCard();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Bank passbook",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider.selectedBankPassbook,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider.setBankPassbook(
+                              file,
+                            );
+                          } else {
+                            newEmployeeBankDetailsProvider.cleaBankPassbook();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Current address proof",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider
+                                .selectedCurrentAddressProof,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider
+                                .setCurrentAddressProof(file);
+                          } else {
+                            newEmployeeBankDetailsProvider
+                                .cleaCurrentAddressProof();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Driving licence",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider
+                                .selectedDrivingLicence,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider.setDrivingLicence(
+                              file,
+                            );
+                          } else {
+                            newEmployeeBankDetailsProvider.cleaDrivingLicence();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Passport",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider.selectedPassport,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider.setPassport(file);
+                          } else {
+                            newEmployeeBankDetailsProvider.cleaPassport();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      DocumentUploadField(
+                        labelText: "Other Document",
+                        isMandatory: true,
+                        selectedFile:
+                            newEmployeeBankDetailsProvider
+                                .selectedOtherDocument,
+                        allowedExtensions: ["pdf", "doc", "docx"],
+                        onFilePicked: (file) {
+                          if (file != null) {
+                            newEmployeeBankDetailsProvider.setOtherDocument(
+                              file,
+                            );
+                          } else {
+                            newEmployeeBankDetailsProvider.cleaOtherDocument();
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),

@@ -16,11 +16,12 @@ class TabletMobileDrawer extends StatefulWidget {
 
 class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
   bool _isPayrollExpanded = false;
+  bool _isEmployeesExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
-    double navItemFontSize = 18;
+    double navItemFontSize = 17;
     final AppBarController appBarController = Get.find<AppBarController>();
 
     return Drawer(
@@ -98,14 +99,18 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                           fontSize: navItemFontSize,
                         ),
                         TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.message_outlined,
+                          leadingIcon: Icons.person_search,
                           title: 'Employee Management',
-                          targetPage: AppRoutes.EmployeeTabviewScreen,
+                          targetPage: AppRoutes.employeeManagement,
                           fontSize: navItemFontSize,
                         ),
 
                         // Payroll with Submenu
                         _buildPayrollSection(navItemFontSize, appBarController),
+                        _buildEmployeesSection(
+                          navItemFontSize,
+                          appBarController,
+                        ),
                       ],
                     ),
                   ),
@@ -356,5 +361,131 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
     ];
 
     return payrollRoutes.contains(currentRoute);
+  }
+
+  Widget _buildEmployeesSection(
+    double fontSize,
+    AppBarController appBarController,
+  ) {
+    return Column(
+      children: [
+        // Main Employees Button
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isEmployeesExpanded = !_isEmployeesExpanded;
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          splashColor: AppColor.primaryColor2.withOpacity(0.3),
+          highlightColor: AppColor.primaryColor2.withOpacity(0.1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color:
+                  _isEmployeesExpanded
+                      ? AppColor.primaryColor2.withOpacity(0.1)
+                      : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.people,
+                  color:
+                      _isEmployeesExpanded
+                          ? AppColor.primaryColor2
+                          : const Color.fromARGB(255, 63, 63, 63),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Employees',
+                    style: TextStyle(
+                      color:
+                          _isEmployeesExpanded
+                              ? AppColor.primaryColor2
+                              : const Color.fromARGB(255, 63, 63, 63),
+                      fontSize: fontSize,
+                      fontWeight:
+                          _isEmployeesExpanded
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                ),
+                AnimatedRotation(
+                  turns: _isEmployeesExpanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down,
+                    color:
+                        _isEmployeesExpanded
+                            ? AppColor.primaryColor2
+                            : const Color.fromARGB(255, 63, 63, 63),
+                    size: 24,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Submenu Items
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          height: _isEmployeesExpanded ? null : 0,
+          child: AnimatedOpacity(
+            opacity: _isEmployeesExpanded ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 200),
+            child: Container(
+              margin: const EdgeInsets.only(left: 20, top: 8),
+              child: Column(
+                children: [
+                  _buildSubmenuItem(
+                    icon: Icons.group,
+                    title: 'All',
+                    route: AppRoutes.allEmployees,
+                    fontSize: fontSize - 2,
+                    appBarController: appBarController,
+                  ),
+                  _buildSubmenuItem(
+                    icon: Icons.work,
+                    title: 'Professionals',
+                    route: AppRoutes.professionals,
+                    fontSize: fontSize - 2,
+                    appBarController: appBarController,
+                  ),
+                  _buildSubmenuItem(
+                    icon: Icons.badge,
+                    title: 'Employees',
+                    route: AppRoutes.employees,
+                    fontSize: fontSize - 2,
+                    appBarController: appBarController,
+                  ),
+                  _buildSubmenuItem(
+                    icon: Icons.school,
+                    title: 'Students',
+                    route: AppRoutes.students,
+                    fontSize: fontSize - 2,
+                    appBarController: appBarController,
+                  ),
+                  _buildSubmenuItem(
+                    icon: Icons.apartment,
+                    title: 'F11 Employees',
+                    route: AppRoutes.f11Employees,
+                    fontSize: fontSize - 2,
+                    appBarController: appBarController,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

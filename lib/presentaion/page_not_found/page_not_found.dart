@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 
 import '../../core/components/appbar/appbar.dart';
 import '../../core/components/drawer/drawer.dart';
@@ -151,10 +152,10 @@ class SpeechBubbleCard extends StatelessWidget {
         width: 290,
         child: Column(
           children: [
-            const Text(
+            Text(
               'No Files Found',
               style: TextStyle(
-                fontFamily: "Prompt",
+                fontFamily: AppFonts.poppins,
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF1C355E), // Dark blue text
@@ -164,7 +165,7 @@ class SpeechBubbleCard extends StatelessWidget {
             const Text(
               'Maybe go back and try a',
               style: TextStyle(
-                fontFamily: "Prompt",
+                fontFamily: AppFonts.poppins,
                 fontSize: 20,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF1C355E), // Dark blue text
@@ -174,7 +175,7 @@ class SpeechBubbleCard extends StatelessWidget {
             const Text(
               'different keyword ? ',
               style: TextStyle(
-                fontFamily: "Prompt",
+                fontFamily: AppFonts.poppins,
                 fontSize: 20,
                 fontWeight: FontWeight.w400,
                 color: Color(0xFF1C355E), // Dark blue text

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/AllEmployeesScreens/All_Employee_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/InActiveScreens/Inactive_screen.dart';
 import 'package:provider/provider.dart';
-import '../../../core/components/drawer/drawer.dart';
-import '../../../core/constants/appcolor_dart.dart';
-import '../../../core/fonts/fonts.dart';
-import '../../../provider/Employee_management_Provider/employee_tabview_provider.dart';
-import 'NewEmployeeScreens/New_Employee_Screen.dart';
-import 'activescreens/Active_screen.dart';
-import 'AbscondScreens/abscond_screen.dart';
-import 'managementApproval/management_approval_screen.dart';
-import 'NoticePeriod/notice_period_screen.dart';
+import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
+import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/Employee_management_Provider/employee_tabview_provider.dart';
+import '../NewEmployeeScreens/New_Employee_Screen.dart';
+import '../activescreens/Active_screen.dart';
+import '../AbscondScreens/abscond_screen.dart';
+import '../managementApproval/management_approval_screen.dart';
+import '../NoticePeriod/notice_period_screen.dart';
 
 class EmployeeManagementTabviewScreen extends StatefulWidget {
   const EmployeeManagementTabviewScreen({super.key});
