@@ -16,5 +16,10 @@ class AppRoutes {
   static const neft = '/neft'; // ✅ Lowercase here
   static const latePunchReports = '/latePunchReports'; // ✅ Lowercase here
   static const salaryReport = '/salaryReport'; // ✅ Lowercase here
-  static const EmployeeTabviewScreen = '/activeScreen'; // ✅ Lowercase here
+  static const employeeManagement = '/activeScreen'; // ✅ Lowercase here
+  static const allEmployees = '/allEmployees'; // ✅ Lowercase here
+  static const professionals = '/professionals'; // ✅ Lowercase here
+  static const employees = '/employees'; // ✅ Lowercase here
+  static const students = '/students'; // ✅ Lowercase here
+  static const f11Employees = '/f11Employees'; // ✅ Lowercase here
 }

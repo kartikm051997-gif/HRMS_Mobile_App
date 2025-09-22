@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
-import 'package:hrms_mobile_app/presentaion/pages/authentication/login/forget_password_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/custom_textfield/custom_textfield.dart';
 import '../../../../provider/login_provider/login_provider.dart';
+import 'forget_password_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});

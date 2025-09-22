@@ -19,6 +19,7 @@ class NewEmployeeDocumentProvider extends ChangeNotifier {
   File? _selectedJoiningLetter;
   File? get selectedJoiningLetter => _selectedJoiningLetter;
 
+  // joining Letter
   void setJoiningLetter(File? file) {
     _selectedJoiningLetter = file;
     notifyListeners();
@@ -29,6 +30,7 @@ class NewEmployeeDocumentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // contract letter
   File? _selectedContractPaper;
   File? get selectedContractPaper => _selectedContractPaper;
 
@@ -42,6 +44,7 @@ class NewEmployeeDocumentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Aadhaar card
   File? _selectedAadhaarCard;
   File? get selectedAadhaarCard => _selectedAadhaarCard;
 
@@ -52,6 +55,90 @@ class NewEmployeeDocumentProvider extends ChangeNotifier {
 
   void clearAadhaarCard() {
     _selectedAadhaarCard = null;
+    notifyListeners();
+  }
+
+  // Pan card
+  File? _selectedPanCard;
+  File? get selectedPanCard => _selectedPanCard;
+
+  void setPanCard(File? file) {
+    _selectedPanCard = file;
+    notifyListeners();
+  }
+
+  void cleaPanCard() {
+    _selectedPanCard = null;
+    notifyListeners();
+  }
+
+  // Bank passbook
+  File? _selectedBankPassbook;
+  File? get selectedBankPassbook => _selectedBankPassbook;
+
+  void setBankPassbook(File? file) {
+    _selectedBankPassbook = file;
+    notifyListeners();
+  }
+
+  void cleaBankPassbook() {
+    _selectedBankPassbook = null;
+    notifyListeners();
+  }
+
+  // Current address proof
+  File? _selectedCurrentAddressProof;
+  File? get selectedCurrentAddressProof => _selectedCurrentAddressProof;
+
+  void setCurrentAddressProof(File? file) {
+    _selectedCurrentAddressProof = file;
+    notifyListeners();
+  }
+
+  void cleaCurrentAddressProof() {
+    _selectedCurrentAddressProof = null;
+    notifyListeners();
+  }
+
+  // Driving licence
+  File? _selectedDrivingLicence;
+  File? get selectedDrivingLicence => _selectedDrivingLicence;
+
+  void setDrivingLicence(File? file) {
+    _selectedDrivingLicence = file;
+    notifyListeners();
+  }
+
+  void cleaDrivingLicence() {
+    _selectedDrivingLicence = null;
+    notifyListeners();
+  }
+
+  // Passport
+  File? _selectedPassport;
+  File? get selectedPassport => _selectedPassport;
+
+  void setPassport(File? file) {
+    _selectedPassport = file;
+    notifyListeners();
+  }
+
+  void cleaPassport() {
+    _selectedPassport = null;
+    notifyListeners();
+  }
+
+  // Other Document
+  File? _selectedOtherDocument;
+  File? get selectedOtherDocument => _selectedOtherDocument;
+
+  void setOtherDocument(File? file) {
+    _selectedOtherDocument = file;
+    notifyListeners();
+  }
+
+  void cleaOtherDocument() {
+    _selectedOtherDocument = null;
     notifyListeners();
   }
 
