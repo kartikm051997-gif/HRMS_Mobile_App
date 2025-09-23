@@ -5,8 +5,9 @@ import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
+import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class EmploManagementApprovalDetailsScreen extends StatelessWidget {
+class EmploManagementApprovalDetailsScreen extends StatefulWidget {
   final String empId;
   final Employee employee;
   const EmploManagementApprovalDetailsScreen({
@@ -15,6 +16,13 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
     required this.employee,
   });
 
+  @override
+  State<EmploManagementApprovalDetailsScreen> createState() =>
+      _EmploManagementApprovalDetailsScreenState();
+}
+
+class _EmploManagementApprovalDetailsScreenState
+    extends State<EmploManagementApprovalDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -56,16 +64,18 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child:
-                              employee.photoUrl != null &&
-                                      employee.photoUrl!.isNotEmpty
+                              widget.employee.photoUrl != null &&
+                                      widget.employee.photoUrl!.isNotEmpty
                                   ? Image.network(
-                                    employee.photoUrl!,
+                                    widget.employee.photoUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(employee.name);
+                                      return _buildDefaultAvatar(
+                                        widget.employee.name,
+                                      );
                                     },
                                   )
-                                  : _buildDefaultAvatar(employee.name),
+                                  : _buildDefaultAvatar(widget.employee.name),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -74,7 +84,7 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              employee.name,
+                              widget.employee.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -93,7 +103,7 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "ID: ${employee.employeeId}",
+                                "ID: ${widget.employee.employeeId}",
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -104,7 +114,7 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              employee.designation,
+                              widget.employee.designation,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -112,10 +122,48 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                                 color: const Color(0xFF3B82F6),
                               ),
                             ),
+                            SizedBox(height: 20),
                           ],
                         ),
                       ),
                     ],
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => EmployeeDetailsScreen(
+                                  empId: widget.employee.employeeId,
+                                  empPhoto: widget.employee.photoUrl ?? "",
+                                  empName: widget.employee.name,
+                                  empDesignation: widget.employee.designation,
+                                  empBranch: widget.employee.branch,
+                                ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "View Profile Details",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 20),
@@ -156,18 +204,22 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildDetailRow(
                     "Department",
-                    employee.department,
+                    widget.employee.department,
                     Icons.business,
                   ),
-                  _buildDetailRow("Branch", employee.branch, Icons.location_on),
+                  _buildDetailRow(
+                    "Branch",
+                    widget.employee.branch,
+                    Icons.location_on,
+                  ),
                   _buildDetailRow(
                     "Date of Joining",
-                    employee.doj,
+                    widget.employee.doj,
                     Icons.calendar_today,
                   ),
                   _buildDetailRow(
                     "Payroll Category",
-                    employee.payrollCategory,
+                    widget.employee.payrollCategory,
                     Icons.category,
                   ),
                 ],
@@ -209,8 +261,8 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   // Recruiter Info
                   _buildTeamMemberCard(
                     "Recruiter",
-                    employee.recruiterName ?? "Not assigned",
-                    employee.recruiterPhotoUrl,
+                    widget.employee.recruiterName ?? "Not assigned",
+                    widget.employee.recruiterPhotoUrl,
                     Icons.person_search,
                   ),
 
@@ -219,8 +271,8 @@ class EmploManagementApprovalDetailsScreen extends StatelessWidget {
                   // Created By Info
                   _buildTeamMemberCard(
                     "Created By",
-                    employee.createdByName ?? "Unknown",
-                    employee.createdByPhotoUrl,
+                    widget.employee.createdByName ?? "Unknown",
+                    widget.employee.createdByPhotoUrl,
                     Icons.person_add,
                   ),
                 ],

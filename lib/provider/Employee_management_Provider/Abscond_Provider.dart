@@ -22,7 +22,6 @@ class AbscondProvider extends ChangeNotifier {
   }
 
   void clearAllFilters() {
-
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
@@ -48,8 +47,21 @@ class AbscondProvider extends ChangeNotifier {
   /// Dropdown data
   final List<String> _company = ["Dr.Aravind's", "The MindMax"];
   final List<String> _zone = ["North", "South", "East", "West"];
-  final List<String> _branch = ["Chennai", "Bangalore", "Hyderabad", "Tiruppur"];
-  final List<String> _designation = ["Manager", "HR", "Developer", "Admin", "Receptionist", "Jr.Admin", "Lab Technician"];
+  final List<String> _branch = [
+    "Chennai",
+    "Bangalore",
+    "Hyderabad",
+    "Tiruppur",
+  ];
+  final List<String> _designation = [
+    "Manager",
+    "HR",
+    "Developer",
+    "Admin",
+    "Receptionist",
+    "Jr.Admin",
+    "Lab Technician",
+  ];
   final List<String> _ctc = ["< 5 LPA", "5–10 LPA", "> 10 LPA"];
 
   List<String> get company => _company;
@@ -184,41 +196,53 @@ class AbscondProvider extends ChangeNotifier {
 
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees = _allEmployees.where((employee) {
-        bool matches = true;
+      _filteredEmployees =
+          _allEmployees.where((employee) {
+            bool matches = true;
 
-        // Filter by company (if selected)
-        if (_selectedCompany != null && _selectedCompany!.isNotEmpty) {
-          // Add company filtering logic when you have company data in Employee model
-        }
+            // Filter by company (if selected)
+            if (_selectedCompany != null && _selectedCompany!.isNotEmpty) {
+              // Add company filtering logic when you have company data in Employee model
+            }
 
-        // Filter by zone (if selected)
-        if (_selectedZone != null && _selectedZone!.isNotEmpty) {
-          // Add zone filtering logic when you have zone data in Employee model
-        }
+            // Filter by zone (if selected)
+            if (_selectedZone != null && _selectedZone!.isNotEmpty) {
+              // Add zone filtering logic when you have zone data in Employee model
+            }
 
-        // Filter by branch (if selected)
-        if (_selectedBranch != null && _selectedBranch!.isNotEmpty) {
-          matches = matches && employee.branch.toLowerCase().contains(_selectedBranch!.toLowerCase());
-        }
+            // Filter by branch (if selected)
+            if (_selectedBranch != null && _selectedBranch!.isNotEmpty) {
+              matches =
+                  matches &&
+                  employee.branch.toLowerCase().contains(
+                    _selectedBranch!.toLowerCase(),
+                  );
+            }
 
-        // Filter by designation (if selected)
-        if (_selectedDesignation != null && _selectedDesignation!.isNotEmpty) {
-          matches = matches && employee.designation.toLowerCase().contains(_selectedDesignation!.toLowerCase());
-        }
+            // Filter by designation (if selected)
+            if (_selectedDesignation != null &&
+                _selectedDesignation!.isNotEmpty) {
+              matches =
+                  matches &&
+                  employee.designation.toLowerCase().contains(
+                    _selectedDesignation!.toLowerCase(),
+                  );
+            }
 
-        // Filter by CTC (if selected)
-        if (_selectedCTC != null && _selectedCTC!.isNotEmpty) {
-          matches = matches && _filterByCTC(employee.monthlyCTC, _selectedCTC!);
-        }
+            // Filter by CTC (if selected)
+            if (_selectedCTC != null && _selectedCTC!.isNotEmpty) {
+              matches =
+                  matches && _filterByCTC(employee.monthlyCTC, _selectedCTC!);
+            }
 
-        // Filter by date range
-        if (dojFromController.text.isNotEmpty || fojToController.text.isNotEmpty) {
-          matches = matches && _filterByDateRange(employee.doj);
-        }
+            // Filter by date range
+            if (dojFromController.text.isNotEmpty ||
+                fojToController.text.isNotEmpty) {
+              matches = matches && _filterByDateRange(employee.doj);
+            }
 
-        return matches;
-      }).toList();
+            return matches;
+          }).toList();
 
       _isLoading = false;
       notifyListeners();

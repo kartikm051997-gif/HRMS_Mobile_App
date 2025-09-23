@@ -539,7 +539,6 @@ class _NewEmployeeScreenState extends State<NewEmployeeScreen> {
               text: "Create Employee",
               onPressed: () {},
             ),
-            SizedBox(height: 50),
           ],
         ),
       ),

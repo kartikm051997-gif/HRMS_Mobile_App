@@ -1,4 +1,4 @@
-class AllEmployeeModel {
+class EmployeeBasicModel {
   final String employeeId;
   final String name;
   final String branch;
@@ -27,7 +27,7 @@ class AllEmployeeModel {
   final String? createdByName;
   final String? createdByPhotoUrl;
 
-  AllEmployeeModel({
+  EmployeeBasicModel({
     required this.employeeId,
     required this.name,
     required this.branch,
