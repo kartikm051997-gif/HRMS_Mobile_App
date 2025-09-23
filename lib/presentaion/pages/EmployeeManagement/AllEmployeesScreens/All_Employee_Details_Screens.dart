@@ -7,8 +7,9 @@ import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
+import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class AllEmployeeDetailsScreens extends StatelessWidget {
+class AllEmployeeDetailsScreens extends StatefulWidget {
   final String empId;
   final Employee employee;
   const AllEmployeeDetailsScreens({
@@ -17,6 +18,11 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
     required this.employee,
   });
 
+  @override
+  State<AllEmployeeDetailsScreens> createState() => _AllEmployeeDetailsScreensState();
+}
+
+class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,16 +64,16 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child:
-                              employee.photoUrl != null &&
-                                      employee.photoUrl!.isNotEmpty
+                              widget.employee.photoUrl != null &&
+                                      widget.employee.photoUrl!.isNotEmpty
                                   ? Image.network(
-                                    employee.photoUrl!,
+                                    widget.employee.photoUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(employee.name);
+                                      return _buildDefaultAvatar(widget.employee.name);
                                     },
                                   )
-                                  : _buildDefaultAvatar(employee.name),
+                                  : _buildDefaultAvatar(widget.employee.name),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -76,7 +82,7 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              employee.name,
+                              widget.employee.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -95,7 +101,7 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "ID: ${employee.employeeId}",
+                                "ID: ${widget.employee.employeeId}",
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -106,7 +112,7 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              employee.designation,
+                              widget.employee.designation,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -174,6 +180,44 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                       ),
                     ],
                   ),
+                  SizedBox(height: 20,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => EmployeeDetailsScreen(
+                              empId: widget.employee.employeeId,
+                              empPhoto: widget.employee.photoUrl ?? "",
+                              empName: widget.employee.name,
+                              empDesignation: widget.employee.designation,
+                              empBranch: widget.employee.branch,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "View Profile Details",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -209,15 +253,15 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildDetailRow(
                     "Department",
-                    employee.department,
+                    widget.employee.department,
                     Icons.business,
                   ),
-                  _buildDetailRow("Branch", employee.branch, Icons.location_on),
-                  _buildDetailRow("DOJ", employee.doj, Icons.calendar_today),
+                  _buildDetailRow("Branch", widget.employee.branch, Icons.location_on),
+                  _buildDetailRow("DOJ", widget.employee.doj, Icons.calendar_today),
 
                   _buildDetailRow(
                     "Payroll Category",
-                    employee.payrollCategory,
+                    widget.employee.payrollCategory,
                     Icons.category,
                   ),
                 ],
@@ -259,8 +303,8 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                   // Recruiter Info
                   _buildTeamMemberCard(
                     "Recruiter",
-                    employee.recruiterName ?? "Not assigned",
-                    employee.recruiterPhotoUrl,
+                    widget.employee.recruiterName ?? "Not assigned",
+                    widget.employee.recruiterPhotoUrl,
                     Icons.person_search,
                   ),
 
@@ -269,8 +313,8 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
                   // Created By Info
                   _buildTeamMemberCard(
                     "Created By",
-                    employee.createdByName ?? "Unknown",
-                    employee.createdByPhotoUrl,
+                    widget.employee.createdByName ?? "Unknown",
+                    widget.employee.createdByPhotoUrl,
                     Icons.person_add,
                   ),
                 ],
@@ -497,7 +541,7 @@ class AllEmployeeDetailsScreens extends StatelessWidget {
     DateTime date,
   ) {
     final provider = Provider.of<AllEmployeesProvider>(context, listen: false);
-    provider.updateEmployeeStatus(employee.employeeId, status, date).then((
+    provider.updateEmployeeStatus(widget.employee.employeeId, status, date).then((
       success,
     ) {
       if (success) {

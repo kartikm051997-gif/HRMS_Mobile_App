@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../model/AllEmployeeDetailsModel/All_employee_model.dart';
+import 'package:hrms_mobile_app/model/AllEmployeeDetailsModel/Student_Model.dart';
 
-class AllEmployeeProvider extends ChangeNotifier {
+class StudentProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
   int pageSize = 10;
@@ -74,11 +74,11 @@ class AllEmployeeProvider extends ChangeNotifier {
   DateTime? get dojFrom => _dojFrom;
   DateTime? get dojTo => _dojTo;
 
-  /// Employee data
-  List<AllEmployeeModel> _allEmployees = [];
-  List<AllEmployeeModel> _filteredEmployees = [];
+  /// Employee basic data
+  List<StudentModel> _studentDetails = [];
+  List<StudentModel> _filteredEmployees = [];
 
-  List<AllEmployeeModel> get filteredEmployees => _filteredEmployees;
+  List<StudentModel> get filteredEmployees => _filteredEmployees;
 
   TextEditingController searchController = TextEditingController();
 
@@ -94,8 +94,8 @@ class AllEmployeeProvider extends ChangeNotifier {
 
   /// Initialize with sample data (replace with API call)
   void initializeEmployees() {
-    _allEmployees = [
-      AllEmployeeModel(
+    _studentDetails = [
+      StudentModel(
         employeeId: "12867",
         name: "Vimalkumar Palanisamy",
         branch: "chengalpattu",
@@ -123,8 +123,10 @@ class AllEmployeeProvider extends ChangeNotifier {
         annualTravelAllowance: '0',
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
+        annualStudentStipend: '24,000',
+        monthlyStudentStipend: '2,000',
       ),
-      AllEmployeeModel(
+      StudentModel(
         employeeId: "12866",
         name: "Nivetha",
         branch: "Tiruppur",
@@ -151,8 +153,10 @@ class AllEmployeeProvider extends ChangeNotifier {
         annualTravelAllowance: '0',
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
+        annualStudentStipend: '24,000',
+        monthlyStudentStipend: '2,000',
       ),
-      AllEmployeeModel(
+      StudentModel(
         employeeId: "12865",
         name: "Bharath Kumar T R",
         branch: "Tiruppur",
@@ -179,8 +183,10 @@ class AllEmployeeProvider extends ChangeNotifier {
         annualTravelAllowance: '0',
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
+        annualStudentStipend: '24,000',
+        monthlyStudentStipend: '2,000',
       ),
-      AllEmployeeModel(
+      StudentModel(
         employeeId: "12864",
         name: "Sree Lakshmi K",
         branch: "Tiruppur",
@@ -207,8 +213,10 @@ class AllEmployeeProvider extends ChangeNotifier {
         annualTravelAllowance: '0',
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
+        annualStudentStipend: '24,000',
+        monthlyStudentStipend: '2,000',
       ),
-      AllEmployeeModel(
+      StudentModel(
         employeeId: "12863",
         name: "Sabitha",
         branch: "Tiruppur",
@@ -235,9 +243,11 @@ class AllEmployeeProvider extends ChangeNotifier {
         annualTravelAllowance: '0',
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
+        annualStudentStipend: '24,000',
+        monthlyStudentStipend: '2,000',
       ),
     ];
-    _filteredEmployees = List.from(_allEmployees);
+    _filteredEmployees = List.from(_studentDetails);
     notifyListeners();
   }
 
@@ -249,7 +259,7 @@ class AllEmployeeProvider extends ChangeNotifier {
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
       _filteredEmployees =
-          _allEmployees.where((employee) {
+          _studentDetails.where((employee) {
             bool matches = true;
 
             // Filter by company (if selected)
@@ -363,7 +373,7 @@ class AllEmployeeProvider extends ChangeNotifier {
     _dojTo = null;
     dojFromController.clear();
     fojToController.clear();
-    _filteredEmployees = List.from(_allEmployees);
+    _filteredEmployees = List.from(_studentDetails);
     notifyListeners();
   }
 

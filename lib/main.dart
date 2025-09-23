@@ -4,7 +4,12 @@ import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
-import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/All_Employee_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/AllEmployeeScreens/All_Employee_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreens/EmployeeBasicDeatils.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/F11EmployeesScreens/F11EmployeesScreens.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/ProfessionalsScreens/Professionals_Screens.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/Student_Details_Screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/Student_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
@@ -41,6 +46,10 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Ca
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
+import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';
+import 'package:hrms_mobile_app/provider/employeeProvider/F11_Employee_Provider.dart';
+import 'package:hrms_mobile_app/provider/employeeProvider/Professionals_Provider.dart';
+import 'package:hrms_mobile_app/provider/employeeProvider/Student_Provider.dart';
 import 'package:hrms_mobile_app/provider/forget_password_provider/forget_password_provider.dart';
 import 'package:hrms_mobile_app/provider/login_provider/login_provider.dart';
 import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.dart';
@@ -103,6 +112,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => NewEmployeeDocumentProvider()),
         ChangeNotifierProvider(create: (_) => PayrollCategoryTypeProvider()),
         ChangeNotifierProvider(create: (_) => AllEmployeeProvider()),
+        ChangeNotifierProvider(create: (_) => ProfessionalsProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeBasicProvider()),
+        ChangeNotifierProvider(create: (_) => StudentProvider()),
+        ChangeNotifierProvider(create: (_) => F11EmployeeProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -164,8 +177,14 @@ class MyApp extends StatelessWidget {
         return EmployeeManagementTabviewScreen();
       case AppRoutes.allEmployees:
         return AllEmployeeScreen();
-
-
+      case AppRoutes.professionals:
+        return ProfessionalsScreens();
+      case AppRoutes.employees:
+        return EmployeeBasicDetails();
+      case AppRoutes.students:
+        return StudentScreen();
+      case AppRoutes.f11Employees:
+        return F11EmployeesScreens();
 
       default:
         return const NotFoundPage();

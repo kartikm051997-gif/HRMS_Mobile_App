@@ -6,8 +6,9 @@ import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
+import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class AbscondEmpDetailsScreen extends StatelessWidget {
+class AbscondEmpDetailsScreen extends StatefulWidget {
   final String empId;
   final Employee employee;
   const AbscondEmpDetailsScreen({
@@ -16,6 +17,11 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
     required this.employee,
   });
 
+  @override
+  State<AbscondEmpDetailsScreen> createState() => _AbscondEmpDetailsScreenState();
+}
+
+class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,16 +63,16 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child:
-                              employee.photoUrl != null &&
-                                      employee.photoUrl!.isNotEmpty
+                              widget.employee.photoUrl != null &&
+                                      widget.employee.photoUrl!.isNotEmpty
                                   ? Image.network(
-                                    employee.photoUrl!,
+                                    widget.employee.photoUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(employee.name);
+                                      return _buildDefaultAvatar(widget.employee.name);
                                     },
                                   )
-                                  : _buildDefaultAvatar(employee.name),
+                                  : _buildDefaultAvatar(widget.employee.name),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -75,7 +81,7 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              employee.name,
+                              widget.employee.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -94,7 +100,7 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "ID: ${employee.employeeId}",
+                                "ID: ${widget.employee.employeeId}",
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -105,7 +111,7 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              employee.designation,
+                              widget.employee.designation,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -172,6 +178,44 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  SizedBox(height: 20,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => EmployeeDetailsScreen(
+                              empId: widget.employee.employeeId,
+                              empPhoto: widget.employee.photoUrl ?? "",
+                              empName: widget.employee.name,
+                              empDesignation: widget.employee.designation,
+                              empBranch: widget.employee.branch,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "View Profile Details",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -207,18 +251,18 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildDetailRow(
                     "Department",
-                    employee.department,
+                    widget.employee.department,
                     Icons.business,
                   ),
-                  _buildDetailRow("Branch", employee.branch, Icons.location_on),
+                  _buildDetailRow("Branch", widget.employee.branch, Icons.location_on),
                   _buildDetailRow(
                     "Abscond Date",
-                    employee.doj,
+                    widget.employee.doj,
                     Icons.calendar_today,
                   ),
                   _buildDetailRow(
                     "Payroll Category",
-                    employee.payrollCategory,
+                    widget.employee.payrollCategory,
                     Icons.category,
                   ),
                 ],
@@ -260,8 +304,8 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                   // Recruiter Info
                   _buildTeamMemberCard(
                     "Recruiter",
-                    employee.recruiterName ?? "Not assigned",
-                    employee.recruiterPhotoUrl,
+                    widget.employee.recruiterName ?? "Not assigned",
+                    widget.employee.recruiterPhotoUrl,
                     Icons.person_search,
                   ),
 
@@ -270,8 +314,8 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
                   // Created By Info
                   _buildTeamMemberCard(
                     "Created By",
-                    employee.createdByName ?? "Unknown",
-                    employee.createdByPhotoUrl,
+                    widget.employee.createdByName ?? "Unknown",
+                    widget.employee.createdByPhotoUrl,
                     Icons.person_add,
                   ),
                 ],
@@ -298,7 +342,7 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
               ),
             ),
             content: Text(
-              "Are you sure you want to activate ${employee.name}?",
+              "Are you sure you want to activate ${widget.employee.name}?",
               style: TextStyle(fontFamily: AppFonts.poppins),
             ),
             actions: [
@@ -333,7 +377,7 @@ class AbscondEmpDetailsScreen extends StatelessWidget {
   void _activateEmployee(BuildContext context) {
     // Call your provider method here
     final provider = Provider.of<AbscondProvider>(context, listen: false);
-    provider.activateEmployee(employee.employeeId).then((success) {
+    provider.activateEmployee(widget.employee.employeeId).then((success) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

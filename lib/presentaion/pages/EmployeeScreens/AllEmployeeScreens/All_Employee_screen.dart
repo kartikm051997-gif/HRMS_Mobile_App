@@ -1,14 +1,12 @@
-import 'package:flutter/Material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../../core/components/appbar/appbar.dart';
-import '../../../core/components/drawer/drawer.dart';
-import '../../../core/constants/appcolor_dart.dart';
-import '../../../core/fonts/fonts.dart';
-import '../../../model/AllEmployeeDetailsModel/All_employee_model.dart';
-import '../../../provider/employeeProvider/All_Employee_Provider.dart';
-import '../../../widgets/custom_textfield/Custom_date_field.dart';
-import '../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../core/components/appbar/appbar.dart';
+import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
+import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/employeeProvider/All_Employee_Provider.dart';
+import '../../../../widgets/custom_textfield/Custom_date_field.dart';
+import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import 'All_Employee_Details_Screen.dart';
 
 class AllEmployeeScreen extends StatefulWidget {
@@ -302,16 +300,13 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Fourth Row - CTC Range
-
                     // Go and Clear Buttons
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              allEmployeeProvider
-                                  .clearAllFilters(); // You'll need to implement this
+                              allEmployeeProvider.clearAllFilters();
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: const Color(0xFF6B7280),
@@ -336,9 +331,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
                           flex: 2,
                           child: ElevatedButton(
                             onPressed: () {
-                              // Apply filters but keep filters section open
                               allEmployeeProvider.searchEmployees();
-                              // Don't close filters - keep them open for user convenience
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF3B82F6),
@@ -382,7 +375,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
                       color: const Color(0xFF1E293B),
                     ),
                   ),
-                  // Optional: Add a collapse filters button here
                   if (allEmployeeProvider.showFilters)
                     TextButton.icon(
                       onPressed: () {
@@ -493,7 +485,8 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
                                 builder:
                                     (_) => AllEmployeeDetailsScreen(
                                       empId: employee.employeeId,
-                                      employee: employee,
+                                      employee:
+                                          employee, // Keep as AllEmployeeModelEmployee
                                     ),
                               ),
                             );
@@ -584,123 +577,146 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
                                 ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: Row(
+                                  child: Column(
                                     children: [
-                                      // Designation Section
-                                      Expanded(
-                                        flex: 3,
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue[50],
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Icon(
-                                                Icons.work_outline,
-                                                size: 14,
-                                                color: Colors.blue[600],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "DESIGNATION",
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.grey[500],
-                                                      letterSpacing: 0.5,
-                                                    ),
+                                      // Designation and Branch Row
+                                      Row(
+                                        children: [
+                                          // Designation Section
+                                          Expanded(
+                                            flex: 3,
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    4,
                                                   ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    employee.designation,
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontFamily:
-                                                          AppFonts.poppins,
-                                                      color: const Color(
-                                                        0xFF374151,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.blue[50],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.work_outline,
+                                                    size: 14,
+                                                    color: Colors.blue[600],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "DESIGNATION",
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[500],
+                                                          letterSpacing: 0.5,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        employee.designation,
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontFamily:
+                                                              AppFonts.poppins,
+                                                          color: const Color(
+                                                            0xFF374151,
+                                                          ),
+                                                        ),
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                      ),
+                                                    ],
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+
+                                          const SizedBox(width: 16),
+
+                                          // Branch Section
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(
+                                                    4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green[50],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.location_on_outlined,
+                                                    size: 14,
+                                                    color: Colors.green[600],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "BRANCH",
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              Colors.grey[500],
+                                                          letterSpacing: 0.5,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        employee.branch,
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontFamily:
+                                                              AppFonts.poppins,
+                                                          color: const Color(
+                                                            0xFF374151,
+                                                          ),
+                                                        ),
+                                                        overflow:
+                                                            TextOverflow
+                                                                .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
 
-                                      const SizedBox(width: 16),
+                                      const SizedBox(height: 12),
 
-                                      // Branch Section
-                                      Expanded(
-                                        flex: 2,
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              padding: const EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.green[50],
-                                                borderRadius:
-                                                    BorderRadius.circular(6),
-                                              ),
-                                              child: Icon(
-                                                Icons.location_on_outlined,
-                                                size: 14,
-                                                color: Colors.green[600],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "BRANCH",
-                                                    style: TextStyle(
-                                                      fontSize: 10,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: Colors.grey[500],
-                                                      letterSpacing: 0.5,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    employee.branch,
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontFamily:
-                                                          AppFonts.poppins,
-                                                      color: const Color(
-                                                        0xFF374151,
-                                                      ),
-                                                    ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
+                                      // View Profile Details Button
                                     ],
                                   ),
                                 ),

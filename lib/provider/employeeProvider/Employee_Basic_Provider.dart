@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../model/AllEmployeeDetailsModel/All_employee_model.dart';
+import '../../model/AllEmployeeDetailsModel/Employee_Basic_Details.dart';
 
-class AllEmployeeProvider extends ChangeNotifier {
+class EmployeeBasicProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
   int pageSize = 10;
@@ -74,11 +74,11 @@ class AllEmployeeProvider extends ChangeNotifier {
   DateTime? get dojFrom => _dojFrom;
   DateTime? get dojTo => _dojTo;
 
-  /// Employee data
-  List<AllEmployeeModel> _allEmployees = [];
-  List<AllEmployeeModel> _filteredEmployees = [];
+  /// Employee basic data
+  List<EmployeeBasicModel> _employeesBasicDetails = [];
+  List<EmployeeBasicModel> _filteredEmployees = [];
 
-  List<AllEmployeeModel> get filteredEmployees => _filteredEmployees;
+  List<EmployeeBasicModel> get filteredEmployees => _filteredEmployees;
 
   TextEditingController searchController = TextEditingController();
 
@@ -94,8 +94,8 @@ class AllEmployeeProvider extends ChangeNotifier {
 
   /// Initialize with sample data (replace with API call)
   void initializeEmployees() {
-    _allEmployees = [
-      AllEmployeeModel(
+    _employeesBasicDetails = [
+      EmployeeBasicModel(
         employeeId: "12867",
         name: "Vimalkumar Palanisamy",
         branch: "chengalpattu",
@@ -124,7 +124,7 @@ class AllEmployeeProvider extends ChangeNotifier {
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
       ),
-      AllEmployeeModel(
+      EmployeeBasicModel(
         employeeId: "12866",
         name: "Nivetha",
         branch: "Tiruppur",
@@ -152,7 +152,7 @@ class AllEmployeeProvider extends ChangeNotifier {
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
       ),
-      AllEmployeeModel(
+      EmployeeBasicModel(
         employeeId: "12865",
         name: "Bharath Kumar T R",
         branch: "Tiruppur",
@@ -180,7 +180,7 @@ class AllEmployeeProvider extends ChangeNotifier {
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
       ),
-      AllEmployeeModel(
+      EmployeeBasicModel(
         employeeId: "12864",
         name: "Sree Lakshmi K",
         branch: "Tiruppur",
@@ -208,7 +208,7 @@ class AllEmployeeProvider extends ChangeNotifier {
         monthlyTravelAllowance: '0',
         monthlyTravelTds: '0',
       ),
-      AllEmployeeModel(
+      EmployeeBasicModel(
         employeeId: "12863",
         name: "Sabitha",
         branch: "Tiruppur",
@@ -237,7 +237,7 @@ class AllEmployeeProvider extends ChangeNotifier {
         monthlyTravelTds: '0',
       ),
     ];
-    _filteredEmployees = List.from(_allEmployees);
+    _filteredEmployees = List.from(_employeesBasicDetails);
     notifyListeners();
   }
 
@@ -249,7 +249,7 @@ class AllEmployeeProvider extends ChangeNotifier {
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
       _filteredEmployees =
-          _allEmployees.where((employee) {
+          _employeesBasicDetails.where((employee) {
             bool matches = true;
 
             // Filter by company (if selected)
@@ -363,7 +363,7 @@ class AllEmployeeProvider extends ChangeNotifier {
     _dojTo = null;
     dojFromController.clear();
     fojToController.clear();
-    _filteredEmployees = List.from(_allEmployees);
+    _filteredEmployees = List.from(_employeesBasicDetails);
     notifyListeners();
   }
 

@@ -1,27 +1,28 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/Material.dart';
 
-import '../../../core/components/appbar/appbar.dart';
-import '../../../core/components/drawer/drawer.dart';
-import '../../../core/fonts/fonts.dart';
-import '../../../model/AllEmployeeDetailsModel/All_employee_model.dart';
-import '../../../model/Employee_management/Employee_management.dart';
+import '../../../../core/components/appbar/appbar.dart';
+import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
+import '../../../../core/fonts/fonts.dart';
+import '../../../../model/AllEmployeeDetailsModel/Employee_Basic_Details.dart';
+import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class AllEmployeeDetailsScreen extends StatefulWidget {
+class EmployeeInsideDetailsScreen extends StatefulWidget {
   final String empId;
-  final AllEmployeeModel employee;
-  const AllEmployeeDetailsScreen({
+  final EmployeeBasicModel employee;
+  const EmployeeInsideDetailsScreen({
     super.key,
     required this.empId,
     required this.employee,
   });
 
   @override
-  State<AllEmployeeDetailsScreen> createState() =>
-      _AllEmployeeDetailsScreenState();
+  State<EmployeeInsideDetailsScreen> createState() =>
+      _EmployeeInsideDetailsScreenState();
 }
 
-class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
+class _EmployeeInsideDetailsScreenState
+    extends State<EmployeeInsideDetailsScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -90,56 +91,6 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
           ),
         ),
       ),
-    );
-  }
-
-  PreferredSizeWidget _buildCleanAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        onPressed: () => Navigator.pop(context),
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F5F5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new,
-            color: Color(0xFF2D3748),
-            size: 18,
-          ),
-        ),
-      ),
-      title: Text(
-        "Employee Details",
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          fontFamily: AppFonts.poppins,
-          color: const Color(0xFF2D3748),
-        ),
-      ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.more_horiz,
-              color: Color(0xFF2D3748),
-              size: 18,
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-      ],
     );
   }
 
@@ -222,6 +173,57 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
               letterSpacing: -0.5,
             ),
           ),
+          const SizedBox(height: 12),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF3B82F6).withOpacity(0.1),
+                  const Color(0xFF1D4ED8).withOpacity(0.05),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF3B82F6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.badge, size: 10, color: Colors.white),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  "ID: ${widget.employee.employeeId}",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                    color: const Color(0xFF1D4ED8),
+                  ),
+                ),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 8),
 
@@ -240,19 +242,164 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
 
           // Employee ID Badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF7FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+              color: AppColor.whiteColor,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(16),
+                bottomRight: Radius.circular(16),
+              ),
             ),
-            child: Text(
-              "ID: ${widget.employee.employeeId}",
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                fontFamily: AppFonts.poppins,
-                color: const Color(0xFF4A5568),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Existing designation and branch row
+                  Row(
+                    children: [
+                      // Designation Section
+                      Expanded(
+                        flex: 3,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                Icons.work_outline,
+                                size: 14,
+                                color: Colors.blue[600],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "DESIGNATION",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[500],
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.employee.designation,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: AppFonts.poppins,
+                                      color: const Color(0xFF374151),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 16),
+
+                      // Branch Section
+                      Expanded(
+                        flex: 2,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: Colors.green[600],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "BRANCH",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[500],
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    widget.employee.branch,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: AppFonts.poppins,
+                                      color: const Color(0xFF374151),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // View Profile Details Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => EmployeeDetailsScreen(
+                                  empId: widget.employee.employeeId,
+                                  empPhoto: widget.employee.photoUrl ?? "",
+                                  empName: widget.employee.name,
+                                  empDesignation: widget.employee.designation,
+                                  empBranch: widget.employee.branch,
+                                ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "View Profile Details",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -367,10 +514,16 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
       icon: Icons.account_balance_wallet_outlined,
       children: [
         _buildDetailItem(
+          "annual CTC",
+          "₹${widget.employee.annualCTC}",
+          Icons.currency_rupee,
+        ),
+        _buildDetailItem(
           "Monthly CTC",
           "₹${widget.employee.monthlyCTC}",
           Icons.currency_rupee,
         ),
+
         _buildDetailItem(
           "Basic Salary",
           "₹${widget.employee.basic}",
@@ -526,7 +679,6 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
       ),
     );
   }
-
 
   Widget _buildDefaultAvatar(String name) {
     return Container(

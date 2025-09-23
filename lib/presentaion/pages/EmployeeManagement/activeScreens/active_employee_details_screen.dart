@@ -5,8 +5,9 @@ import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
+import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class EmployeeManagementDetailsScreen extends StatelessWidget {
+class EmployeeManagementDetailsScreen extends StatefulWidget {
   final String empId;
   final Employee employee;
   const EmployeeManagementDetailsScreen({
@@ -15,6 +16,11 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
     required this.employee,
   });
 
+  @override
+  State<EmployeeManagementDetailsScreen> createState() => _EmployeeManagementDetailsScreenState();
+}
+
+class _EmployeeManagementDetailsScreenState extends State<EmployeeManagementDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final activeProvider = Provider.of<ActiveProvider>(context);
@@ -58,16 +64,16 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child:
-                              employee.photoUrl != null &&
-                                      employee.photoUrl!.isNotEmpty
+                              widget.employee.photoUrl != null &&
+                                      widget.employee.photoUrl!.isNotEmpty
                                   ? Image.network(
-                                    employee.photoUrl!,
+                                    widget.employee.photoUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      return _buildDefaultAvatar(employee.name);
+                                      return _buildDefaultAvatar(widget.employee.name);
                                     },
                                   )
-                                  : _buildDefaultAvatar(employee.name),
+                                  : _buildDefaultAvatar(widget.employee.name),
                         ),
                       ),
                       const SizedBox(width: 20),
@@ -76,7 +82,7 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              employee.name,
+                              widget.employee.name,
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
@@ -95,7 +101,7 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                "ID: ${employee.employeeId}",
+                                "ID: ${widget.employee.employeeId}",
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -106,7 +112,7 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              employee.designation,
+                              widget.employee.designation,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -134,13 +140,13 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color:
-                              employee.status.toLowerCase() == 'active'
+                              widget.employee.status.toLowerCase() == 'active'
                                   ? const Color(0xFFECFDF5)
                                   : const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color:
-                                employee.status.toLowerCase() == 'active'
+                                widget.employee.status.toLowerCase() == 'active'
                                     ? const Color(0xFFBBF7D0)
                                     : const Color(0xFFFECACA),
                           ),
@@ -154,20 +160,20 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color:
-                                    employee.status.toLowerCase() == 'active'
+                                    widget.employee.status.toLowerCase() == 'active'
                                         ? const Color(0xFF059669)
                                         : const Color(0xFFDC2626),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              employee.status,
+                              widget.employee.status,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 fontFamily: AppFonts.poppins,
                                 color:
-                                    employee.status.toLowerCase() == 'active'
+                                    widget.employee.status.toLowerCase() == 'active'
                                         ? const Color(0xFF059669)
                                         : const Color(0xFFDC2626),
                               ),
@@ -181,13 +187,13 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                         onPressed: () {
                           _showStatusChangeDialog(
                             context,
-                            employee,
+                            widget.employee,
                             activeProvider,
                           );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              employee.status.toLowerCase() == 'active'
+                              widget.employee.status.toLowerCase() == 'active'
                                   ? const Color(0xFFDC2626)
                                   : const Color(0xFF059669),
                           foregroundColor: Colors.white,
@@ -201,13 +207,13 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                           elevation: 0,
                         ),
                         icon: Icon(
-                          employee.status.toLowerCase() == 'active'
+                          widget.employee.status.toLowerCase() == 'active'
                               ? Icons.person_remove
                               : Icons.person_add,
                           size: 18,
                         ),
                         label: Text(
-                          employee.status.toLowerCase() == 'active'
+                          widget.employee.status.toLowerCase() == 'active'
                               ? "Deactivate"
                               : "Activate",
                           style: TextStyle(
@@ -219,6 +225,45 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  SizedBox(height: 20,),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (_) => EmployeeDetailsScreen(
+                              empId: widget.employee.employeeId,
+                              empPhoto: widget.employee.photoUrl ?? "",
+                              empName: widget.employee.name,
+                              empDesignation: widget.employee.designation,
+                              empBranch: widget.employee.branch,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "View Profile Details",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 ],
               ),
             ),
@@ -254,23 +299,23 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   _buildDetailRow(
                     "Department",
-                    employee.department,
+                    widget.employee.department,
                     Icons.business,
                   ),
-                  _buildDetailRow("Branch", employee.branch, Icons.location_on),
+                  _buildDetailRow("Branch", widget.employee.branch, Icons.location_on),
                   _buildDetailRow(
                     "Date of Joining",
-                    employee.doj,
+                    widget.employee.doj,
                     Icons.calendar_today,
                   ),
                   _buildDetailRow(
                     "Monthly CTC",
-                    "₹${employee.monthlyCTC}",
+                    "₹${widget.employee.monthlyCTC}",
                     Icons.account_balance_wallet,
                   ),
                   _buildDetailRow(
                     "Payroll Category",
-                    employee.payrollCategory,
+                    widget.employee.payrollCategory,
                     Icons.category,
                   ),
                 ],
@@ -312,8 +357,8 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                   // Recruiter Info
                   _buildTeamMemberCard(
                     "Recruiter",
-                    employee.recruiterName ?? "Not assigned",
-                    employee.recruiterPhotoUrl,
+                    widget.employee.recruiterName ?? "Not assigned",
+                    widget.employee.recruiterPhotoUrl,
                     Icons.person_search,
                   ),
 
@@ -322,8 +367,8 @@ class EmployeeManagementDetailsScreen extends StatelessWidget {
                   // Created By Info
                   _buildTeamMemberCard(
                     "Created By",
-                    employee.createdByName ?? "Unknown",
-                    employee.createdByPhotoUrl,
+                    widget.employee.createdByName ?? "Unknown",
+                    widget.employee.createdByPhotoUrl,
                     Icons.person_add,
                   ),
                 ],

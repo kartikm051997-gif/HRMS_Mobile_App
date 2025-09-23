@@ -1,4 +1,4 @@
-class AllEmployeeModel {
+class F11EmployeeModel {
   final String employeeId;
   final String name;
   final String branch;
@@ -26,8 +26,10 @@ class AllEmployeeModel {
   final String? recruiterPhotoUrl;
   final String? createdByName;
   final String? createdByPhotoUrl;
+  final String? annualStudentStipend;
+  final String? monthlyStudentStipend;
 
-  AllEmployeeModel({
+  F11EmployeeModel({
     required this.employeeId,
     required this.name,
     required this.branch,
@@ -55,5 +57,7 @@ class AllEmployeeModel {
     this.recruiterPhotoUrl,
     this.createdByName,
     this.createdByPhotoUrl,
+    this.annualStudentStipend,
+    this.monthlyStudentStipend,
   });
 }
