@@ -22,4 +22,9 @@ class AppRoutes {
   static const employees = '/employees'; // ✅ Lowercase here
   static const students = '/students'; // ✅ Lowercase here
   static const f11Employees = '/f11Employees'; // ✅ Lowercase here
+  static const resumeManagement = '/resumeManagement'; // ✅ Lowercase here
+  static const jobApplications = '/jobApplications'; // ✅ Lowercase here
+  static const semiFilledApplication = '/semiFilledApplication';
+  static const joiningForms = '/joiningForms'; // ✅ Lowercase here
+  static const offerLetters = '/offerLetters'; // ✅ Lowercase here
 }
