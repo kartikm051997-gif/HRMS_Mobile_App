@@ -25,6 +25,11 @@ class HelperUtil {
       AppRoutes.employees,
       AppRoutes.students,
       AppRoutes.f11Employees,
+      AppRoutes.resumeManagement,
+      AppRoutes.jobApplications,
+      AppRoutes.semiFilledApplication,
+      AppRoutes.joiningForms,
+      AppRoutes.offerLetters,
     ];
 
     return validRoutes.contains(route);
