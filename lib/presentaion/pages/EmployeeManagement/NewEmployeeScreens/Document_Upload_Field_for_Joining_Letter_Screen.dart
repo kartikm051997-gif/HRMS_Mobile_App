@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 
 class DocumentUploadField extends StatefulWidget {
@@ -99,10 +100,10 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
         RichText(
           text: TextSpan(
             text: widget.labelText,
-            style: const TextStyle(
+            style:  TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF374151),
+              color: AppColor.blackColor,
               fontFamily: AppFonts.poppins,
             ),
             children:

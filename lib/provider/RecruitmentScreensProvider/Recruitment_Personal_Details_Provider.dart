@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class EmployeeInformationProvider extends ChangeNotifier {
-
+class RecruitmentEmpPersonalDetailsProvider extends ChangeNotifier {
   File? _selectedFile;
 
   File? get selectedFile => _selectedFile;
@@ -30,6 +29,7 @@ class EmployeeInformationProvider extends ChangeNotifier {
     _selectedJoiningLetter = null;
     notifyListeners();
   }
+
   String _selectedGender = "Male"; // Default value
 
   String get selectedGender => _selectedGender;
@@ -99,9 +99,12 @@ class EmployeeInformationProvider extends ChangeNotifier {
       motherTongueController.text = response["Mother Tongue"] ?? "";
       casteController.text = response["Caste"] ?? "";
       bloodGroupController.text = response["Blood Group"] ?? "";
-      secondaryContactNumberController.text = response["Secondary Contact Number"] ?? "";
-      secondaryContactOccupationController.text = response["Secondary Contact Occupation"] ?? "";
-      secondaryContactMobileController.text = response["Secondary Contact Mobile"] ?? "";
+      secondaryContactNumberController.text =
+          response["Secondary Contact Number"] ?? "";
+      secondaryContactOccupationController.text =
+          response["Secondary Contact Occupation"] ?? "";
+      secondaryContactMobileController.text =
+          response["Secondary Contact Mobile"] ?? "";
       permanentAddressController.text = response["Permanent Address"] ?? "";
       presentAddressController.text = response["Present Address"] ?? "";
 

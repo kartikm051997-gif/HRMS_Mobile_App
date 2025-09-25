@@ -29,6 +29,7 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     final jobApplicationProvider = Provider.of<JobApplicationProvider>(context);
     return Scaffold(
