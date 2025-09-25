@@ -9,12 +9,25 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../model/RecruitmentModel/Job_Application_Model.dart';
 
 class JobApplicationProvider extends ChangeNotifier {
+  // job application tabview function
+
+  int _currentTabIndex = 0;
+  late bool _isLoading = false;
+
+  // Getters
+  int get currentTabIndex => _currentTabIndex;
+  bool get isLoading => _isLoading;
+
+  // Tab navigation
+  void setCurrentTab(int index) {
+    _currentTabIndex = index;
+    notifyListeners();
+  }
+
   bool _showFilters = false;
   bool get showFilters => _showFilters;
   int pageSize = 10;
   int currentPage = 0;
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
   final Dio _dio = Dio();
 
   // PDF download state variables
@@ -145,7 +158,7 @@ class JobApplicationProvider extends ChangeNotifier {
     _allJobApplication = [
       JobApplicationModel(
         jobId: "RA232",
-        name: "MANOJKUMAR DHAMODARAN",
+        name: "RAJKUMAR MOHAMMEDAN",
         phone: "95******41",
         jobTitle: "Lab Technician",
         primaryLocation: "Bengaluru - Hebbal",
@@ -209,7 +222,9 @@ class JobApplicationProvider extends ChangeNotifier {
   }
 
   /// PDF Download functionality for Job Applications
-  Future<bool> downloadJobApplicationPDF(JobApplicationModel jobApplication) async {
+  Future<bool> downloadJobApplicationPDF(
+    JobApplicationModel jobApplication,
+  ) async {
     try {
       setDownloading(true, jobApplication.jobId);
 
@@ -241,11 +256,13 @@ class JobApplicationProvider extends ChangeNotifier {
         }
 
         // Create filename based on job application data
-        final fileName = 'job_application_${jobApplication.jobId}_${jobApplication.name.replaceAll(' ', '_')}.pdf';
+        final fileName =
+            'job_application_${jobApplication.jobId}_${jobApplication.name.replaceAll(' ', '_')}.pdf';
         final filePath = '${directory.path}/$fileName';
 
         // Use dummy PDF URL (same as in letter provider)
-        const pdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+        const pdfUrl =
+            "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
 
         if (kDebugMode) {
           print("Downloading job application PDF to: $filePath");
@@ -257,7 +274,9 @@ class JobApplicationProvider extends ChangeNotifier {
           onReceiveProgress: (received, total) {
             if (total != -1) {
               final progress = received / total;
-              debugPrint('Download progress: ${(progress * 100).toStringAsFixed(0)}%');
+              debugPrint(
+                'Download progress: ${(progress * 100).toStringAsFixed(0)}%',
+              );
             }
           },
         );
@@ -281,12 +300,10 @@ class JobApplicationProvider extends ChangeNotifier {
           debugPrint("File was not created at expected location");
           return false;
         }
-
       } else {
         debugPrint("Storage permission denied");
         return false;
       }
-
     } catch (e) {
       debugPrint("Error downloading job application PDF: $e");
       return false;
@@ -328,32 +345,33 @@ class JobApplicationProvider extends ChangeNotifier {
 
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees = _allJobApplication.where((employee) {
-        bool matches = true;
+      _filteredEmployees =
+          _allJobApplication.where((employee) {
+            bool matches = true;
 
-        // Filter by company (if selected)
-        if (_selectedPrimaryBranch != null &&
-            _selectedPrimaryBranch!.isNotEmpty) {
-          // Add company filtering logic when you have company data in Employee model
-        }
+            // Filter by company (if selected)
+            if (_selectedPrimaryBranch != null &&
+                _selectedPrimaryBranch!.isNotEmpty) {
+              // Add company filtering logic when you have company data in Employee model
+            }
 
-        // Filter by zone (if selected)
-        if (_selectedJobTitle != null && _selectedJobTitle!.isNotEmpty) {
-          // Add zone filtering logic when you have zone data in Employee model
-        }
-        if (_selectedAssignedStaff != null &&
-            _selectedAssignedStaff!.isNotEmpty) {
-          // Add zone filtering logic when you have zone data in Employee model
-        }
-        if (_selectedDateType != null && _selectedDateType!.isNotEmpty) {
-          // Add zone filtering logic when you have zone data in Employee model
-        }
-        if (_selectedJobStatus != null && selectedJobStatus!.isNotEmpty) {
-          // Add zone filtering logic when you have zone data in Employee model
-        }
+            // Filter by zone (if selected)
+            if (_selectedJobTitle != null && _selectedJobTitle!.isNotEmpty) {
+              // Add zone filtering logic when you have zone data in Employee model
+            }
+            if (_selectedAssignedStaff != null &&
+                _selectedAssignedStaff!.isNotEmpty) {
+              // Add zone filtering logic when you have zone data in Employee model
+            }
+            if (_selectedDateType != null && _selectedDateType!.isNotEmpty) {
+              // Add zone filtering logic when you have zone data in Employee model
+            }
+            if (_selectedJobStatus != null && selectedJobStatus!.isNotEmpty) {
+              // Add zone filtering logic when you have zone data in Employee model
+            }
 
-        return matches;
-      }).toList();
+            return matches;
+          }).toList();
 
       _isLoading = false;
       notifyListeners();

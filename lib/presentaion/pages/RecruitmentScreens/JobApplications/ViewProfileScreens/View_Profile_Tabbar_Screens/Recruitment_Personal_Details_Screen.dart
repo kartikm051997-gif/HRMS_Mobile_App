@@ -1,47 +1,48 @@
-import 'package:flutter/material.dart';
-import 'package:hrms_mobile_app/core/fonts/fonts.dart';
+import 'package:flutter/Material.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/constants/appcolor_dart.dart';
-import '../../../../provider/Deliverables_Overview_provider/employee_personal_details_provider.dart';
-import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
-import '../../../../widgets/custom_textfield/custom_large_textfield.dart';
-import '../../../../widgets/custom_textfield/custom_textfield.dart';
-import '../../EmployeeManagement/NewEmployeeScreens/Document_Upload_Field_for_Joining_Letter_Screen.dart';
-import '../../EmployeeManagement/NewEmployeeScreens/Photo_Upload_screen.dart';
 
-class EmployeePersonalDetailsScreen extends StatefulWidget {
+import '../../../../../../core/constants/appcolor_dart.dart';
+import '../../../../../../core/fonts/fonts.dart';
+import '../../../../../../provider/RecruitmentScreensProvider/Recruitment_Personal_Details_Provider.dart';
+import '../../../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../../../widgets/custom_textfield/custom_large_textfield.dart';
+import '../../../../../../widgets/custom_textfield/custom_textfield.dart';
+import '../../../../EmployeeManagement/NewEmployeeScreens/Document_Upload_Field_for_Joining_Letter_Screen.dart';
+import '../../../../EmployeeManagement/NewEmployeeScreens/Photo_Upload_screen.dart';
+
+class RecruitmentPersonalDetailsScreen extends StatefulWidget {
   final String empId;
 
-  const EmployeePersonalDetailsScreen({super.key, required this.empId});
+  const RecruitmentPersonalDetailsScreen({super.key, required this.empId});
 
   @override
-  State<EmployeePersonalDetailsScreen> createState() =>
-      _EmployeePersonalDetailsScreenState();
+  State<RecruitmentPersonalDetailsScreen> createState() =>
+      _RecruitmentPersonalDetailsScreenState();
 }
 
-class _EmployeePersonalDetailsScreenState
-    extends State<EmployeePersonalDetailsScreen> {
+class _RecruitmentPersonalDetailsScreenState
+    extends State<RecruitmentPersonalDetailsScreen> {
+  @override
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () {
-      context.read<EmployeeInformationProvider>().fetchEmployeeDetails(
-        widget.empId,
-      );
+      context
+          .read<RecruitmentEmpPersonalDetailsProvider>()
+          .fetchEmployeeDetails(widget.empId);
     });
   }
 
-  @override
   Widget build(BuildContext context) {
-    final employeeInformationProvider =
-        Provider.of<EmployeeInformationProvider>(context);
+    final recruitmentEmpPersonalDetailsProvider =
+        Provider.of<RecruitmentEmpPersonalDetailsProvider>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: SingleChildScrollView(
         child: Column(
           children: [
             CustomTextField(
-              controller: employeeInformationProvider.emailController,
+              controller: recruitmentEmpPersonalDetailsProvider.emailController,
               hintText: "",
               labelText: "Email",
               isMandatory: true,
@@ -49,7 +50,8 @@ class _EmployeePersonalDetailsScreenState
             ),
             SizedBox(height: 10),
             CustomTextField(
-              controller: employeeInformationProvider.mobileController,
+              controller:
+                  recruitmentEmpPersonalDetailsProvider.mobileController,
               hintText: "",
               labelText: "Mobile",
               isMandatory: true,
@@ -91,10 +93,13 @@ class _EmployeePersonalDetailsScreenState
                         Radio<String>(
                           value: "Male",
                           groupValue:
-                              employeeInformationProvider.selectedGender,
+                              recruitmentEmpPersonalDetailsProvider
+                                  .selectedGender,
                           activeColor: AppColor.primaryColor2,
                           onChanged: (value) {
-                            employeeInformationProvider.setGender(value!);
+                            recruitmentEmpPersonalDetailsProvider.setGender(
+                              value!,
+                            );
                           },
                         ),
                         Text(
@@ -114,10 +119,13 @@ class _EmployeePersonalDetailsScreenState
                         Radio<String>(
                           value: "Female",
                           groupValue:
-                              employeeInformationProvider.selectedGender,
+                              recruitmentEmpPersonalDetailsProvider
+                                  .selectedGender,
                           activeColor: AppColor.primaryColor2,
                           onChanged: (value) {
-                            employeeInformationProvider.setGender(value!);
+                            recruitmentEmpPersonalDetailsProvider.setGender(
+                              value!,
+                            );
                           },
                         ),
                         Text(
@@ -135,7 +143,9 @@ class _EmployeePersonalDetailsScreenState
                 ),
 
                 CustomTextField(
-                  controller: employeeInformationProvider.experienceController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider
+                          .experienceController,
                   hintText: "",
                   labelText: "Total Experience in Years ",
                   isMandatory: true,
@@ -146,13 +156,17 @@ class _EmployeePersonalDetailsScreenState
                   labelText: "Resume",
                   isMandatory: true,
                   selectedFile:
-                      employeeInformationProvider.selectedJoiningLetter,
+                      recruitmentEmpPersonalDetailsProvider
+                          .selectedJoiningLetter,
                   allowedExtensions: ["pdf", "doc", "docx"],
                   onFilePicked: (file) {
                     if (file != null) {
-                      employeeInformationProvider.setJoiningLetter(file);
+                      recruitmentEmpPersonalDetailsProvider.setJoiningLetter(
+                        file,
+                      );
                     } else {
-                      employeeInformationProvider.clearJoiningLetter();
+                      recruitmentEmpPersonalDetailsProvider
+                          .clearJoiningLetter();
                     }
                   },
                 ),
@@ -161,12 +175,13 @@ class _EmployeePersonalDetailsScreenState
                 ProfilePhotoField(
                   labelText: "Upload Profile Photo",
                   isMandatory: true,
-                  selectedFile: employeeInformationProvider.selectedFile,
+                  selectedFile:
+                      recruitmentEmpPersonalDetailsProvider.selectedFile,
                   onFilePicked: (file) {
                     if (file != null) {
-                      employeeInformationProvider.setFile(file);
+                      recruitmentEmpPersonalDetailsProvider.setFile(file);
                     } else {
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .clearFile(); // Use clearFile for null
                     }
                   },
@@ -174,7 +189,8 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
 
                 CustomTextField(
-                  controller: employeeInformationProvider.dobController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider.dobController,
                   hintText: "",
                   labelText: "Date Of Birth",
                   isMandatory: true,
@@ -182,7 +198,8 @@ class _EmployeePersonalDetailsScreenState
                 ),
                 SizedBox(height: 10),
                 CustomTextField(
-                  controller: employeeInformationProvider.ageController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider.ageController,
                   hintText: "",
                   labelText: "Age",
                   isMandatory: true,
@@ -190,7 +207,8 @@ class _EmployeePersonalDetailsScreenState
                 ),
                 SizedBox(height: 10),
                 CustomTextField(
-                  controller: employeeInformationProvider.religionController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider.religionController,
                   hintText: "",
                   labelText: "Religion",
                   isMandatory: true,
@@ -199,7 +217,8 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider.motherTongueController,
+                      recruitmentEmpPersonalDetailsProvider
+                          .motherTongueController,
                   hintText: "",
                   labelText: "Mother Tongue",
                   isMandatory: true,
@@ -207,7 +226,8 @@ class _EmployeePersonalDetailsScreenState
                 ),
                 SizedBox(height: 10),
                 CustomTextField(
-                  controller: employeeInformationProvider.casteController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider.casteController,
                   hintText: "",
                   labelText: "Caste",
                   isMandatory: true,
@@ -215,7 +235,9 @@ class _EmployeePersonalDetailsScreenState
                 ),
                 SizedBox(height: 10),
                 CustomTextField(
-                  controller: employeeInformationProvider.bloodGroupController,
+                  controller:
+                      recruitmentEmpPersonalDetailsProvider
+                          .bloodGroupController,
                   hintText: "",
                   labelText: "Blood Group",
                   isMandatory: true,
@@ -226,11 +248,13 @@ class _EmployeePersonalDetailsScreenState
                 CustomSearchDropdownWithSearch(
                   isMandatory: true,
                   labelText: "Marital Status",
-                  items: employeeInformationProvider.materialStatus,
+                  items: recruitmentEmpPersonalDetailsProvider.materialStatus,
                   selectedValue:
-                      employeeInformationProvider.selectedmaterialStatus,
+                      recruitmentEmpPersonalDetailsProvider
+                          .selectedmaterialStatus,
                   onChanged:
-                      employeeInformationProvider.setSelectedmaterialStatus,
+                      recruitmentEmpPersonalDetailsProvider
+                          .setSelectedmaterialStatus,
                   hintText: "Single",
                   readOnly:
                       true, // ✅ Will show "Single" but user cannot change it
@@ -240,7 +264,8 @@ class _EmployeePersonalDetailsScreenState
                 CustomLargeTextField(
                   readOnly: true, // ✅ Make it uneditable
                   controller:
-                      employeeInformationProvider.choiceOfWorkController,
+                      recruitmentEmpPersonalDetailsProvider
+                          .choiceOfWorkController,
                   hintText: "",
                   labelText: "Choice of work",
                   isMandatory: true,
@@ -248,7 +273,7 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .secondaryContactNumberController,
                   hintText: "",
                   labelText: "secondary Contact Number",
@@ -261,12 +286,13 @@ class _EmployeePersonalDetailsScreenState
                   isMandatory: true,
                   labelText: "Secondary Contact Relationship",
                   items:
-                      employeeInformationProvider.secondaryContactRelationship,
+                      recruitmentEmpPersonalDetailsProvider
+                          .secondaryContactRelationship,
                   selectedValue:
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .selectedSecondaryContactRelationship,
                   onChanged:
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .setSelectedSecondaryContactRelationship,
                   hintText: "mother",
                   readOnly:
@@ -275,7 +301,7 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .secondaryContactOccupationController,
                   hintText: "",
                   labelText: "Secondary Contact Occupation",
@@ -285,7 +311,7 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider
+                      recruitmentEmpPersonalDetailsProvider
                           .secondaryContactMobileController,
                   hintText: "",
                   labelText: "secondary Contact Number",
@@ -295,7 +321,8 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider.permanentAddressController,
+                      recruitmentEmpPersonalDetailsProvider
+                          .permanentAddressController,
                   hintText: "",
                   labelText: "Permanent Address",
                   isMandatory: true,
@@ -304,7 +331,8 @@ class _EmployeePersonalDetailsScreenState
                 SizedBox(height: 10),
                 CustomTextField(
                   controller:
-                      employeeInformationProvider.presentAddressController,
+                      recruitmentEmpPersonalDetailsProvider
+                          .presentAddressController,
                   hintText: "",
                   labelText: "Present Address",
                   isMandatory: true,
@@ -348,10 +376,13 @@ class _EmployeePersonalDetailsScreenState
                         Radio<String>(
                           value: "Yes",
                           groupValue:
-                              employeeInformationProvider.selectedGender,
+                              recruitmentEmpPersonalDetailsProvider
+                                  .selectedGender,
                           activeColor: AppColor.primaryColor2,
                           onChanged: (value) {
-                            employeeInformationProvider.setGender(value!);
+                            recruitmentEmpPersonalDetailsProvider.setGender(
+                              value!,
+                            );
                           },
                         ),
                         Text(
@@ -372,10 +403,13 @@ class _EmployeePersonalDetailsScreenState
                         Radio<String>(
                           value: "No",
                           groupValue:
-                              employeeInformationProvider.selectedGender,
+                              recruitmentEmpPersonalDetailsProvider
+                                  .selectedGender,
                           activeColor: AppColor.primaryColor2,
                           onChanged: (value) {
-                            employeeInformationProvider.setGender(value!);
+                            recruitmentEmpPersonalDetailsProvider.setGender(
+                              value!,
+                            );
                           },
                         ),
                         Text(

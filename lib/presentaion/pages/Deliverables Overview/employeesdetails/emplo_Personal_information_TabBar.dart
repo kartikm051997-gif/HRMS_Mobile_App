@@ -88,7 +88,7 @@ class _ProfileTabBarViewState extends State<ProfileTabBarView>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children:  [
+                children: [
                   EmployeePersonalDetailsScreen(
                     empId: "12345", // Replace with your dynamic employee ID
                   ),

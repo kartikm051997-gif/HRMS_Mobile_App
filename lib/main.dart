@@ -8,7 +8,6 @@ import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/AllEmployeeScr
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreens/EmployeeBasicDeatils.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/F11EmployeesScreens/F11EmployeesScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/ProfessionalsScreens/Professionals_Screens.dart';
-import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/Student_Details_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/Student_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
@@ -48,6 +47,10 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Ca
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Job_Application_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Edu_Exp_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Others_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Personal_Details_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Referenec_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Resume_Management_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';
@@ -122,6 +125,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => F11EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ResumeManagementProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationProvider()),
+        ChangeNotifierProvider(create: (_) => RecruitmentEmpPersonalDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => RecruitmentEduExpProvider()),
+        ChangeNotifierProvider(create: (_) => RecruitmentOthersProvider()),
+        ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
+
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
