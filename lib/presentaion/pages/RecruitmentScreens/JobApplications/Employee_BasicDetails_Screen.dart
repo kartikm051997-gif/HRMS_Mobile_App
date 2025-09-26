@@ -202,7 +202,10 @@ class _EmployeeBasicDetailsScreenState
                                 context,
                                 MaterialPageRoute(
                                   builder:
-                                      (_) => const ViewProfileTabViewScreens(),
+                                      (_) => ViewProfileTabViewScreens(
+                                        jobId: widget.employee?.jobId,
+                                        employee: widget.employee,
+                                      ),
                                 ),
                               );
                             },

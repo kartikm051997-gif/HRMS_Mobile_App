@@ -4,16 +4,18 @@ import 'package:provider/provider.dart';
 import '../../../../../../core/components/drawer/drawer.dart';
 import '../../../../../../core/constants/appcolor_dart.dart';
 import '../../../../../../core/fonts/fonts.dart';
-import '../../../../../../provider/RecruitmentScreensProvider/Job_Application_Provider.dart';
-import '../../../../Deliverables Overview/employeesdetails/edu_exp_Details_screen.dart';
-import '../../../../Deliverables Overview/employeesdetails/employee_personal_details_screen.dart';
+import '../../../../../../model/RecruitmentModel/Job_Application_Model.dart';
+import '../../../../../../provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 import '../../../../Deliverables Overview/employeesdetails/other_details_screen.dart';
 import '../../../../Deliverables Overview/employeesdetails/reference_details_screen.dart';
+import 'Job_Application_Edit_Screen.dart';
 import 'Recruitment_Edu_Experience_Screen.dart';
 import 'Recruitment_Personal_Details_Screen.dart';
 
 class ViewProfileTabViewScreens extends StatefulWidget {
-  const ViewProfileTabViewScreens({super.key});
+  final String? jobId; // Optional
+  final JobApplicationModel? employee;
+  const ViewProfileTabViewScreens({super.key, this.jobId, this.employee});
 
   @override
   State<ViewProfileTabViewScreens> createState() =>
@@ -27,7 +29,7 @@ class _ViewProfileTabViewScreensState extends State<ViewProfileTabViewScreens>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
 
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
@@ -84,7 +86,9 @@ class _ViewProfileTabViewScreensState extends State<ViewProfileTabViewScreens>
             ),
             body: TabBarView(
               controller: _tabController,
-              children: const [
+              children: [
+                JobApplicationEditScreen(jobId: widget.employee!.jobId),
+
                 RecruitmentPersonalDetailsScreen(empId: "12345"),
                 RecruitmentEduExperienceScreen(empId: "12345"),
                 OtherDetailsScreen(empId: "12345"),

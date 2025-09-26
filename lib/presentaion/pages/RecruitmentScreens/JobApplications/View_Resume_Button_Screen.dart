@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/RecruitmentModel/Job_Application_Model.dart';
-import '../../../../provider/RecruitmentScreensProvider/Job_Application_Provider.dart';
+import '../../../../provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 
 class ViewResumeButtonScreen extends StatefulWidget {
   final JobApplicationModel? employee;

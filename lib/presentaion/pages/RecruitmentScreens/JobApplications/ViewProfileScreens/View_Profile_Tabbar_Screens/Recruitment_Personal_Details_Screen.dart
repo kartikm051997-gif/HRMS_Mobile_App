@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../../core/constants/appcolor_dart.dart';
 import '../../../../../../core/fonts/fonts.dart';
-import '../../../../../../provider/RecruitmentScreensProvider/Recruitment_Personal_Details_Provider.dart';
+import '../../../../../../provider/RecruitmentScreensProviders/Recruitment_Personal_Details_Provider.dart';
 import '../../../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../../../widgets/custom_textfield/custom_large_textfield.dart';
 import '../../../../../../widgets/custom_textfield/custom_textfield.dart';

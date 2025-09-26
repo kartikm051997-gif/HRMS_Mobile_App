@@ -1,28 +1,29 @@
 import 'package:flutter/Material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../provider/RecruitmentScreensProviders/Resume_Management_Provider.dart';
+import '../../../../provider/RecruitmentScreensProviders/Semi_Filled_Application_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
-import 'ResumeMangaement_details_Screen.dart';
 
-class ResumeManagementScreens extends StatefulWidget {
-  const ResumeManagementScreens({super.key});
+class SemiFilledApplicationScreens extends StatefulWidget {
+  const SemiFilledApplicationScreens({super.key});
 
   @override
-  State<ResumeManagementScreens> createState() =>
-      _ResumemanagementscreensState();
+  State<SemiFilledApplicationScreens> createState() =>
+      _SemiFilledApplicationScreensState();
 }
 
-class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
+class _SemiFilledApplicationScreensState
+    extends State<SemiFilledApplicationScreens> {
   @override
   void initState() {
     super.initState();
     // Initialize employee data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ResumeManagementProvider>(
+      Provider.of<SemiFilledApplicationProvider>(
         context,
         listen: false,
       ).initializeEmployees();
@@ -31,12 +32,11 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
 
   @override
   Widget build(BuildContext context) {
-    final resumeManagementProvider = Provider.of<ResumeManagementProvider>(
-      context,
-    );
+    final semiFilledApplicationProvider =
+        Provider.of<SemiFilledApplicationProvider>(context);
     return Scaffold(
       drawer: const TabletMobileDrawer(),
-      appBar: const CustomAppBar(title: "Resume Management"),
+      appBar: const CustomAppBar(title: "Semi Filled Application"),
       backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
@@ -67,7 +67,8 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                           // Filter Toggle
                           Expanded(
                             child: InkWell(
-                              onTap: resumeManagementProvider.toggleFilters,
+                              onTap:
+                                  semiFilledApplicationProvider.toggleFilters,
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -100,7 +101,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                     ),
                                     const Spacer(),
                                     Icon(
-                                      resumeManagementProvider.showFilters
+                                      semiFilledApplicationProvider.showFilters
                                           ? Icons.expand_less
                                           : Icons.expand_more,
                                       color: const Color(0xFF475569),
@@ -124,7 +125,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<int>(
-                                value: resumeManagementProvider.pageSize,
+                                value: semiFilledApplicationProvider.pageSize,
                                 items:
                                     [5, 10, 15, 20].map((e) {
                                       return DropdownMenuItem(
@@ -141,7 +142,9 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                     }).toList(),
                                 onChanged: (val) {
                                   if (val != null) {
-                                    resumeManagementProvider.setPageSize(val);
+                                    semiFilledApplicationProvider.setPageSize(
+                                      val,
+                                    );
                                   }
                                 },
                               ),
@@ -166,9 +169,12 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                           ],
                         ),
                         child: TextField(
-                          controller: resumeManagementProvider.searchController,
+                          controller:
+                              semiFilledApplicationProvider.searchController,
                           onChanged: (value) {
-                            resumeManagementProvider.onSearchChanged(value);
+                            semiFilledApplicationProvider.onSearchChanged(
+                              value,
+                            );
                           },
                           style: TextStyle(
                             fontSize: 16,
@@ -192,13 +198,14 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                               ),
                             ),
                             suffixIcon:
-                                resumeManagementProvider
+                                semiFilledApplicationProvider
                                         .searchController
                                         .text
                                         .isNotEmpty
                                     ? IconButton(
                                       onPressed: () {
-                                        resumeManagementProvider.clearSearch();
+                                        semiFilledApplicationProvider
+                                            .clearSearch();
                                       },
                                       icon: const Icon(
                                         Icons.clear_rounded,
@@ -223,7 +230,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
           ),
 
           // Filter Section - Only shows when expanded
-          if (resumeManagementProvider.showFilters)
+          if (semiFilledApplicationProvider.showFilters)
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
@@ -238,11 +245,12 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Primary Branch ",
-                            items: resumeManagementProvider.primaryBranch,
+                            items: semiFilledApplicationProvider.primaryBranch,
                             selectedValue:
-                                resumeManagementProvider.selectedPrimaryBranch,
+                                semiFilledApplicationProvider
+                                    .selectedPrimaryBranch,
                             onChanged:
-                                resumeManagementProvider
+                                semiFilledApplicationProvider
                                     .setSelectedPrimaryBranch,
                             hintText: "Select Primary Branch ",
                           ),
@@ -257,24 +265,13 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                         Expanded(
                           child: CustomSearchDropdownWithSearch(
                             labelText: "Job Title ",
-                            items: resumeManagementProvider.jobTitle,
+                            items: semiFilledApplicationProvider.jobTitle,
                             selectedValue:
-                                resumeManagementProvider.selectedJobTitle,
+                                semiFilledApplicationProvider.selectedJobTitle,
                             onChanged:
-                                resumeManagementProvider.setSelectedJobTitle,
+                                semiFilledApplicationProvider
+                                    .setSelectedJobTitle,
                             hintText: "Select Branch",
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
-                            labelText: "Designation",
-                            items: resumeManagementProvider.uploadedBy,
-                            selectedValue:
-                                resumeManagementProvider.selectedUploadedBy,
-                            onChanged:
-                                resumeManagementProvider.setSelectedUploadedBy,
-                            hintText: "Select Designation",
                           ),
                         ),
                       ],
@@ -286,7 +283,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: () {
-                              resumeManagementProvider
+                              semiFilledApplicationProvider
                                   .clearAllFilters(); // You'll need to implement this
                             },
                             style: OutlinedButton.styleFrom(
@@ -313,7 +310,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                           child: ElevatedButton(
                             onPressed: () {
                               // Apply filters but keep filters section open
-                              resumeManagementProvider.searchEmployees();
+                              semiFilledApplicationProvider.searchEmployees();
                               // Don't close filters - keep them open for user convenience
                             },
                             style: ElevatedButton.styleFrom(
@@ -350,7 +347,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "${resumeManagementProvider.filteredEmployees.length} Employees Found",
+                    "${semiFilledApplicationProvider.filteredEmployees.length} Employees Found",
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -359,10 +356,10 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                     ),
                   ),
                   // Optional: Add a collapse filters button here
-                  if (resumeManagementProvider.showFilters)
+                  if (semiFilledApplicationProvider.showFilters)
                     TextButton.icon(
                       onPressed: () {
-                        resumeManagementProvider.toggleFilters();
+                        semiFilledApplicationProvider.toggleFilters();
                       },
                       icon: const Icon(Icons.keyboard_arrow_up, size: 18),
                       label: Text(
@@ -382,7 +379,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
           ),
 
           // Employee List
-          resumeManagementProvider.isLoading
+          semiFilledApplicationProvider.isLoading
               ? const SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -404,7 +401,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                   ),
                 ),
               )
-              : resumeManagementProvider.filteredEmployees.isEmpty
+              : semiFilledApplicationProvider.filteredEmployees.isEmpty
               ? SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -444,16 +441,17 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final employee =
-                          resumeManagementProvider.filteredEmployees[index];
+                          semiFilledApplicationProvider
+                              .filteredEmployees[index];
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
+                        margin: const EdgeInsets.only(bottom: 20),
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.08),
+                              color: Colors.grey.withOpacity(0.12),
                               spreadRadius: 0,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                           color: Colors.white,
@@ -463,38 +461,27 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                           color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ResumeManagementDetailsScreen(
-                                        cvId: employee.cvId,
-                                        employee: employee,
-                                      ),
-                                ),
-                              );
-                            },
+                            onTap: () {},
                             child: Column(
                               children: [
                                 // Top Half - Purple Section
                                 Container(
                                   width: double.infinity,
-                                  height: 80,
+                                  height: 75,
                                   decoration: BoxDecoration(
                                     color: Color(0xffa14f79),
-
-                                    // color: Color(0xffb85a89),
                                     borderRadius: const BorderRadius.only(
                                       topLeft: Radius.circular(16),
                                       topRight: Radius.circular(16),
                                     ),
                                   ),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(16),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
                                     child: Row(
                                       children: [
-                                        // Employee Name and ID
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -510,29 +497,45 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                   fontFamily: AppFonts.poppins,
                                                   color: Colors.white,
                                                 ),
-                                                maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                "CVID: ${employee.cvId}",
+                                                employee.email,
                                                 style: TextStyle(
                                                   fontSize: 12,
-                                                  fontWeight: FontWeight.w500,
+                                                  fontWeight: FontWeight.w400,
                                                   fontFamily: AppFonts.poppins,
                                                   color: Colors.white
-                                                      .withOpacity(0.8),
+                                                      .withOpacity(0.85),
                                                 ),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),
                                         ),
-
-                                        // Arrow Icon
-                                        const Icon(
-                                          Icons.chevron_right,
-                                          color: Colors.white,
-                                          size: 20,
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            employee.appliedOn,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w500,
+                                              fontFamily: AppFonts.poppins,
+                                              color: Colors.white,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -554,31 +557,29 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                     child: Column(
                                       children: [
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            // Designation Section
+                                            // Job Title Section
                                             Expanded(
                                               flex: 3,
                                               child: Row(
                                                 children: [
                                                   Container(
                                                     padding:
-                                                        const EdgeInsets.all(4),
+                                                        const EdgeInsets.all(6),
                                                     decoration: BoxDecoration(
                                                       color: Colors.blue[50],
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                            6,
+                                                            8,
                                                           ),
                                                     ),
                                                     child: Icon(
                                                       Icons.work_outline,
-                                                      size: 14,
+                                                      size: 16,
                                                       color: Colors.blue[600],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 5),
+                                                  const SizedBox(width: 8),
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment:
@@ -586,21 +587,17 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                               .start,
                                                       children: [
                                                         Text(
-                                                          "job Title",
+                                                          "Job Title",
                                                           style: TextStyle(
-                                                            fontSize: 12,
+                                                            fontSize: 11,
                                                             fontWeight:
-                                                                FontWeight.w600,
+                                                                FontWeight.w500,
                                                             color:
                                                                 Colors
                                                                     .grey[500],
-                                                            letterSpacing: 0.5,
                                                             fontFamily:
                                                                 AppFonts
                                                                     .poppins,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
                                                           ),
                                                         ),
                                                         const SizedBox(
@@ -609,9 +606,9 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                         Text(
                                                           employee.jobTitle,
                                                           style: TextStyle(
-                                                            fontSize: 10,
+                                                            fontSize: 13,
                                                             fontWeight:
-                                                                FontWeight.w500,
+                                                                FontWeight.w600,
                                                             fontFamily:
                                                                 AppFonts
                                                                     .poppins,
@@ -629,30 +626,30 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                 ],
                                               ),
                                             ),
-                                            // Branch Section
+                                            const SizedBox(width: 16),
+                                            // Location Section
                                             Expanded(
                                               flex: 2,
                                               child: Row(
                                                 children: [
                                                   Container(
                                                     padding:
-                                                        const EdgeInsets.all(4),
+                                                        const EdgeInsets.all(6),
                                                     decoration: BoxDecoration(
                                                       color: Colors.green[50],
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                            6,
+                                                            8,
                                                           ),
                                                     ),
                                                     child: Icon(
                                                       Icons
                                                           .location_on_outlined,
-                                                      size: 14,
+                                                      size: 16,
                                                       color: Colors.green[600],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 5),
-
+                                                  const SizedBox(width: 8),
                                                   Expanded(
                                                     child: Column(
                                                       crossAxisAlignment:
@@ -660,21 +657,17 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                               .start,
                                                       children: [
                                                         Text(
-                                                          "primary Location",
+                                                          "Location",
                                                           style: TextStyle(
-                                                            fontSize: 12,
+                                                            fontSize: 11,
                                                             fontWeight:
-                                                                FontWeight.w600,
+                                                                FontWeight.w500,
                                                             color:
                                                                 Colors
                                                                     .grey[500],
-                                                            letterSpacing: 0.5,
                                                             fontFamily:
                                                                 AppFonts
                                                                     .poppins,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
                                                           ),
                                                         ),
                                                         const SizedBox(
@@ -684,9 +677,9 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                                           employee
                                                               .primaryLocation,
                                                           style: TextStyle(
-                                                            fontSize: 10,
+                                                            fontSize: 13,
                                                             fontWeight:
-                                                                FontWeight.w500,
+                                                                FontWeight.w600,
                                                             fontFamily:
                                                                 AppFonts
                                                                     .poppins,
@@ -706,7 +699,10 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 10),
+
+                                        const SizedBox(height: 16),
+
+                                        // Phone number
                                         Container(
                                           height: 40,
                                           width: double.infinity,
@@ -757,7 +753,7 @@ class _ResumemanagementscreensState extends State<ResumeManagementScreens> {
                       );
                     },
                     childCount:
-                        resumeManagementProvider.filteredEmployees.length,
+                        semiFilledApplicationProvider.filteredEmployees.length,
                   ),
                 ),
               ),

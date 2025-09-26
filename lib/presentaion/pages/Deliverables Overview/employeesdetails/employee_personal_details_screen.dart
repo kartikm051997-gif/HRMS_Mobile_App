@@ -141,36 +141,7 @@ class _EmployeePersonalDetailsScreenState
                   isMandatory: true,
                   readOnly: true,
                 ),
-                const SizedBox(height: 12),
-                DocumentUploadField(
-                  labelText: "Resume",
-                  isMandatory: true,
-                  selectedFile:
-                      employeeInformationProvider.selectedJoiningLetter,
-                  allowedExtensions: ["pdf", "doc", "docx"],
-                  onFilePicked: (file) {
-                    if (file != null) {
-                      employeeInformationProvider.setJoiningLetter(file);
-                    } else {
-                      employeeInformationProvider.clearJoiningLetter();
-                    }
-                  },
-                ),
 
-                SizedBox(height: 10),
-                ProfilePhotoField(
-                  labelText: "Upload Profile Photo",
-                  isMandatory: true,
-                  selectedFile: employeeInformationProvider.selectedFile,
-                  onFilePicked: (file) {
-                    if (file != null) {
-                      employeeInformationProvider.setFile(file);
-                    } else {
-                      employeeInformationProvider
-                          .clearFile(); // Use clearFile for null
-                    }
-                  },
-                ),
                 SizedBox(height: 10),
 
                 CustomTextField(
