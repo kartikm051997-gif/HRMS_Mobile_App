@@ -14,6 +14,7 @@ import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Sc
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplications/Job_Application_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
+import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/dashboard_screen.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
@@ -46,12 +47,14 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Notice_Per
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Category_Type_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Job_Application_Provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Edu_Exp_Provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Others_Provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Personal_Details_Provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Recruitment_Referenec_Provider.dart';
-import 'package:hrms_mobile_app/provider/RecruitmentScreensProvider/Resume_Management_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Applocation_Edit_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Edu_Exp_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Others_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Personal_Details_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Referenec_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Resume_Management_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Semi_Filled_Application_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/F11_Employee_Provider.dart';
@@ -125,11 +128,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => F11EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ResumeManagementProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationProvider()),
-        ChangeNotifierProvider(create: (_) => RecruitmentEmpPersonalDetailsProvider()),
+        ChangeNotifierProvider(
+          create: (_) => RecruitmentEmpPersonalDetailsProvider(),
+        ),
         ChangeNotifierProvider(create: (_) => RecruitmentEduExpProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentOthersProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
-
+        ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
+        ChangeNotifierProvider(create: (_) => JobApplicationEditProvider()),
+        ChangeNotifierProvider(create: (_) => SemiFilledApplicationProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -203,6 +210,8 @@ class MyApp extends StatelessWidget {
         return ResumeManagementScreens();
       case AppRoutes.jobApplications:
         return JobApplicationScreen();
+      case AppRoutes.semiFilledApplication:
+        return SemiFilledApplicationScreens();
 
       default:
         return const NotFoundPage();

@@ -5,7 +5,7 @@ import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../provider/RecruitmentScreensProvider/Job_Application_Provider.dart';
+import '../../../../provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import 'Job_Application_Details_Screen.dart';
 
@@ -722,32 +722,42 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                                       ),
                                       SizedBox(height: 10),
                                       Container(
-                                        height: 35,
+                                        height: 40,
+                                        width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: Color(0xffa14f79),
+                                          color: Color(
+                                            0xffa14f79,
+                                          ).withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(
-                                            8,
+                                            10,
                                           ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.2,
+                                          border: Border.all(
+                                            color: Color(
+                                              0xffa14f79,
+                                            ).withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.phone_outlined,
+                                              color: Color(0xffa14f79),
+                                              size: 16,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              employee.phone,
+                                              style: TextStyle(
+                                                color: Color(0xffa14f79),
+                                                fontFamily: AppFonts.poppins,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
                                               ),
-                                              spreadRadius: 1,
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
                                             ),
                                           ],
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            employee.phone,
-                                            style: TextStyle(
-                                              color: AppColor.whiteColor,
-                                              fontFamily: AppFonts.poppins,
-                                              fontSize: 16,
-                                            ),
-                                          ),
                                         ),
                                       ),
                                     ],

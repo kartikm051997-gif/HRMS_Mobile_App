@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../../core/constants/appcolor_dart.dart';
 import '../../../../../../core/fonts/fonts.dart';
-import '../../../../../../provider/RecruitmentScreensProvider/Recruitment_Others_Provider.dart';
+import '../../../../../../provider/RecruitmentScreensProviders/Recruitment_Others_Provider.dart';
 import '../../../../../../widgets/custom_textfield/custom_textfield.dart';
 
 class RecruitmentOtherDetailsScreen extends StatefulWidget {
