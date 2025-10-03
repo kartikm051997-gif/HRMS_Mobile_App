@@ -26,7 +26,7 @@ class _StatusButtonScreenState extends State<StatusButtonScreen> {
               style: TextStyle(fontFamily: AppFonts.poppins),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor:  Colors.blue,
+              backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(

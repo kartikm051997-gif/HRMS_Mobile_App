@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../../../../core/components/drawer/drawer.dart';
 import '../../../../../../core/constants/appcolor_dart.dart';
 import '../../../../../../core/fonts/fonts.dart';

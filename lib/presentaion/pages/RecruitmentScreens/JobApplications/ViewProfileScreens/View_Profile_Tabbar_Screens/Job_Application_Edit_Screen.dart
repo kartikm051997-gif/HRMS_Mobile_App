@@ -298,7 +298,7 @@ class _JobApplicationEditScreenState extends State<JobApplicationEditScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

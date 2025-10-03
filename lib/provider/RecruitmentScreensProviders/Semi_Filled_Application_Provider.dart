@@ -164,48 +164,7 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
     });
   }
 
-  bool _filterByCTC(String employeeCTC, String selectedCTC) {
-    double ctc = double.tryParse(employeeCTC) ?? 0;
-    double monthlyToAnnual = ctc * 12; // Convert monthly to annual
 
-    switch (selectedCTC) {
-      case "< 5 LPA":
-        return monthlyToAnnual < 500000;
-      case "5–10 LPA":
-        return monthlyToAnnual >= 500000 && monthlyToAnnual <= 1000000;
-      case "> 10 LPA":
-        return monthlyToAnnual > 1000000;
-      default:
-        return true;
-    }
-  }
-
-  bool _filterByDateRange(String employeeDoj) {
-    try {
-      // Parse employee DOJ (assuming format: "dd/MM/yyyy")
-      List<String> parts = employeeDoj.split('/');
-      DateTime empDate = DateTime(
-        int.parse(parts[2]), // year
-        int.parse(parts[1]), // month
-        int.parse(parts[0]), // day
-      );
-
-      DateTime? fromDate;
-      DateTime? toDate;
-
-      if (fromDate != null && empDate.isBefore(fromDate)) {
-        return false;
-      }
-
-      if (toDate != null && empDate.isAfter(toDate)) {
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      return true; // If parsing fails, include the employee
-    }
-  }
 
   /// Clear all filters
   void clearFilters() {
