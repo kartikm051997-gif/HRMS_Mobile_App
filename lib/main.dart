@@ -13,6 +13,7 @@ import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplications/Job_Application_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JoiningFormsScreens/Joining_Forms_TabView_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
@@ -49,6 +50,7 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_t
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Applocation_Edit_Provider.dart';
+import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/JoiningFormsScreenProvider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Edu_Exp_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Others_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Personal_Details_Provider.dart';
@@ -137,6 +139,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationEditProvider()),
         ChangeNotifierProvider(create: (_) => SemiFilledApplicationProvider()),
+        ChangeNotifierProvider(create: (_) => JoiningFormsScreenProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -212,6 +215,8 @@ class MyApp extends StatelessWidget {
         return JobApplicationScreen();
       case AppRoutes.semiFilledApplication:
         return SemiFilledApplicationScreens();
+      case AppRoutes.joiningForms:
+        return JoiningFormsTabViewScreen();
 
       default:
         return const NotFoundPage();

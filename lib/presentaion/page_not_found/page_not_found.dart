@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
-
 import '../../core/components/appbar/appbar.dart';
 import '../../core/components/drawer/drawer.dart';
 
@@ -23,49 +22,6 @@ class NotFoundPage extends StatelessWidget {
     //     return const MobileAppbar();
     //   }
     // }
-
-    Widget? getEndDrawer() {
-      if (screenWidth < 1000) {
-        return const TabletMobileDrawer();
-      }
-      return null;
-    }
-
-    double getNoFilesTextSize() {
-      if (screenWidth >= 1440) {
-        return 35;
-      } else if (screenWidth >= 1024) {
-        return 30;
-      } else if (screenWidth >= 768) {
-        return 25;
-      } else {
-        return 15;
-      }
-    }
-
-    double getSuggestionTextSize() {
-      if (screenWidth >= 1440) {
-        return 35;
-      } else if (screenWidth >= 1024) {
-        return 30;
-      } else if (screenWidth >= 768) {
-        return 25;
-      } else {
-        return 15;
-      }
-    }
-
-    double getKeywordTextSize() {
-      if (screenWidth >= 1440) {
-        return 35;
-      } else if (screenWidth >= 1024) {
-        return 30;
-      } else if (screenWidth >= 768) {
-        return 25;
-      } else {
-        return 15;
-      }
-    }
 
     return Scaffold(
       drawer: TabletMobileDrawer(),
