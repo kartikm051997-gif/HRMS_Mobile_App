@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
 
 class PaySlipsDrawerProvider extends ChangeNotifier {
-  String _searchType = 'By Employee';
+  String? _searchType;
   String? _selectedEmployee;
   String? _selectedLocation;
   DateTime? _selectedMonth;
@@ -10,8 +16,9 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
   List<Payslip> _payslips = [];
   bool _isLoading = false;
   String? _errorMessage;
+  String _downloadingPayslipId = '';
 
-  String get searchType => _searchType;
+  String? get searchType => _searchType;
   String? get selectedEmployee => _selectedEmployee;
   String? get selectedLocation => _selectedLocation;
   DateTime? get selectedMonth => _selectedMonth;
@@ -20,6 +27,16 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
   List<Payslip> get payslips => _payslips;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  String get downloadingPayslipId => _downloadingPayslipId;
+
+  bool isDownloadingPayslip(String payslipId) {
+    return _downloadingPayslipId == payslipId;
+  }
+
+  void setDownloading(bool isDownloading, String payslipId) {
+    _downloadingPayslipId = isDownloading ? payslipId : '';
+    notifyListeners();
+  }
 
   void setSearchType(String value) {
     _searchType = value;
@@ -122,6 +139,7 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       _payslips = [
         Payslip(
+          id: '1',
           monthYear: 'January 2025',
           empId: '10055',
           name: 'Ramya',
@@ -132,8 +150,12 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
           totalDeductions: 0.00,
           netSalary: 35000.00,
           status: 0,
+          pdfUrl:
+              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Add your actual URL
+          fileName: 'Payslip_Ramya_January_2025.pdf',
         ),
         Payslip(
+          id: '2',
           monthYear: 'December 2024',
           empId: '10055',
           name: 'Ramya',
@@ -144,6 +166,9 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
           totalDeductions: 0.00,
           netSalary: 35000.00,
           status: 0,
+          pdfUrl:
+              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Add your actual URL
+          fileName: 'Payslip_Ramya_December_2024.pdf',
         ),
       ];
       _errorMessage = null;
@@ -166,6 +191,7 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 1));
       _payslips = [
         Payslip(
+          id: '1',
           monthYear: 'January 2025',
           empId: '10055',
           name: 'Ramya',
@@ -176,6 +202,9 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
           totalDeductions: 0.00,
           netSalary: 35000.00,
           status: 0,
+          pdfUrl:
+              'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Add your actual URL
+          fileName: 'Payslip_Ramya_January_2025.pdf',
         ),
       ];
       _errorMessage = null;
@@ -187,138 +216,125 @@ class PaySlipsDrawerProvider extends ChangeNotifier {
     }
   }
 
+  // Download payslip with proper file handling
+  Future<bool> downloadPayslip(Payslip payslip) async {
+    try {
+      setDownloading(true, payslip.id);
+
+      // Check and request storage permission
+      if (await _requestStoragePermission()) {
+        final dio = Dio();
+        Directory? directory;
+
+        // Get the appropriate directory based on platform
+        if (Platform.isAndroid) {
+          // For Android, use external storage Downloads folder
+          directory = await getExternalStorageDirectory();
+          if (directory != null) {
+            // Create Downloads folder if it doesn't exist
+            final downloadsDir = Directory('${directory.path}/Download');
+            if (!await downloadsDir.exists()) {
+              await downloadsDir.create(recursive: true);
+            }
+            directory = downloadsDir;
+          }
+        } else {
+          // For iOS, use documents directory
+          directory = await getApplicationDocumentsDirectory();
+        }
+
+        if (directory == null) {
+          debugPrint("Could not access storage directory");
+          return false;
+        }
+
+        final filePath = '${directory.path}/${payslip.fileName}';
+
+        if (kDebugMode) {
+          print("Downloading payslip to: $filePath");
+        }
+
+        await dio.download(
+          payslip.pdfUrl,
+          filePath,
+          onReceiveProgress: (received, total) {
+            if (total != -1) {
+              final progress = received / total;
+              debugPrint(
+                'Download progress: ${(progress * 100).toStringAsFixed(0)}%',
+              );
+            }
+          },
+        );
+
+        // Verify file was downloaded
+        final file = File(filePath);
+        if (await file.exists()) {
+          if (kDebugMode) {
+            print("Payslip downloaded successfully: ${file.path}");
+            print("File size: ${await file.length()} bytes");
+          }
+
+          // Try to open the downloaded file
+          final result = await OpenFile.open(filePath);
+          if (kDebugMode) {
+            print("Open file result: ${result.message}");
+          }
+
+          return true;
+        } else {
+          debugPrint("File was not created at expected location");
+          return false;
+        }
+      } else {
+        debugPrint("Storage permission denied");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("Error downloading payslip: $e");
+      return false;
+    } finally {
+      setDownloading(false, '');
+    }
+  }
+
+  Future<bool> _requestStoragePermission() async {
+    if (Platform.isAndroid) {
+      // For Android 13+ (API 33+), we need different permissions
+      if (await Permission.manageExternalStorage.isGranted) {
+        return true;
+      }
+
+      // Try to request manage external storage permission first
+      var result = await Permission.manageExternalStorage.request();
+      if (result.isGranted) {
+        return true;
+      }
+
+      // Fallback to regular storage permission
+      if (await Permission.storage.isGranted) {
+        return true;
+      }
+
+      result = await Permission.storage.request();
+      return result.isGranted;
+    } else {
+      // For iOS, no special permission needed for app documents directory
+      return true;
+    }
+  }
+
   void clearPayslips() {
     _payslips = [];
     notifyListeners();
   }
-}
 
-// lib/providers/employee_provider.dart
-class EmployeeProvider with ChangeNotifier {
-  String _selectedTab = 'Active';
-  String? _selectedZone;
-  String? _selectedBranch;
-  String? _selectedDesignation;
-  String _searchQuery = '';
-  List<Employee> _employees = [];
-  bool _isLoading = false;
-  bool _showFilters = false;
-
-  String get selectedTab => _selectedTab;
-  String? get selectedZone => _selectedZone;
-  String? get selectedBranch => _selectedBranch;
-  String? get selectedDesignation => _selectedDesignation;
-  String get searchQuery => _searchQuery;
-  List<Employee> get employees => _employees;
-  bool get isLoading => _isLoading;
-  bool get showFilters => _showFilters;
-
-  List<Employee> get filteredEmployees {
-    return _employees.where((emp) {
-      bool matchesSearch =
-          _searchQuery.isEmpty ||
-          emp.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          emp.id.contains(_searchQuery);
-      bool matchesZone = _selectedZone == null || emp.zone == _selectedZone;
-      bool matchesBranch =
-          _selectedBranch == null || emp.branch == _selectedBranch;
-      bool matchesDesignation =
-          _selectedDesignation == null ||
-          emp.designation == _selectedDesignation;
-      return matchesSearch &&
-          matchesZone &&
-          matchesBranch &&
-          matchesDesignation;
-    }).toList();
-  }
-
-  void setSelectedTab(String value) {
-    _selectedTab = value;
-    loadEmployees();
-  }
-
-  void setSelectedZone(String? value) {
-    _selectedZone = value;
-    notifyListeners();
-  }
-
-  void setSelectedBranch(String? value) {
-    _selectedBranch = value;
-    notifyListeners();
-  }
-
-  void setSelectedDesignation(String? value) {
-    _selectedDesignation = value;
-    notifyListeners();
-  }
-
-  void setSearchQuery(String value) {
-    _searchQuery = value;
-    notifyListeners();
-  }
-
-  void toggleFilters() {
-    _showFilters = !_showFilters;
-    notifyListeners();
-  }
-
-  void clearFilters() {
-    _selectedZone = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    notifyListeners();
-  }
-
-  Future<void> loadEmployees() async {
-    _isLoading = true;
-    notifyListeners();
-
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      _employees = [
-        Employee(
-          id: '12867',
-          name: 'Vimalkumar Palanisamy',
-          designation: 'Admin',
-          branch: 'chengalpattu',
-          zone: 'South',
-        ),
-        Employee(
-          id: '12866',
-          name: 'Nivetha',
-          designation: 'Manager',
-          branch: 'chengalpattu',
-          zone: 'South',
-        ),
-        Employee(
-          id: '12865',
-          name: 'Rajesh Kumar',
-          designation: 'Developer',
-          branch: 'bangalore',
-          zone: 'South',
-        ),
-        Employee(
-          id: '12864',
-          name: 'Priya Sharma',
-          designation: 'HR Manager',
-          branch: 'mumbai',
-          zone: 'West',
-        ),
-        Employee(
-          id: '12863',
-          name: 'Arjun Reddy',
-          designation: 'Team Lead',
-          branch: 'hyderabad',
-          zone: 'South',
-        ),
-      ];
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
+  void refreshPayslips(String empId) {
+    searchPayslipsByEmployee(empId);
   }
 }
 
+// Models
 class Employee {
   final String id;
   final String name;
@@ -345,8 +361,8 @@ class Employee {
   }
 }
 
-// lib/models/payslip.dart
 class Payslip {
+  final String id;
   final String monthYear;
   final String empId;
   final String name;
@@ -357,8 +373,11 @@ class Payslip {
   final double totalDeductions;
   final double netSalary;
   final int status;
+  final String pdfUrl;
+  final String fileName;
 
   Payslip({
+    required this.id,
     required this.monthYear,
     required this.empId,
     required this.name,
@@ -369,10 +388,13 @@ class Payslip {
     required this.totalDeductions,
     required this.netSalary,
     required this.status,
+    required this.pdfUrl,
+    required this.fileName,
   });
 
   factory Payslip.fromJson(Map<String, dynamic> json) {
     return Payslip(
+      id: json['id'] ?? '',
       monthYear: json['monthYear'] ?? '',
       empId: json['empId'] ?? '',
       name: json['name'] ?? '',
@@ -383,6 +405,8 @@ class Payslip {
       totalDeductions: (json['totalDeductions'] ?? 0).toDouble(),
       netSalary: (json['netSalary'] ?? 0).toDouble(),
       status: json['status'] ?? 0,
+      pdfUrl: json['pdfUrl'] ?? '',
+      fileName: json['fileName'] ?? 'payslip.pdf',
     );
   }
 }

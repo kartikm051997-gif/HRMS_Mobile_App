@@ -51,6 +51,7 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Ca
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
 import 'package:hrms_mobile_app/provider/PaySlipsDrawerProvider/PaySlipsDrawerProvider.dart';
+import 'package:hrms_mobile_app/provider/PaySlipsDrawerProvider/PayrollDetailsProvider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Applocation_Edit_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/JoiningFormsScreenProvider.dart';
@@ -144,6 +145,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SemiFilledApplicationProvider()),
         ChangeNotifierProvider(create: (_) => JoiningFormsScreenProvider()),
         ChangeNotifierProvider(create: (_) => PaySlipsDrawerProvider()),
+        ChangeNotifierProvider(create: (_) => PayrollDetailsProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
