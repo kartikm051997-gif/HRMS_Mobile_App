@@ -1,6 +1,6 @@
 class JoiningFormModel {
   final String empName;
-  final String? empDesignation;
+  final String empDesignation;
   final String empJoiningDate;
   final String branch;
   final String empSalary;

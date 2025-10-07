@@ -76,6 +76,8 @@ class _ViewProfileTabViewScreensState extends State<ViewProfileTabViewScreens>
                 indicatorColor: AppColor.whiteColor,
                 labelStyle: TextStyle(fontFamily: AppFonts.poppins),
                 tabs: const [
+                  Tab(text: 'Job Application Edit'),
+
                   Tab(text: 'Personal Detail'),
                   Tab(text: 'Education & Experience Detail'),
                   Tab(text: 'Other Details'),

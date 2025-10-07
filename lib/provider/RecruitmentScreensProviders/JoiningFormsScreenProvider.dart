@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/model/RecruitmentModel/Joining_Form_Model.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -106,7 +107,7 @@ class JoiningFormsScreenProvider extends ChangeNotifier {
     _selectedAssignedStaff = null;
     _selectedDateType = null;
 
-    _filteredEmployees = List.from(_allJobApplication);
+    _filteredEmployees = List.from(_allJoiningForm);
     notifyListeners();
   }
 
@@ -137,10 +138,10 @@ class JoiningFormsScreenProvider extends ChangeNotifier {
   }
 
   /// Employee data
-  List<JobApplicationModel> _allJobApplication = [];
-  List<JobApplicationModel> _filteredEmployees = [];
+  List<JoiningFormModel> _allJoiningForm = [];
+  List<JoiningFormModel> _filteredEmployees = [];
 
-  List<JobApplicationModel> get filteredEmployees => _filteredEmployees;
+  List<JoiningFormModel> get filteredEmployees => _filteredEmployees;
 
   TextEditingController searchController = TextEditingController();
 
@@ -156,69 +157,59 @@ class JoiningFormsScreenProvider extends ChangeNotifier {
 
   /// Initialize with sample data (replace with API call)
   void initializeEmployees() {
-    _allJobApplication = [
-      JobApplicationModel(
-        jobId: "RA232",
-        name: "RAJKUMAR MOHAMMEDAN",
-        phone: "95******41",
-        jobTitle: "Lab Technician",
-        primaryLocation: "Bengaluru - Hebbal",
-        uploadedBy: "https://example.com/recruiter2.jpg",
-        createdDate: "16/09/2025",
-        photoUrl: "https://example.com/photo1.jpg",
-        interviewDate: "12/08/2025",
-        joiningDate: "12/08/2025",
+    _allJoiningForm = [
+      JoiningFormModel(
+        branch: "Assam",
+        empCategory: "EMPLOYEE",
+        empDesignation: "Purchase Executive",
+        empJoiningDate: "21-02-2025",
+        empName: "Karthick",
+        empSalary: "300000",
+        uniqueId: "JF20252127",
+        update: "Edit",
       ),
-      JobApplicationModel(
-        jobId: "RA231",
-        name: "Sanjay E",
-        phone: "70******96",
-        jobTitle: "Lab Technician",
-        primaryLocation: "Bengaluru - Hebbal",
-        uploadedBy: "https://example.com/recruiter2.jpg",
-        createdDate: "16/09/2025",
-        photoUrl: "https://example.com/photo1.jpg",
-        interviewDate: "12/08/2025",
-        joiningDate: "12/08/2025",
+      JoiningFormModel(
+        branch: "Assam",
+        empCategory: "EMPLOYEE",
+        empDesignation: "Purchase Executive",
+        empJoiningDate: "21-02-2025",
+        empName: "Karthick",
+        empSalary: "300000",
+        uniqueId: "JF20252127",
+        update: "Edit",
       ),
-      JobApplicationModel(
-        jobId: "RA230",
-        name: "	Divya",
-        phone: "91******47",
-        jobTitle: "Lab Technician",
-        primaryLocation: "Bengaluru - Hebbal",
-        uploadedBy: "https://example.com/recruiter2.jpg",
-        createdDate: "16/09/2025",
-        photoUrl: "https://example.com/photo1.jpg",
-        interviewDate: "12/08/2025",
-        joiningDate: "12/08/2025",
+      JoiningFormModel(
+        branch: "Assam",
+        empCategory: "EMPLOYEE",
+        empDesignation: "Purchase Executive",
+        empJoiningDate: "21-02-2025",
+        empName: "Karthick",
+        empSalary: "300000",
+        uniqueId: "JF20252127",
+        update: "Edit",
       ),
-      JobApplicationModel(
-        jobId: "RA229",
-        name: "sadesh kumar",
-        phone: "9*******30",
-        jobTitle: "Lab Technician",
-        primaryLocation: "Bengaluru - Hebbal",
-        uploadedBy: "https://example.com/recruiter2.jpg",
-        createdDate: "16/09/2025",
-        photoUrl: "https://example.com/photo1.jpg",
-        interviewDate: "12/08/2025",
-        joiningDate: "12/08/2025",
+      JoiningFormModel(
+        branch: "Assam",
+        empCategory: "EMPLOYEE",
+        empDesignation: "Purchase Executive",
+        empJoiningDate: "21-02-2025",
+        empName: "Karthick",
+        empSalary: "300000",
+        uniqueId: "JF20252127",
+        update: "Edit",
       ),
-      JobApplicationModel(
-        jobId: "RA228",
-        name: "Sriram Kunjithapadam",
-        phone: "80******29",
-        jobTitle: "Lab Technician",
-        primaryLocation: "Bengaluru - Hebbal",
-        uploadedBy: "https://example.com/recruiter2.jpg",
-        createdDate: "16/09/2025",
-        photoUrl: "https://example.com/photo1.jpg",
-        interviewDate: "12/08/2025",
-        joiningDate: "12/08/2025",
+      JoiningFormModel(
+        branch: "Assam",
+        empCategory: "EMPLOYEE",
+        empDesignation: "Purchase Executive",
+        empJoiningDate: "21-02-2025",
+        empName: "Karthick",
+        empSalary: "300000",
+        uniqueId: "JF20252127",
+        update: "Edit",
       ),
     ];
-    _filteredEmployees = List.from(_allJobApplication);
+    _filteredEmployees = List.from(_allJoiningForm);
     notifyListeners();
   }
 
@@ -347,7 +338,7 @@ class JoiningFormsScreenProvider extends ChangeNotifier {
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
       _filteredEmployees =
-          _allJobApplication.where((employee) {
+          _allJoiningForm.where((employee) {
             bool matches = true;
 
             // Filter by company (if selected)
