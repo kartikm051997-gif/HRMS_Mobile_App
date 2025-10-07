@@ -20,6 +20,7 @@ class HelperUtil {
       AppRoutes.latePunchReports,
       AppRoutes.salaryReport,
       AppRoutes.employeeManagement,
+      AppRoutes.paySlips,
       AppRoutes.allEmployees,
       AppRoutes.professionals,
       AppRoutes.employees,

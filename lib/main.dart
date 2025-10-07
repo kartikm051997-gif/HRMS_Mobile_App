@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/payslip_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/AllEmployeeScreens/All_Employee_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreens/EmployeeBasicDeatils.dart';
@@ -12,6 +13,7 @@ import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/PaySlipsScreens/PaySlipDrawerScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplications/Job_Application_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JoiningFormsScreens/Joining_Forms_TabView_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
@@ -48,6 +50,7 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Notice_Per
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Category_Type_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
+import 'package:hrms_mobile_app/provider/PaySlipsDrawerProvider/PaySlipsDrawerProvider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Applocation_Edit_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/JoiningFormsScreenProvider.dart';
@@ -140,6 +143,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => JobApplicationEditProvider()),
         ChangeNotifierProvider(create: (_) => SemiFilledApplicationProvider()),
         ChangeNotifierProvider(create: (_) => JoiningFormsScreenProvider()),
+        ChangeNotifierProvider(create: (_) => PaySlipsDrawerProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -199,6 +203,8 @@ class MyApp extends StatelessWidget {
         return MisPunchReportsScreen();
       case AppRoutes.employeeManagement:
         return EmployeeManagementTabviewScreen();
+      case AppRoutes.paySlips:
+        return PaySlipDrawerScreen();
       case AppRoutes.allEmployees:
         return AllEmployeeScreen();
       case AppRoutes.professionals:
