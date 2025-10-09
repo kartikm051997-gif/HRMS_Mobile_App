@@ -527,7 +527,7 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                     ),
                                     Expanded(
                                       child: _InfoItem(
-                                        label: 'Deductions',
+                                        label: 'Total Deductions',
                                         value:
                                             '₹${payslip.totalDeductions.toStringAsFixed(2)}',
                                         icon: Icons.remove_circle_outline,
@@ -573,15 +573,22 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                     Expanded(
                                       child: SizedBox(
                                         child:
-                                            provider.isDownloadingPayslip(payslip.id)
+                                            provider.isDownloadingPayslip(
+                                                  payslip.id,
+                                                )
                                                 ? Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    vertical: 12,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 12,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFF4CAF50),
+                                                    color: const Color(
+                                                      0xFF4CAF50,
+                                                    ),
                                                     borderRadius:
-                                                        BorderRadius.circular(8),
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
                                                   ),
                                                   child: const Center(
                                                     child: SizedBox(
@@ -599,8 +606,11 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                                 )
                                                 : ElevatedButton.icon(
                                                   onPressed: () async {
-                                                    final success = await provider
-                                                        .downloadPayslip(payslip);
+                                                    final success =
+                                                        await provider
+                                                            .downloadPayslip(
+                                                              payslip,
+                                                            );
                                                     if (context.mounted) {
                                                       if (success) {
                                                         ScaffoldMessenger.of(
@@ -611,14 +621,16 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                                               "Payslip downloaded successfully: ${payslip.fileName}",
                                                               style: const TextStyle(
                                                                 fontFamily:
-                                                                    AppFonts.poppins,
+                                                                    AppFonts
+                                                                        .poppins,
                                                               ),
                                                             ),
                                                             backgroundColor:
                                                                 Colors.green,
-                                                            duration: const Duration(
-                                                              seconds: 2,
-                                                            ),
+                                                            duration:
+                                                                const Duration(
+                                                                  seconds: 2,
+                                                                ),
                                                           ),
                                                         );
                                                       } else {
@@ -630,7 +642,8 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                                               "Failed to download payslip",
                                                               style: TextStyle(
                                                                 fontFamily:
-                                                                    AppFonts.poppins,
+                                                                    AppFonts
+                                                                        .poppins,
                                                               ),
                                                             ),
                                                             backgroundColor:
@@ -643,46 +656,51 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                                       }
                                                     }
                                                   },
-                                                  icon: const Icon(
-                                                    Icons.file_download,
-                                                    size: 20,
-                                                  ),
                                                   label: const Text(
                                                     'Download Payslip',
                                                     style: TextStyle(
                                                       fontSize: 14,
-                                                      fontWeight: FontWeight.w600,
-                                                      fontFamily: AppFonts.poppins,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontFamily:
+                                                          AppFonts.poppins,
                                                     ),
                                                   ),
                                                   style: ElevatedButton.styleFrom(
-                                                    backgroundColor: const Color(
-                                                      0xFF4CAF50,
-                                                    ),
-                                                    foregroundColor: Colors.white,
+                                                    backgroundColor:
+                                                        const Color(0xFF4CAF50),
+                                                    foregroundColor:
+                                                        Colors.white,
                                                     padding:
                                                         const EdgeInsets.symmetric(
                                                           vertical: 12,
                                                         ),
                                                     shape: RoundedRectangleBorder(
                                                       borderRadius:
-                                                          BorderRadius.circular(8),
+                                                          BorderRadius.circular(
+                                                            8,
+                                                          ),
                                                     ),
                                                   ),
                                                 ),
                                       ),
                                     ),
-                                    SizedBox(width: 6,),
+                                    SizedBox(width: 6),
                                     Expanded(
                                       child: InkWell(
                                         onTap: () {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => PayrollDetailsScreen(
-                                                payslipId: payslip.id,
-                                                monthYear: payslip.monthYear, // Adjust this field name as per your payslip model
-                                              ),
+                                              builder:
+                                                  (
+                                                    context,
+                                                  ) => PayrollDetailsScreen(
+                                                    payslipId: payslip.id,
+                                                    monthYear:
+                                                        payslip
+                                                            .monthYear, // Adjust this field name as per your payslip model
+                                                  ),
                                             ),
                                           );
                                         },
@@ -693,17 +711,14 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF6A1B9A),
-                                            borderRadius: BorderRadius.circular(8),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                           ),
                                           child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: const [
-                                              Icon(
-                                                Icons.receipt_long,
-                                                size: 20,
-                                                color: Colors.white,
-                                              ),
-                                              SizedBox(width: 8),
                                               Text(
                                                 'Payroll Details',
                                                 style: TextStyle(

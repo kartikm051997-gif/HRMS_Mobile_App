@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
@@ -74,13 +75,14 @@ import 'package:hrms_mobile_app/provider/payroll_provider/Mispunch_Reports_Provi
 import 'package:hrms_mobile_app/provider/payroll_provider/Remote_Attendance_Provider.dart';
 import 'package:provider/provider.dart';
 import 'controller/ui_controller/appbar_controllers.dart';
+import 'core/components/BottomNavigationScreen/Bottom_Navigation_Screen.dart';
 import 'core/routes/app_route_observer.dart';
 import 'core/routes/routes.dart';
 import 'core/utils/helper_utils.dart';
 
 void main() async {
   runApp(const MyApp());
-  Get.lazyPut<AppBarController>(() => AppBarController());
+  Get.put(AppBarController());
 }
 
 class MyApp extends StatelessWidget {
@@ -192,7 +194,7 @@ class MyApp extends StatelessWidget {
       case AppRoutes.loginScreen:
         return LoginScreen();
       case AppRoutes.dashboardScreen:
-        return DashboardScreen();
+        return const DashboardScreen();
       case AppRoutes.deliverablesOverview:
         return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
@@ -225,6 +227,8 @@ class MyApp extends StatelessWidget {
         return SemiFilledApplicationScreens();
       case AppRoutes.joiningForms:
         return JoiningFormsTabViewScreen();
+      case AppRoutes.bottomNav:
+        return const BottomNavScreen();
 
       default:
         return const NotFoundPage();

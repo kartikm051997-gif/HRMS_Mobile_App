@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/components/BottomNavigationScreen/Bottom_Navigation_Screen.dart';
 import '../../../core/constants/appimages.dart';
+import '../../../provider/login_provider/login_provider.dart';
 import '../authenticationScreens/loginScreens/login_screen.dart';
+import '../dashboradScreens/dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -41,16 +45,35 @@ class _SplashScreenState extends State<SplashScreen>
     // Start Animation
     _controller.forward();
 
-    // Navigate to Dashboard After 3.5 sec
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) {
-            return LoginScreen();
-          },
-        ),
+    // Check session after animation
+    _checkSessionAfterDelay();
+  }
+
+  Future<void> _checkSessionAfterDelay() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (!mounted) return;
+
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+
+    // ✅ Use initializeSession() to load user data and check session
+    bool sessionValid = await loginProvider.initializeSession();
+
+    if (!mounted) return;
+
+    if (sessionValid) {
+      // Session valid -> navigate to Dashboard
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const BottomNavScreen()),
       );
-    });
+    } else {
+      // Session invalid -> navigate to Login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -64,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       body: AnimatedContainer(
         duration: const Duration(seconds: 3),
-        decoration: BoxDecoration(color: Colors.white),
+        decoration: const BoxDecoration(),
         child: Center(
           child: FadeTransition(
             opacity: _fadeAnimation,

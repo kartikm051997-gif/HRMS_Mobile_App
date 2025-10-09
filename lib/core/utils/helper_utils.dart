@@ -31,6 +31,7 @@ class HelperUtil {
       AppRoutes.semiFilledApplication,
       AppRoutes.joiningForms,
       AppRoutes.offerLetters,
+      AppRoutes.bottomNav,
     ];
 
     return validRoutes.contains(route);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
 import '../../../provider/PaySlipsDrawerProvider/PayrollDetailsProvider.dart';
 
 class PayrollDetailsScreen extends StatefulWidget {
@@ -28,104 +30,12 @@ class _PayrollDetailsScreenState extends State<PayrollDetailsScreen> {
     });
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF666666),
-              fontFamily: 'Poppins',
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF333333),
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 12),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF333333),
-          fontFamily: 'Poppins',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, {int maxLines = 1}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: Color(0xFF666666),
-            fontFamily: 'Poppins',
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0F0F0),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            '',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF333333),
-              fontFamily: 'Poppins',
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF6A1B9A),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Payroll Details',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 19,
-            fontWeight: FontWeight.w600,
-            fontFamily: 'Poppins',
-          ),
-        ),
-      ),
+      drawer: const TabletMobileDrawer(),
+      appBar: const CustomAppBar(title: "PaySlips Details"),
       body: Consumer<PayrollDetailsProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -140,87 +50,620 @@ class _PayrollDetailsScreenState extends State<PayrollDetailsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Basic Payroll Details
-                _buildDetailRow(
-                  'Gross Salary',
-                  provider.grossSalary.toStringAsFixed(2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Gross Salary',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.grossSalary.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
-                _buildDetailRow('Total Days', provider.totalDays.toString()),
-                _buildDetailRow('Worked Days', provider.workedDays.toString()),
-                _buildDetailRow('LOP Days', provider.lopDays.toString()),
-                _buildDetailRow('LOP', provider.lop.toStringAsFixed(2)),
-                _buildDetailRow(
-                  'Earned Amount',
-                  provider.earnedAmount.toStringAsFixed(2),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Days',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.totalDays.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Worked Days',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.workedDays.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'LOP Days',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.lopDays.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'LOP',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.lop.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Earned Amount',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.earnedAmount.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
 
                 // Allowances Section
-                _buildSectionTitle('Allowances :'),
-                _buildDetailRow(
-                  'Basic',
-                  provider.basicAllowance.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'HRA',
-                  provider.hraAllowance.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Incentive Bonus',
-                  provider.incentiveBonus.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Claim',
-                  provider.claimAllowance.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Allowance(TDS Not applicable)',
-                  provider.tdsNotApplicableAllowance.toStringAsFixed(2),
+                const SizedBox(height: 20),
+                const Text(
+                  'Allowances :',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
+                    fontFamily: 'Poppins',
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildTextField('Allowance Comments', maxLines: 3),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Basic',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.basicAllowance.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'HRA',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.hraAllowance.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Incentive Bonus',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.incentiveBonus.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Claim',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.claimAllowance.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Allowance(TDS Not applicable)',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.tdsNotApplicableAllowance.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
-                _buildDetailRow(
-                  'Total Allowance',
-                  provider.totalAllowance.toString(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Allowance Comments',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF333333),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Allowance',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.totalAllowance.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
 
                 // Deductions Section
-                _buildSectionTitle('Deductions :'),
-                _buildDetailRow(
-                  'Provident Fund',
-                  provider.providentFund.toStringAsFixed(2),
-                ),
-                _buildDetailRow('PT', provider.pt.toStringAsFixed(2)),
-                _buildDetailRow('ESI', provider.esi.toStringAsFixed(2)),
-                _buildDetailRow(
-                  'Security Deposit',
-                  provider.securityDeposit.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Loan & Advance',
-                  provider.loanAdvance.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Training',
-                  provider.training.toStringAsFixed(2),
-                ),
-                _buildDetailRow(
-                  'Others',
-                  provider.othersDeduction.toStringAsFixed(2),
+                const SizedBox(height: 20),
+                const Text(
+                  'Deductions :',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF333333),
+                    fontFamily: 'Poppins',
+                  ),
                 ),
                 const SizedBox(height: 12),
-                _buildTextField('Others Comments', maxLines: 3),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Provident Fund',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.providentFund.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'PT',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.pt.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'ESI',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.esi.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Security Deposit',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.securityDeposit.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Loan & Advance',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.loanAdvance.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Training',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.training.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Others',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.othersDeduction.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
-                _buildDetailRow(
-                  'Total Deductions',
-                  provider.totalDeductions.toString(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Others Comments',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF333333),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Deductions',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.totalDeductions.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
 
                 // Final Details
                 const SizedBox(height: 20),
-                _buildDetailRow('TDS', provider.tds.toString()),
-                _buildDetailRow(
-                  'Net Salary',
-                  provider.netSalary.toStringAsFixed(2),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'TDS',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.tds.toString(),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Net Salary',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    Text(
+                      provider.netSalary.toStringAsFixed(2),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 12),
@@ -271,7 +714,36 @@ class _PayrollDetailsScreenState extends State<PayrollDetailsScreen> {
                 ),
 
                 const SizedBox(height: 12),
-                _buildTextField('Status Comments', maxLines: 3),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Status Comments',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF666666),
+                        fontFamily: 'Poppins',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF333333),
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 30),
               ],
             ),
