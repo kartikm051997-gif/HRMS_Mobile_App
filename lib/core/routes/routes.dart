@@ -28,4 +28,7 @@ class AppRoutes {
   static const semiFilledApplication = '/semiFilledApplication';
   static const joiningForms = '/joiningForms'; // ✅ Lowercase here
   static const offerLetters = '/offerLetters'; // ✅ Lowercase here
+  static const mainBottomNavScreen = '/MainBottomNavScreen';
+  static const String bottomNav = "/bottomNav";
+  // ✅ Lowercase here
 }

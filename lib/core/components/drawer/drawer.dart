@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
+import 'package:provider/provider.dart';
+import '../../../provider/login_provider/login_provider.dart';
 import '../../constants/appcolor_dart.dart';
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
@@ -21,6 +23,8 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+    final user = loginProvider.loginData?.user;
     double screenWidth = MediaQuery.of(context).size.width;
     double navItemFontSize = 17;
     final AppBarController appBarController = Get.find<AppBarController>();
@@ -44,7 +48,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                 ),
                 padding: EdgeInsets.zero,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -68,6 +72,69 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                                 fit: BoxFit.cover,
                               ),
                         ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          CircleAvatar(
+                            radius: 40, // Set a fixed radius
+                            backgroundColor: Colors.grey.shade300,
+                            backgroundImage:
+                                (user?.avatar != null &&
+                                        user!.avatar!.isNotEmpty)
+                                    ? NetworkImage(
+                                      "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                    )
+                                    : null,
+                            child:
+                                (user?.avatar == null || user!.avatar!.isEmpty)
+                                    ? Text(
+                                      user?.fullname != null &&
+                                              user!.fullname!.isNotEmpty
+                                          ? user.fullname![0].toUpperCase()
+                                          : "U",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    )
+                                    : null,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.fullname ?? "User",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              Text(
+                                user?.branch ?? "Branch Unknown",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                  fontFamily: AppFonts.poppins,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          /// Branch Name
+                        ],
                       ),
                     ),
                   ],
