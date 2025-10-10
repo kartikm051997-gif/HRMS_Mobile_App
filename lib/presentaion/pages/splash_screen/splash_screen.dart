@@ -5,7 +5,6 @@ import '../../../core/components/BottomNavigationScreen/Bottom_Navigation_Screen
 import '../../../core/constants/appimages.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import '../authenticationScreens/loginScreens/login_screen.dart';
-import '../dashboradScreens/dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

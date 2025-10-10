@@ -32,6 +32,7 @@ class HelperUtil {
       AppRoutes.joiningForms,
       AppRoutes.offerLetters,
       AppRoutes.bottomNav,
+      AppRoutes.trackingTabViewScreen,
     ];
 
     return validRoutes.contains(route);

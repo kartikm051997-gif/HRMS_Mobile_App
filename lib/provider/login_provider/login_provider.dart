@@ -1,4 +1,3 @@
-// lib/provider/login_provider/login_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -233,12 +232,14 @@ class LoginProvider extends ChangeNotifier {
   /// NAVIGATE TO DASHBOARD
   void _navigateToDashboard(BuildContext context) {
     try {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.dashboardScreen, (route) => false);
+      // Navigate to BottomNavScreen instead of DashboardScreen
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.bottomNav, // Changed from AppRoutes.dashboardScreen
+        (route) => false,
+      );
     } catch (e) {
       if (kDebugMode) print("❌ Navigation Error: $e");
-      Get.offAllNamed(AppRoutes.dashboardScreen);
+      Get.offAllNamed(AppRoutes.bottomNav); // Changed from dashboardScreen
     }
   }
 

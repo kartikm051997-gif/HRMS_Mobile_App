@@ -1,10 +1,8 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
-import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/payslip_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/AllEmployeeScreens/All_Employee_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreens/EmployeeBasicDeatils.dart';
@@ -20,7 +18,7 @@ import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JoiningForm
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
-import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/dashboard_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/Tracking_TabView_Screen.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
@@ -101,9 +99,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
         ChangeNotifierProvider(create: (_) => SalaryDetailsProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
-        ChangeNotifierProvider(
-          create: (_) => EmployeeInformationTabBarProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => EmployeeInformationTabBarProvider(),),
         ChangeNotifierProvider(create: (_) => EmployeeInformationProvider()),
         ChangeNotifierProvider(create: (_) => EduExpProvider()),
         ChangeNotifierProvider(create: (_) => OtherDetailsProvider()),
@@ -136,9 +132,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => F11EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ResumeManagementProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationProvider()),
-        ChangeNotifierProvider(
-          create: (_) => RecruitmentEmpPersonalDetailsProvider(),
-        ),
+        ChangeNotifierProvider(create: (_) => RecruitmentEmpPersonalDetailsProvider(),),
         ChangeNotifierProvider(create: (_) => RecruitmentEduExpProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentOthersProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
@@ -194,7 +188,7 @@ class MyApp extends StatelessWidget {
       case AppRoutes.loginScreen:
         return LoginScreen();
       case AppRoutes.dashboardScreen:
-        return const DashboardScreen();
+        return const TrackingTabViewScreen();
       case AppRoutes.deliverablesOverview:
         return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
@@ -229,6 +223,8 @@ class MyApp extends StatelessWidget {
         return JoiningFormsTabViewScreen();
       case AppRoutes.bottomNav:
         return const BottomNavScreen();
+      case AppRoutes.trackingTabViewScreen:
+        return const TrackingTabViewScreen();
 
       default:
         return const NotFoundPage();
