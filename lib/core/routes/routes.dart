@@ -30,5 +30,6 @@ class AppRoutes {
   static const offerLetters = '/offerLetters'; // ✅ Lowercase here
   static const mainBottomNavScreen = '/MainBottomNavScreen';
   static const String bottomNav = "/bottomNav";
+  static const String trackingTabViewScreen = "/TrackingTabViewScreen";
   // ✅ Lowercase here
 }
