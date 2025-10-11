@@ -97,7 +97,7 @@ class _TrackingTabViewScreenState extends State<TrackingTabViewScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [UserTrackingScreen(), TackingHistoryScreen()],
+        children: const [UserTrackingScreen(), TrackingHistoryScreen()],
       ),
     );
   }
