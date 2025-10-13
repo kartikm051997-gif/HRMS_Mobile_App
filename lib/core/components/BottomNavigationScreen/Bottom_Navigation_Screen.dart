@@ -67,24 +67,25 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
               radius: 14,
               backgroundColor: Colors.grey.shade200,
               backgroundImage:
-              (user?.avatar != null && user!.avatar!.isNotEmpty)
-                  ? NetworkImage(
-                "https://app.draravindsivf.com/hrms/${user.avatar}",
-              )
-                  : null,
-              child: (user?.avatar == null || user!.avatar!.isEmpty)
-                  ? Text(
-                user?.fullname != null && user!.fullname!.isNotEmpty
-                    ? user.fullname![0].toUpperCase()
-                    : "U",
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  fontFamily: AppFonts.poppins,
-                ),
-              )
-                  : null,
+                  (user?.avatar != null && user!.avatar!.isNotEmpty)
+                      ? NetworkImage(
+                        "https://app.draravindsivf.com/hrms/${user.avatar}",
+                      )
+                      : null,
+              child:
+                  (user?.avatar == null || user!.avatar!.isEmpty)
+                      ? Text(
+                        user?.fullname != null && user!.fullname!.isNotEmpty
+                            ? user.fullname![0].toUpperCase()
+                            : "U",
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      )
+                      : null,
             ),
             label: "Profile",
           ),
