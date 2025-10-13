@@ -52,9 +52,8 @@ dependencies:
   shared_preferences: ^2.2.2
   floating_bottom_navigation_bar: ^1.5.2
   geolocator: ^11.0.0
-  google_maps_flutter: ^2.6.0
+  google_maps_flutter:
   geocoding: ^2.2.0
-  image_picker: ^1.1.2  # or latest version
 
 
 
