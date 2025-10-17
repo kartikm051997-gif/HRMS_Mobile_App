@@ -186,7 +186,8 @@ class LoginProvider extends ChangeNotifier {
       // Check if session expired (20 minutes)
       final loginDate = DateTime.fromMillisecondsSinceEpoch(loginTime);
       final now = DateTime.now();
-      if (now.difference(loginDate).inMinutes >= 20) {
+      if (now.difference(loginDate).inMinutes >= 60) // for 1-hour session
+      {
         await prefs.clear();
         _loginData = null;
         notifyListeners();

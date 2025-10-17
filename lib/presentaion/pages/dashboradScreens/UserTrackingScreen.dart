@@ -6,107 +6,12 @@ import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../../../model/UserTrackingModel/UserTrackingModel.dart';
 
-// ==================== DIRECTIONS SERVICE ====================
-class DirectionsService {
-  static const String _baseUrl =
-      'https://maps.googleapis.com/maps/api/directions/json';
 
-  static const String _apiKey = 'AIzaSyAj0Wx6E4wZcM1-Og7ympdaB9kNv-f9JgE';
-
-  /// Fetch directions between origin and destination
-  static Future<List<LatLng>?> getDirections({
-    required LatLng origin,
-    required LatLng destination,
-    String mode = 'driving',
-  }) async {
-    try {
-      final String url =
-          '$_baseUrl?origin=${origin.latitude},${origin.longitude}'
-          '&destination=${destination.latitude},${destination.longitude}'
-          '&mode=$mode'
-          '&key=$_apiKey';
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['status'] == 'OK') {
-          final String encodedPolyline =
-              data['routes'][0]['overview_polyline']['points'];
-
-          return _decodePolyline(encodedPolyline);
-        } else {
-          if (kDebugMode) {
-            print('Directions API error: ${data['status']}');
-            print('Error message: ${data['error_message'] ?? 'No message'}');
-          }
-          return null;
-        }
-      } else {
-        if (kDebugMode) {
-          print('HTTP error: ${response.statusCode}');
-        }
-        return null;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error fetching directions: $e');
-      }
-      return null;
-    }
-  }
-
-  /// Decode Google's encoded polyline format
-  static List<LatLng> _decodePolyline(String encoded) {
-    List<LatLng> polyline = [];
-    int index = 0;
-    int len = encoded.length;
-    int lat = 0;
-    int lng = 0;
-
-    while (index < len) {
-      int b;
-      int shift = 0;
-      int result = 0;
-
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-
-      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      double latitude = lat / 1E5;
-      double longitude = lng / 1E5;
-
-      polyline.add(LatLng(latitude, longitude));
-    }
-
-    return polyline;
-  }
-}
-
-// ==================== TRACKING MANAGER ====================
 class TrackingManager {
   static final TrackingManager _instance = TrackingManager._internal();
   factory TrackingManager() => _instance;
@@ -117,16 +22,25 @@ class TrackingManager {
   String? currentCheckInTime;
   LatLng? currentCheckInLocation;
   String? currentCheckInAddress;
+  List<LatLng> currentRoutePoints = [];
+  List<AddressCheckpoint> currentAddressCheckpoints = [];
 
   final List<VoidCallback> _listeners = [];
+  bool _isInitialized = false;
 
-  void addListener(VoidCallback listener) {
-    _listeners.add(listener);
-  }
+  // Configuration
+  static const double MIN_DISTANCE_METERS = 100.0; // Track address every 100m
+  static const String _keyTrackingRecords = 'tracking_records';
+  static const String _keyIsCheckedIn = 'is_checked_in';
+  static const String _keyCheckInTime = 'check_in_time';
+  static const String _keyCheckInLat = 'check_in_lat';
+  static const String _keyCheckInLng = 'check_in_lng';
+  static const String _keyCheckInAddress = 'check_in_address';
+  static const String _keyRoutePoints = 'route_points';
+  static const String _keyAddressCheckpoints = 'address_checkpoints';
 
-  void removeListener(VoidCallback listener) {
-    _listeners.remove(listener);
-  }
+  void addListener(VoidCallback listener) => _listeners.add(listener);
+  void removeListener(VoidCallback listener) => _listeners.remove(listener);
 
   void _notifyListeners() {
     for (var listener in _listeners) {
@@ -134,8 +48,95 @@ class TrackingManager {
     }
   }
 
+  Future<void> loadData() async {
+    if (_isInitialized) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final recordsJson = prefs.getString(_keyTrackingRecords);
+      if (recordsJson != null) {
+        final List<dynamic> decoded = json.decode(recordsJson);
+        trackingRecords =
+            decoded
+                .map((item) => UserTrackingRecordModel.fromJson(item))
+                .toList();
+      }
+
+      isCheckedIn = prefs.getBool(_keyIsCheckedIn) ?? false;
+      currentCheckInTime = prefs.getString(_keyCheckInTime);
+      currentCheckInAddress = prefs.getString(_keyCheckInAddress);
+
+      final lat = prefs.getDouble(_keyCheckInLat);
+      final lng = prefs.getDouble(_keyCheckInLng);
+      if (lat != null && lng != null) {
+        currentCheckInLocation = LatLng(lat, lng);
+      }
+
+      final routeJson = prefs.getString(_keyRoutePoints);
+      if (routeJson != null) {
+        final List<dynamic> decoded = json.decode(routeJson);
+        currentRoutePoints =
+            decoded.map((point) => LatLng(point['lat'], point['lng'])).toList();
+      }
+
+      final checkpointsJson = prefs.getString(_keyAddressCheckpoints);
+      if (checkpointsJson != null) {
+        final List<dynamic> decoded = json.decode(checkpointsJson);
+        currentAddressCheckpoints =
+            decoded.map((item) => AddressCheckpoint.fromJson(item)).toList();
+      }
+
+      _isInitialized = true;
+      _notifyListeners();
+    } catch (e) {
+      if (kDebugMode) print('Error loading data: $e');
+    }
+  }
+
+  Future<void> _saveData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final recordsJson = json.encode(
+        trackingRecords.map((r) => r.toJson()).toList(),
+      );
+      await prefs.setString(_keyTrackingRecords, recordsJson);
+
+      await prefs.setBool(_keyIsCheckedIn, isCheckedIn);
+      await prefs.setString(_keyCheckInTime, currentCheckInTime ?? '');
+      await prefs.setString(_keyCheckInAddress, currentCheckInAddress ?? '');
+
+      if (currentCheckInLocation != null) {
+        await prefs.setDouble(_keyCheckInLat, currentCheckInLocation!.latitude);
+        await prefs.setDouble(
+          _keyCheckInLng,
+          currentCheckInLocation!.longitude,
+        );
+      } else {
+        await prefs.remove(_keyCheckInLat);
+        await prefs.remove(_keyCheckInLng);
+      }
+
+      final routeJson = json.encode(
+        currentRoutePoints
+            .map((point) => {'lat': point.latitude, 'lng': point.longitude})
+            .toList(),
+      );
+      await prefs.setString(_keyRoutePoints, routeJson);
+
+      final checkpointsJson = json.encode(
+        currentAddressCheckpoints.map((c) => c.toJson()).toList(),
+      );
+      await prefs.setString(_keyAddressCheckpoints, checkpointsJson);
+    } catch (e) {
+      if (kDebugMode) print('Error saving data: $e');
+    }
+  }
+
   void addRecord(UserTrackingRecordModel record) {
     trackingRecords.insert(0, record);
+    _saveData();
     _notifyListeners();
   }
 
@@ -144,7 +145,64 @@ class TrackingManager {
     currentCheckInTime = time;
     currentCheckInLocation = location;
     currentCheckInAddress = address;
+    currentRoutePoints = [location];
+    currentAddressCheckpoints = [
+      AddressCheckpoint(
+        location: location,
+        address: address,
+        timestamp: DateTime.now(),
+        pointIndex: 0,
+      ),
+    ];
+    _saveData();
     _notifyListeners();
+  }
+
+  void addLocationPoint(LatLng location) {
+    if (!isCheckedIn) return;
+
+    if (currentRoutePoints.isNotEmpty) {
+      final lastPoint = currentRoutePoints.last;
+      final distance = Geolocator.distanceBetween(
+        lastPoint.latitude,
+        lastPoint.longitude,
+        location.latitude,
+        location.longitude,
+      );
+      if (distance < 5) return;
+    }
+
+    currentRoutePoints.add(location);
+    _saveData();
+    _notifyListeners();
+  }
+
+  Future<void> addAddressCheckpoint(LatLng location, String address) async {
+    if (!isCheckedIn || currentAddressCheckpoints.isEmpty) return;
+
+    final lastCheckpoint = currentAddressCheckpoints.last;
+    final distance = Geolocator.distanceBetween(
+      lastCheckpoint.location.latitude,
+      lastCheckpoint.location.longitude,
+      location.latitude,
+      location.longitude,
+    );
+
+    // Only add if 100+ meters away AND address is different
+    if (distance >= MIN_DISTANCE_METERS && address != lastCheckpoint.address) {
+      currentAddressCheckpoints.add(
+        AddressCheckpoint(
+          location: location,
+          address: address,
+          timestamp: DateTime.now(),
+          distanceFromPrevious: distance,
+          pointIndex: currentRoutePoints.length - 1,
+        ),
+      );
+      print('New Address: $address (${distance.toStringAsFixed(0)}m away)');
+      _saveData();
+      _notifyListeners();
+    }
   }
 
   void checkOut() {
@@ -152,6 +210,9 @@ class TrackingManager {
     currentCheckInTime = null;
     currentCheckInLocation = null;
     currentCheckInAddress = null;
+    currentRoutePoints.clear();
+    currentAddressCheckpoints.clear();
+    _saveData();
     _notifyListeners();
   }
 }
@@ -165,36 +226,27 @@ class LocationService {
   LatLng? _currentLocation;
   StreamSubscription<Position>? _positionStream;
   bool _isServiceEnabled = false;
+  String? _lastFetchedAddress;
+
+  Function(LatLng)? onLocationUpdate;
+  Function(LatLng, String)? onAddressChange;
 
   LatLng? get currentLocation => _currentLocation;
+  String? get lastFetchedAddress => _lastFetchedAddress;
   bool get isServiceEnabled => _isServiceEnabled;
 
   Future<bool> initLocationService() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        if (kDebugMode) {
-          print('Location service is disabled on device');
-        }
-        return false;
-      }
+      if (!serviceEnabled) return false;
 
       LocationPermission permission = await Geolocator.checkPermission();
-
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (kDebugMode) {
-            print('Location permissions are denied');
-          }
-          return false;
-        }
+        if (permission == LocationPermission.denied) return false;
       }
 
       if (permission == LocationPermission.deniedForever) {
-        if (kDebugMode) {
-          print('Location permissions are permanently denied');
-        }
         await Geolocator.openLocationSettings();
         return false;
       }
@@ -204,9 +256,7 @@ class LocationService {
       _isServiceEnabled = true;
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('Location service initialization error: $e');
-      }
+      if (kDebugMode) print('Location service error: $e');
       return false;
     }
   }
@@ -214,154 +264,87 @@ class LocationService {
   Future<void> _getInitialPosition() async {
     try {
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
-        timeLimit: const Duration(seconds: 15),
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
       _currentLocation = LatLng(position.latitude, position.longitude);
-      if (kDebugMode) {
-        print('Initial location fetched: $_currentLocation');
-      }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting initial position: $e');
-      }
-      try {
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        _currentLocation = LatLng(position.latitude, position.longitude);
-        if (kDebugMode) {
-          print('Location fetched with high accuracy: $_currentLocation');
-        }
-      } catch (e2) {
-        if (kDebugMode) {
-          print('Failed to get location with any accuracy: $e2');
-        }
-      }
+      if (kDebugMode) print('Error getting initial position: $e');
     }
   }
 
   void _startLocationUpdates() {
     const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.best,
-      distanceFilter: 5,
-      timeLimit: Duration(seconds: 20),
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
     );
 
     _positionStream = Geolocator.getPositionStream(
       locationSettings: locationSettings,
     ).listen(
-      (Position position) {
+      (Position position) async {
         _currentLocation = LatLng(position.latitude, position.longitude);
-        if (kDebugMode) {
-          print('Location updated: $_currentLocation');
+
+        if (onLocationUpdate != null) {
+          onLocationUpdate!(_currentLocation!);
+        }
+
+        if (onAddressChange != null) {
+          try {
+            final address = await getAddressFromLocation(_currentLocation!);
+            _lastFetchedAddress = address;
+            onAddressChange!(_currentLocation!, address);
+          } catch (e) {
+            if (kDebugMode) print('Error fetching address: $e');
+          }
         }
       },
       onError: (e) {
-        if (kDebugMode) {
-          print('Position stream error: $e');
-        }
+        if (kDebugMode) print('Position stream error: $e');
       },
     );
   }
 
   Future<LatLng?> getLocationOnce() async {
     try {
-      if (kDebugMode) {
-        print('Fetching fresh location...');
-      }
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
-        timeLimit: const Duration(seconds: 20),
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
       final location = LatLng(position.latitude, position.longitude);
       _currentLocation = location;
-      if (kDebugMode) {
-        print('Fresh location fetched: $location');
-      }
       return location;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error with best accuracy: $e');
-      }
-      try {
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 15),
-        );
-        final location = LatLng(position.latitude, position.longitude);
-        _currentLocation = location;
-        if (kDebugMode) {
-          print('Location fetched with high accuracy: $location');
-        }
-        return location;
-      } catch (e2) {
-        if (kDebugMode) {
-          print('Error with high accuracy: $e2');
-        }
-        try {
-          Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.medium,
-            timeLimit: const Duration(seconds: 10),
-          );
-          final location = LatLng(position.latitude, position.longitude);
-          _currentLocation = location;
-          if (kDebugMode) {
-            print('Location fetched with medium accuracy: $location');
-          }
-          return location;
-        } catch (e3) {
-          if (kDebugMode) {
-            print('Failed to get location: $e3');
-          }
-          if (_currentLocation != null) {
-            if (kDebugMode) {
-              print('Using last known location: $_currentLocation');
-            }
-            return _currentLocation;
-          }
-          return null;
-        }
-      }
+      return _currentLocation;
     }
   }
 
   Future<String> getAddressFromLocation(LatLng location) async {
     try {
-      List<Placemark> placeMarks = await placemarkFromCoordinates(
+      List<Placemark> placemarks = await placemarkFromCoordinates(
         location.latitude,
         location.longitude,
       );
 
-      if (placeMarks.isNotEmpty) {
-        Placemark place = placeMarks[0];
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        List<String> addressParts = [];
 
-        String address = '';
         if (place.street != null && place.street!.isNotEmpty) {
-          address += '${place.street!}, ';
+          addressParts.add(place.street!);
         }
         if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-          address += '${place.subLocality!}, ';
+          addressParts.add(place.subLocality!);
         }
         if (place.locality != null && place.locality!.isNotEmpty) {
-          address += '${place.locality!}, ';
-        }
-        if (place.administrativeArea != null &&
-            place.administrativeArea!.isNotEmpty) {
-          address += '${place.administrativeArea!}, ';
-        }
-        if (place.postalCode != null && place.postalCode!.isNotEmpty) {
-          address += place.postalCode!;
+          addressParts.add(place.locality!);
         }
 
-        address = address.replaceAll(RegExp(r', $'), '');
+        String address = addressParts.take(3).join(', ');
         return address.isEmpty ? 'Address not found' : address;
       }
       return 'Address not found';
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting address: $e');
-      }
       return 'Unable to fetch address';
     }
   }
@@ -389,17 +372,25 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
 
   bool isLoadingLocation = false;
   bool isLoading = false;
-  bool isLoadingRoute = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
+    _initializeApp();
     _trackingManager.addListener(_onTrackingStateChanged);
+
+    _locationService.onLocationUpdate = (LatLng location) {
+      _trackingManager.addLocationPoint(location);
+    };
+
+    _locationService.onAddressChange = (LatLng location, String address) {
+      _trackingManager.addAddressCheckpoint(location, address);
+    };
   }
 
-  Future<void> _initializeLocation() async {
+  Future<void> _initializeApp() async {
     setState(() => isLoadingLocation = true);
+    await _trackingManager.loadData();
     bool success = await _locationService.initLocationService();
     setState(() => isLoadingLocation = false);
 
@@ -428,7 +419,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
 
     if (_trackingManager.isCheckedIn &&
         _trackingManager.currentCheckInLocation != null) {
-      // Add check-in marker
       _markers.add(
         Marker(
           markerId: const MarkerId('check_in'),
@@ -445,7 +435,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
     }
 
     if (_locationService.currentLocation != null) {
-      // Add current location marker
       _markers.add(
         Marker(
           markerId: const MarkerId('current_location'),
@@ -455,50 +444,48 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
         ),
       );
 
-      // Draw route polyline if checked in
-      if (_trackingManager.isCheckedIn &&
-          _trackingManager.currentCheckInLocation != null) {
-        setState(() => isLoadingRoute = true);
-
-        // Fetch directions from Google Directions API
-        List<LatLng>? routePoints = await DirectionsService.getDirections(
-          origin: _trackingManager.currentCheckInLocation!,
-          destination: _locationService.currentLocation!,
-          mode: 'driving', // Change to 'walking' if needed
+      // Add address checkpoint markers (orange)
+      for (
+        int i = 0;
+        i < _trackingManager.currentAddressCheckpoints.length;
+        i++
+      ) {
+        final checkpoint = _trackingManager.currentAddressCheckpoints[i];
+        _markers.add(
+          Marker(
+            markerId: MarkerId('checkpoint_$i'),
+            position: checkpoint.location,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueOrange,
+            ),
+            infoWindow: InfoWindow(
+              title: 'Stop ${i + 1}',
+              snippet: checkpoint.address,
+            ),
+          ),
         );
+      }
 
-        setState(() => isLoadingRoute = false);
-
-        if (routePoints != null && routePoints.isNotEmpty) {
-          // Add polyline with route points following roads
-          _polyLines.add(
-            Polyline(
-              polylineId: const PolylineId('tracking_route'),
-              points: routePoints,
-              color: Colors.teal,
-              width: 4,
-              patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-            ),
-          );
-        } else {
-          // Fallback to straight line if API fails
-          _polyLines.add(
-            Polyline(
-              polylineId: const PolylineId('tracking_route'),
-              points: [
-                _trackingManager.currentCheckInLocation!,
-                _locationService.currentLocation!,
-              ],
-              color: Colors.teal.withOpacity(0.5),
-              width: 4,
-              patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-            ),
-          );
-        }
+      if (_trackingManager.isCheckedIn &&
+          _trackingManager.currentRoutePoints.length >= 2) {
+        _polyLines.add(
+          Polyline(
+            polylineId: const PolylineId('tracking_route'),
+            points: _trackingManager.currentRoutePoints,
+            color: const Color(0xFF4285F4),
+            width: 6,
+            geodesic: true,
+            startCap: Cap.roundCap,
+            endCap: Cap.roundCap,
+            jointType: JointType.round,
+          ),
+        );
       }
     }
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _handleCheckIn() async {
@@ -519,25 +506,17 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
 
     try {
       LatLng? location = await _locationService.getLocationOnce();
-
       if (location == null) {
-        setState(() => isLoading = false);
-        throw Exception(
-          'Could not fetch your current location. Please enable GPS and try again.',
-        );
+        throw Exception('Could not fetch your current location');
       }
 
       String address = await _locationService.getAddressFromLocation(location);
-
       final now = DateTime.now();
       final formatter = DateFormat('hh:mm a');
       final time = formatter.format(now);
 
       _trackingManager.checkIn(time, location, address);
-
-      // Update map with route
       await _updateMapMarkersWithRoute();
-
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(location, 15));
 
       setState(() => isLoading = false);
@@ -588,17 +567,15 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
 
     try {
       LatLng? location = await _locationService.getLocationOnce();
-
       if (location == null) {
-        setState(() => isLoading = false);
-        throw Exception(
-          'Could not fetch your current location. Please enable GPS and try again.',
-        );
+        throw Exception('Could not fetch your current location');
       }
 
+      _trackingManager.addLocationPoint(location);
       String checkOutAddress = await _locationService.getAddressFromLocation(
         location,
       );
+      await _trackingManager.addAddressCheckpoint(location, checkOutAddress);
 
       final now = DateTime.now();
       final formatter = DateFormat('hh:mm a');
@@ -615,6 +592,10 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
             _trackingManager.currentCheckInAddress ?? 'Address not available',
         checkOutAddress: checkOutAddress,
         status: 'checked_out',
+        routePoints: List<LatLng>.from(_trackingManager.currentRoutePoints),
+        addressCheckpoints: List<AddressCheckpoint>.from(
+          _trackingManager.currentAddressCheckpoints,
+        ),
       );
 
       _trackingManager.addRecord(newRecord);
@@ -650,53 +631,11 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
     }
   }
 
-  void _fitMapToBounds() {
-    if (_mapController == null || _trackingManager.trackingRecords.isEmpty) {
-      return;
-    }
-
-    List<LatLng> allLocations = [];
-
-    for (var record in _trackingManager.trackingRecords) {
-      allLocations.add(record.checkInLocation);
-      allLocations.add(record.checkOutLocation);
-    }
-
-    if (allLocations.length == 1) {
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: allLocations[0], zoom: 14),
-        ),
-      );
-      return;
-    }
-
-    double minLat = allLocations[0].latitude;
-    double maxLat = allLocations[0].latitude;
-    double minLng = allLocations[0].longitude;
-    double maxLng = allLocations[0].longitude;
-
-    for (var location in allLocations) {
-      if (location.latitude < minLat) minLat = location.latitude;
-      if (location.latitude > maxLat) maxLat = location.latitude;
-      if (location.longitude < minLng) minLng = location.longitude;
-      if (location.longitude > maxLng) maxLng = location.longitude;
-    }
-
-    LatLngBounds bounds = LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
-
-    _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          // TOP SECTION - Check In/Out Buttons
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -711,7 +650,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
             ),
             child: Column(
               children: [
-                // Status Badge (when checked in)
                 if (_trackingManager.isCheckedIn) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -735,7 +673,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Tracking started at ${_trackingManager.currentCheckInTime}',
+                          '${_trackingManager.currentRoutePoints.length} points • ${_trackingManager.currentAddressCheckpoints.length} places',
                           style: TextStyle(
                             color: Colors.green,
                             fontWeight: FontWeight.w600,
@@ -747,7 +685,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Address Display
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -763,24 +700,16 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (_trackingManager.currentCheckInAddress !=
-                                  null)
-                                Text(
-                                  _trackingManager.currentCheckInAddress!,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade800,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              const SizedBox(height: 4),
-                            ],
+                          child: Text(
+                            _trackingManager.currentCheckInAddress ?? '',
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -788,8 +717,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-
-                // Buttons Row
                 Row(
                   children: [
                     Expanded(
@@ -853,149 +780,38 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
               ],
             ),
           ),
-
-          // MAP SECTION - Expands to fill space
           Expanded(
             child:
                 _locationService.currentLocation == null
                     ? const Center(child: CircularProgressIndicator())
-                    : Stack(
-                      children: [
-                        GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: _locationService.currentLocation!,
-                            zoom: 15,
-                          ),
-                          markers: _markers,
-                          polylines: _polyLines,
-                          onMapCreated: (controller) {
-                            _mapController = controller;
-                            if (_trackingManager.trackingRecords.isNotEmpty) {
-                              _fitMapToBounds();
-                            }
+                    : GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: _locationService.currentLocation!,
+                        zoom: 15,
+                      ),
+                      markers: _markers,
+                      polylines: _polyLines,
+                      onMapCreated: (controller) {
+                        _mapController = controller;
+                      },
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: true,
+                      zoomControlsEnabled: true,
+                      mapToolbarEnabled: true,
+                      gestureRecognizers:
+                          <Factory<OneSequenceGestureRecognizer>>{
+                            Factory<OneSequenceGestureRecognizer>(
+                              () => EagerGestureRecognizer(),
+                            ),
                           },
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: true,
-                          zoomControlsEnabled: true,
-                          mapToolbarEnabled: true,
-                          gestureRecognizers:
-                              <Factory<OneSequenceGestureRecognizer>>{
-                                Factory<OneSequenceGestureRecognizer>(
-                                  () => EagerGestureRecognizer(),
-                                ),
-                              },
-                          zoomGesturesEnabled: true,
-                          scrollGesturesEnabled: true,
-                          rotateGesturesEnabled: true,
-                          tiltGesturesEnabled: true,
-                        ),
-
-                        // Loading Route Indicator
-                        if (isLoadingRoute)
-                          Positioned(
-                            bottom: 16,
-                            left: 0,
-                            right: 0,
-                            child: Center(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      'Loading route...',
-                                      style: TextStyle(
-                                        fontFamily: AppFonts.poppins,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        // Legend
-                        Positioned(
-                          top: 12,
-                          right: 12,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildLegendItem('Check In', Colors.green),
-                                const SizedBox(height: 8),
-                                _buildLegendItem('Check Out', Colors.red),
-                                const SizedBox(height: 8),
-                                _buildLegendItem('Current', Colors.blue),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                      zoomGesturesEnabled: true,
+                      scrollGesturesEnabled: true,
+                      rotateGesturesEnabled: true,
+                      tiltGesturesEnabled: true,
                     ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildLegendItem(String title, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: AppFonts.poppins,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
     );
   }
 
