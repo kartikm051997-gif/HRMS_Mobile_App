@@ -11,7 +11,6 @@ import 'dart:async';
 import 'dart:convert';
 import '../../../model/UserTrackingModel/UserTrackingModel.dart';
 
-
 class TrackingManager {
   static final TrackingManager _instance = TrackingManager._internal();
   factory TrackingManager() => _instance;
@@ -330,7 +329,13 @@ class LocationService {
         Placemark place = placemarks[0];
         List<String> addressParts = [];
 
-        if (place.street != null && place.street!.isNotEmpty) {
+        // Add all available components for full address
+        if (place.name != null && place.name!.isNotEmpty) {
+          addressParts.add(place.name!);
+        }
+        if (place.street != null &&
+            place.street!.isNotEmpty &&
+            place.street != place.name) {
           addressParts.add(place.street!);
         }
         if (place.subLocality != null && place.subLocality!.isNotEmpty) {
@@ -339,8 +344,22 @@ class LocationService {
         if (place.locality != null && place.locality!.isNotEmpty) {
           addressParts.add(place.locality!);
         }
+        if (place.subAdministrativeArea != null &&
+            place.subAdministrativeArea!.isNotEmpty) {
+          addressParts.add(place.subAdministrativeArea!);
+        }
+        if (place.administrativeArea != null &&
+            place.administrativeArea!.isNotEmpty) {
+          addressParts.add(place.administrativeArea!);
+        }
+        if (place.postalCode != null && place.postalCode!.isNotEmpty) {
+          addressParts.add(place.postalCode!);
+        }
+        if (place.country != null && place.country!.isNotEmpty) {
+          addressParts.add(place.country!);
+        }
 
-        String address = addressParts.take(3).join(', ');
+        String address = addressParts.join(', ');
         return address.isEmpty ? 'Address not found' : address;
       }
       return 'Address not found';
@@ -502,6 +521,42 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
       return;
     }
 
+    // ✅ CHECK LOCATION SERVICE AND PERMISSION FIRST
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showLocationRequiredDialog(
+        title: 'Location Service Disabled',
+        message: 'Please enable location services to check in',
+        isServiceIssue: true,
+      );
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showLocationRequiredDialog(
+          title: 'Location Permission Denied',
+          message: 'Location permission is required to check in',
+          isServiceIssue: false,
+        );
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      _showLocationRequiredDialog(
+        title: 'Location Permission Required',
+        message:
+            'Please enable location permission from app settings to check in',
+        isServiceIssue: false,
+        showSettings: true,
+      );
+      return;
+    }
+
+    // ✅ NOW PROCEED WITH CHECK-IN
     setState(() => isLoading = true);
 
     try {
@@ -821,5 +876,89 @@ class _UserTrackingScreenState extends State<UserTrackingScreen> {
     _mapController?.dispose();
     _locationService.dispose();
     super.dispose();
+  }
+
+  void _showLocationRequiredDialog({
+    required String title,
+    required String message,
+    bool isServiceIssue = false,
+    bool showSettings = false,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.location_off, color: Colors.red.shade700, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(fontFamily: AppFonts.poppins, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'No Thanks',
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                if (showSettings) {
+                  // Open app settings for permission
+                  await Geolocator.openAppSettings();
+                } else if (isServiceIssue) {
+                  // Open location settings
+                  await Geolocator.openLocationSettings();
+                } else {
+                  // Request permission again
+                  await Geolocator.requestPermission();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                showSettings ? 'Open Settings' : 'Turn On',
+                style: const TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
