@@ -54,6 +54,15 @@ dependencies:
   geolocator: ^11.0.0
   google_maps_flutter:
   geocoding: ^2.2.0
+  flutter_polyline_points: ^2.0.0
+  flutter_background_service:
+  flutter_background_service_android:
+  flutter_local_notifications:
+  camera:
+  google_mlkit_face_detection: ^0.10.0
+
+
+
 
 
 

@@ -19,7 +19,7 @@ class _TrackingTabViewScreenState extends State<TrackingTabViewScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> menuItems = ["Tracking", "Tracking History"];
+  final List<String> menuItems = ["Tracking", " History List"];
 
   @override
   void initState() {
