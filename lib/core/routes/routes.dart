@@ -2,7 +2,8 @@ class AppRoutes {
   static const splashScreen = '/splashscreen';
   static const loginScreen = '/loginScreen';
 
-  static const dashboardScreen = '/dashboardScreen';
+  static const userTracking = '/userTracking';
+  static const adminTracking = '/adminTracking';
   static const deliverablesOverview = '/DeliverablesOverview';
   static const addDeliverable = '/addDeliverable'; // ✅ Lowercase here
   static const attendanceLog = '/attendanceLog'; // ✅ Lowercase here
@@ -31,5 +32,10 @@ class AppRoutes {
   static const mainBottomNavScreen = '/MainBottomNavScreen';
   static const String bottomNav = "/bottomNav";
   static const String trackingTabViewScreen = "/TrackingTabViewScreen";
-  // ✅ Lowercase here
+  static const String trackingDetailScreen = '/trackingdetail';
+
+
+
+
+// ✅ Lowercase here
 }

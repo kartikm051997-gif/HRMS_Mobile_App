@@ -154,8 +154,14 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                         // Dashboard
                         TabletAppbarNavigationBtn(
                           leadingIcon: Icons.dashboard,
-                          title: 'DashBoard',
-                          targetPage: AppRoutes.dashboardScreen,
+                          title: 'User Tracking',
+                          targetPage: AppRoutes.userTracking,
+                          fontSize: navItemFontSize,
+                        ),
+                        TabletAppbarNavigationBtn(
+                          leadingIcon: Icons.admin_panel_settings,
+                          title: 'Admin Tracking',
+                          targetPage: AppRoutes.adminTracking,
                           fontSize: navItemFontSize,
                         ),
 

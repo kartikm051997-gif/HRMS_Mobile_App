@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
+import 'package:hrms_mobile_app/presentaion/pages/AdminScreen/AdminTrackingScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
@@ -19,6 +20,8 @@ import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManag
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/Tracking_TabView_Screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/UserTrackingScreen.dart';
+import 'package:hrms_mobile_app/provider/AdminTrackingProvider/AdminTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
@@ -72,6 +75,7 @@ import 'package:hrms_mobile_app/provider/payroll_provider/Attendance_Log_provide
 import 'package:hrms_mobile_app/provider/payroll_provider/Mispunch_Reports_Provider.dart';
 import 'package:hrms_mobile_app/provider/payroll_provider/Remote_Attendance_Provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'controller/ui_controller/appbar_controllers.dart';
 import 'core/components/BottomNavigationScreen/Bottom_Navigation_Screen.dart';
 import 'core/routes/app_route_observer.dart';
@@ -79,18 +83,40 @@ import 'core/routes/routes.dart';
 import 'core/utils/helper_utils.dart';
 
 void main() async {
-  runApp(const MyApp());
-  Get.put(AppBarController());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // 🟢 Initialize GetX dependencies
+  Get.put(AppBarController(), permanent: true);
+
+  // 🟢 Initialize LoginProvider and restore session
+  final loginProvider = LoginProvider();
+  final isLoggedIn = await loginProvider.initializeSession();
+
+  // 🟢 Initialize background service (non-blocking)
+  Future.microtask(() async {
+    await BackgroundTrackingService().initializeService();
+  });
+
+  // ✅ Launch app with the initialized loginProvider instance
+  runApp(MyApp(isLoggedIn: isLoggedIn, loginProvider: loginProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+  final LoginProvider loginProvider;
+
+  const MyApp({
+    super.key,
+    required this.isLoggedIn,
+    required this.loginProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => LoginProvider()),
+        // 🟢 Use the pre-initialized LoginProvider instance
+        ChangeNotifierProvider<LoginProvider>.value(value: loginProvider),
         ChangeNotifierProvider(create: (_) => ForgetPasswordProvider()),
         ChangeNotifierProvider(create: (_) => DeliverablesOverviewProvider()),
         ChangeNotifierProvider(create: (_) => AddDeliverableProvider()),
@@ -99,7 +125,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DocumentProvider()),
         ChangeNotifierProvider(create: (_) => SalaryDetailsProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
-        ChangeNotifierProvider(create: (_) => EmployeeInformationTabBarProvider(),),
+        ChangeNotifierProvider(
+          create: (_) => EmployeeInformationTabBarProvider(),
+        ),
         ChangeNotifierProvider(create: (_) => EmployeeInformationProvider()),
         ChangeNotifierProvider(create: (_) => EduExpProvider()),
         ChangeNotifierProvider(create: (_) => OtherDetailsProvider()),
@@ -132,16 +160,18 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => F11EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => ResumeManagementProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationProvider()),
-        ChangeNotifierProvider(create: (_) => RecruitmentEmpPersonalDetailsProvider(),),
+        ChangeNotifierProvider(
+          create: (_) => RecruitmentEmpPersonalDetailsProvider(),
+        ),
         ChangeNotifierProvider(create: (_) => RecruitmentEduExpProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentOthersProvider()),
-        ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
         ChangeNotifierProvider(create: (_) => RecruitmentReferenceProvider()),
         ChangeNotifierProvider(create: (_) => JobApplicationEditProvider()),
         ChangeNotifierProvider(create: (_) => SemiFilledApplicationProvider()),
         ChangeNotifierProvider(create: (_) => JoiningFormsScreenProvider()),
         ChangeNotifierProvider(create: (_) => PaySlipsDrawerProvider()),
         ChangeNotifierProvider(create: (_) => PayrollDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => AdminTrackingProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -158,9 +188,8 @@ class MyApp extends StatelessWidget {
             fillColor: const Color(0xFFF2F2F2),
           ),
         ),
-
         navigatorObservers: [AppRouteObserver()],
-        initialRoute: "/splashscreen",
+        initialRoute: isLoggedIn ? AppRoutes.bottomNav : AppRoutes.splashScreen,
         onGenerateRoute: (settings) {
           String routeName = settings.name ?? '';
           routeName = HelperUtil.normalizeUrl(routeName);
@@ -187,8 +216,10 @@ class MyApp extends StatelessWidget {
         return SplashScreen();
       case AppRoutes.loginScreen:
         return LoginScreen();
-      case AppRoutes.dashboardScreen:
+      case AppRoutes.userTracking:
         return const TrackingTabViewScreen();
+      case AppRoutes.adminTracking:
+        return const AdminTrackingScreen();
       case AppRoutes.deliverablesOverview:
         return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
@@ -225,7 +256,6 @@ class MyApp extends StatelessWidget {
         return const BottomNavScreen();
       case AppRoutes.trackingTabViewScreen:
         return const TrackingTabViewScreen();
-
       default:
         return const NotFoundPage();
     }

@@ -4,11 +4,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
 import '../../apibaseScreen/Api_Base_Screens.dart';
 import '../../core/routes/routes.dart';
-import 'package:get/get.dart';
 import '../../model/login_model/login_model.dart';
+import '../../presentaion/pages/dashboradScreens/UserTrackingScreen.dart';
 
+/// Allow self-signed certs (dev only)
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
@@ -21,6 +23,7 @@ class MyHttpOverrides extends HttpOverrides {
 class LoginProvider extends ChangeNotifier {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+
   bool _isLoading = false;
   LoginApiModel? _loginData;
   String? _errorMessage;
@@ -33,7 +36,9 @@ class LoginProvider extends ChangeNotifier {
     HttpOverrides.global = MyHttpOverrides();
   }
 
-  /// LOGIN API
+  // ---------------------------------------------------------------------------
+  // LOGIN API
+  // ---------------------------------------------------------------------------
   Future<void> login(BuildContext context) async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       _showSnackBar(context, "Please fill all fields");
@@ -61,120 +66,136 @@ class LoginProvider extends ChangeNotifier {
           )
           .timeout(
             const Duration(seconds: 30),
-            onTimeout:
-                () =>
-                    throw TimeoutException(
-                      'Connection timeout after 30 seconds',
-                    ),
+            onTimeout: () => throw TimeoutException('Connection timeout'),
           );
 
-      if (kDebugMode) print("✅ Response Status: ${response.statusCode}");
-      if (kDebugMode) print("📦 Response Body: ${response.body}");
+      if (kDebugMode) {
+        print("✅ Response Status: ${response.statusCode}");
+        print("📦 Response Body: ${response.body}");
+      }
+      if (_loginData != null) {
+        print("✅ Restored user: ${_loginData?.user?.fullname}");
+      }
 
       if (response.statusCode == 200) {
-        try {
-          final jsonResponse = jsonDecode(response.body);
-          _loginData = LoginApiModel.fromJson(jsonResponse);
+        final jsonResponse = jsonDecode(response.body);
+        _loginData = LoginApiModel.fromJson(jsonResponse);
 
-          if (kDebugMode) print("📊 Login Status: ${_loginData?.status}");
-          if (kDebugMode) print("📝 Login Message: ${_loginData?.message}");
-          if (kDebugMode) print("👤 User: ${_loginData?.user}");
-          if (kDebugMode) print("🆔 User ID: ${_loginData?.userId}");
+        if (_loginData?.status?.toLowerCase() == 'success' ||
+            _loginData?.status == '1' ||
+            _loginData?.status?.toLowerCase() == 'ok' ||
+            _loginData?.status?.toLowerCase() == 'true') {
+          _showSnackBar(context, "✅ Login Successful!");
 
-          // Check success
-          if (_loginData?.status == 'success' ||
-              _loginData?.status == '1' ||
-              _loginData?.status?.toLowerCase() == 'ok' ||
-              _loginData?.status?.toLowerCase() == 'true') {
-            _showSnackBar(context, "✅ Login Successful!");
+          await _saveLoginSession(jsonResponse); // save session & empId
 
-            // FIRST: Save to SharedPreferences
-            await _saveLoginSession(jsonResponse);
+          // 🟢 Add this line below:
+          await handleLoginSuccess(jsonResponse);
 
-            // SECOND: Verify it was saved
-            await _verifyDataSaved();
+          await _verifyDataSaved();
 
-            _clearFields();
+          _clearFields();
 
-            await Future.delayed(const Duration(milliseconds: 500));
-            _navigateToDashboard(context);
-          } else {
-            _errorMessage = _loginData?.message ?? "Invalid ID or Password";
-            _showSnackBar(context, _errorMessage!);
-          }
-        } catch (e) {
-          _errorMessage = "Error parsing response: $e";
+          await Future.delayed(const Duration(milliseconds: 400));
+          _navigateToDashboard(context);
+        } else {
+          _errorMessage = _loginData?.message ?? "Invalid ID or Password";
           _showSnackBar(context, _errorMessage!);
-          if (kDebugMode) print("❌ Parse Error: $e");
         }
-      } else if (response.statusCode == 401) {
-        _errorMessage = "Invalid ID or Password";
-        _showSnackBar(context, _errorMessage!);
-      } else if (response.statusCode == 404) {
-        _errorMessage = "API endpoint not found";
-        _showSnackBar(context, _errorMessage!);
-      } else if (response.statusCode == 500) {
-        _errorMessage = "Server error. Please try again later";
-        _showSnackBar(context, _errorMessage!);
       } else {
-        _errorMessage = "Login failed. Status: ${response.statusCode}";
+        _errorMessage = "Login failed (HTTP ${response.statusCode})";
         _showSnackBar(context, _errorMessage!);
       }
     } on TimeoutException catch (e) {
-      _errorMessage =
-          "⏱️ Connection timeout. Please check your internet connection";
-      _showSnackBar(context, _errorMessage!);
-      if (kDebugMode) print("❌ Timeout Error: $e");
-    } on SocketException catch (e) {
-      _errorMessage = "❌ Network error. Please check your internet connection";
-      _showSnackBar(context, _errorMessage!);
-      if (kDebugMode) print("❌ Socket Error: $e");
+      _showSnackBar(context, "⏱️ Timeout: $e");
+    } on SocketException {
+      _showSnackBar(context, "❌ Network error. Check connection.");
     } catch (e) {
-      _errorMessage = "Error: ${e.toString()}";
-      _showSnackBar(context, _errorMessage!);
-      if (kDebugMode) print("❌ Login Error: $e");
+      _showSnackBar(context, "❌ Error: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// VERIFY DATA SAVED
-  Future<void> _verifyDataSaved() async {
+  // ---------------------------------------------------------------------------
+  // SAVE SESSION + EMPLOYEE ID
+  // ---------------------------------------------------------------------------
+  Future<void> _saveLoginSession(Map<String, dynamic> userData) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedData = prefs.getString('userData');
-      if (kDebugMode) print("📝 Saved userData: $savedData");
-      if (kDebugMode) print("✅ isLoggedIn: ${prefs.getBool('isLoggedIn')}");
-      if (kDebugMode) print("⏰ loginTime: ${prefs.getInt('loginTime')}");
+
+      // Save entire login response
+      final userDataString = jsonEncode(userData);
+      await prefs.setString('userData', userDataString);
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setInt('loginTime', DateTime.now().millisecondsSinceEpoch);
+
+      // ✅ Extract and save employee ID
+      final userId = userData['userId']?.toString() ?? '';
+      await prefs.setString('employeeId', userId);
+
+      if (kDebugMode) {
+        print("✅ Saved to SharedPreferences:");
+        print("🆔 employeeId: $userId");
+      }
     } catch (e) {
-      if (kDebugMode) print("❌ Verify error: $e");
+      if (kDebugMode) print("❌ Error saving session: $e");
     }
   }
 
-  /// SHOW SNACKBAR
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: message.contains("✅") ? Colors.green : Colors.red,
-      ),
-    );
+  Future<void> handleLoginSuccess(Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final newUserId = userData['userId']?.toString() ?? '';
+
+    // ✅ Always use singleton instance
+    final trackingManager = TrackingManager();
+
+    // Load previous user ID
+    final oldUserId = prefs.getString('employeeId');
+
+    if (kDebugMode) {
+      print("👥 Old User: $oldUserId | New User: $newUserId");
+    }
+
+    // ✅ If new user logs in
+    if (oldUserId != null && oldUserId != newUserId) {
+      // Clear *everything* for previous user
+      await trackingManager.setUserId(oldUserId);
+      await trackingManager.clearCurrentUserData(clearHistory: true);
+      trackingManager.trackingRecords.clear();
+      trackingManager.currentRoutePoints.clear();
+      trackingManager.currentAddressCheckpoints.clear();
+
+      if (kDebugMode) print("🧹 Cleared old user's full tracking data");
+    } else {
+      // Same user logs in again
+      await trackingManager.clearCurrentUserData(clearHistory: false);
+      if (kDebugMode) print("✅ Same user re-login, kept history");
+    }
+
+    // ✅ Set up for the new user
+    await prefs.setString('employeeId', newUserId);
+    await trackingManager.setUserId(newUserId);
+
+    // Also clear in-memory caches just in case
+    trackingManager.trackingRecords.clear();
+    trackingManager.currentRoutePoints.clear();
+    trackingManager.currentAddressCheckpoints.clear();
+
+    if (kDebugMode) {
+      print("✅ TrackingManager now active for new user: $newUserId");
+    }
   }
 
-  /// Initialize session: load user data + check session validity
+  // ---------------------------------------------------------------------------
+  // INITIALIZE SESSION (check expiry)
+  // ---------------------------------------------------------------------------
   Future<bool> initializeSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
       final loginTime = prefs.getInt('loginTime');
-
-      if (kDebugMode) print("🔍 Checking session...");
-      if (kDebugMode) print("✅ isLoggedIn: $isLoggedIn");
-      if (kDebugMode) print("⏰ loginTime: $loginTime");
 
       if (!isLoggedIn || loginTime == null) {
         _loginData = null;
@@ -183,92 +204,79 @@ class LoginProvider extends ChangeNotifier {
         return false;
       }
 
-      // Check if session expired (20 minutes)
       final loginDate = DateTime.fromMillisecondsSinceEpoch(loginTime);
       final now = DateTime.now();
-      if (now.difference(loginDate).inMinutes >= 60) // for 1-hour session
-      {
-        await prefs.clear();
+
+      // 2 days (2880 minutes)
+      if (now.difference(loginDate).inMinutes >= 2880) {
+        // ❌ Session expired, clear only login data (not employeeId)
+        await prefs.remove('isLoggedIn');
+        await prefs.remove('loginTime');
+        await prefs.remove('userData');
+
         _loginData = null;
         notifyListeners();
-        if (kDebugMode) print("❌ Session expired");
+        if (kDebugMode) print("❌ Session expired after 2 days");
         return false;
       }
 
-      // Load user data from SharedPreferences
+      // Load user data
       final userData = prefs.getString('userData');
-      if (kDebugMode) print("📝 Loading userData: $userData");
-
       if (userData != null && userData.isNotEmpty) {
-        try {
-          final decodedData = jsonDecode(userData);
-          _loginData = LoginApiModel.fromJson(decodedData);
-          notifyListeners();
-          if (kDebugMode) print("✅ User data loaded successfully");
-          if (kDebugMode) print("👤 User: ${_loginData?.user?.fullname}");
-          if (kDebugMode) print("🏢 Branch: ${_loginData?.user?.branch}");
-          return true;
-        } catch (e) {
-          if (kDebugMode) print("❌ Error decoding userData: $e");
-          return false;
-        }
-      } else {
-        if (kDebugMode) print("❌ userData is null or empty");
-        return false;
+        final decoded = jsonDecode(userData);
+        _loginData = LoginApiModel.fromJson(decoded);
+        notifyListeners();
+        if (kDebugMode) print("✅ Session restored");
+        return true;
       }
+      return false;
     } catch (e) {
-      _loginData = null;
-      notifyListeners();
-      if (kDebugMode) print("❌ Initialize session error: $e");
+      if (kDebugMode) print("❌ initializeSession error: $e");
       return false;
     }
   }
 
-  /// CLEAR TEXT FIELDS
+  // ---------------------------------------------------------------------------
+  // VERIFY SAVED DATA (debug)
+  // ---------------------------------------------------------------------------
+  Future<void> _verifyDataSaved() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (kDebugMode) {
+      print("📝 userData: ${prefs.getString('userData')}");
+      print("✅ isLoggedIn: ${prefs.getBool('isLoggedIn')}");
+      print("⏰ loginTime: ${prefs.getInt('loginTime')}");
+      print("🆔 employeeId: ${prefs.getString('employeeId')}");
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // SNACKBAR / NAVIGATION / UTILITIES
+  // ---------------------------------------------------------------------------
+  void _showSnackBar(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        duration: const Duration(seconds: 3),
+        backgroundColor: msg.contains("✅") ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  void _navigateToDashboard(BuildContext context) {
+    try {
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.bottomNav, (route) => false);
+    } catch (_) {
+      Get.offAllNamed(AppRoutes.bottomNav);
+    }
+  }
+
   void _clearFields() {
     emailController.clear();
     passwordController.clear();
   }
-
-  /// NAVIGATE TO DASHBOARD
-  void _navigateToDashboard(BuildContext context) {
-    try {
-      // Navigate to BottomNavScreen instead of DashboardScreen
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.bottomNav, // Changed from AppRoutes.dashboardScreen
-        (route) => false,
-      );
-    } catch (e) {
-      if (kDebugMode) print("❌ Navigation Error: $e");
-      Get.offAllNamed(AppRoutes.bottomNav); // Changed from dashboardScreen
-    }
-  }
-
-  /// SAVE LOGIN SESSION WITH USER DATA
-  Future<void> _saveLoginSession(Map<String, dynamic> userData) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Save the entire response as userData
-      final userDataString = jsonEncode(userData);
-      await prefs.setString('userData', userDataString);
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setInt('loginTime', DateTime.now().millisecondsSinceEpoch);
-
-      if (kDebugMode) print("✅ Saved to SharedPreferences:");
-      if (kDebugMode) print("📝 userData: $userDataString");
-      if (kDebugMode) print("✅ isLoggedIn: true");
-    } catch (e) {
-      if (kDebugMode) print("❌ Error saving session: $e");
-    }
-  }
-
-  /// CHECK SESSION VALIDITY (used in SplashScreen)
-  Future<bool> checkSessionValidity() async {
-    return await initializeSession();
-  }
-
-  /// LOGOUT
 
   @override
   void dispose() {
@@ -278,10 +286,10 @@ class LoginProvider extends ChangeNotifier {
   }
 }
 
+/// TimeoutException class (for clarity)
 class TimeoutException implements Exception {
   final String message;
   TimeoutException(this.message);
-
   @override
   String toString() => message;
 }
