@@ -60,6 +60,8 @@ dependencies:
   flutter_local_notifications:
   camera:
   google_mlkit_face_detection: ^0.10.0
+  floating_bottom_bar: ^0.0.1
+
 
 
 

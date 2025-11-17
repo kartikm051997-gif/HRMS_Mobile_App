@@ -7,7 +7,7 @@ class HelperUtil {
       AppRoutes.splashScreen,
       AppRoutes.splashScreen,
       AppRoutes.loginScreen,
-      AppRoutes.userTracking,
+      AppRoutes.userTrackingScreen,
       AppRoutes.adminTracking,
       AppRoutes.deliverablesOverview,
       AppRoutes.attendanceLog,

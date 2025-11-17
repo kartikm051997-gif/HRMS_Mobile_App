@@ -5,9 +5,9 @@ import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../core/constants/appcolor_dart.dart';
+import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import '../authenticationScreens/loginScreens/login_screen.dart';
-import '../dashboradScreens/UserTrackingScreen.dart';
 import 'FullImageViewScreen.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -290,24 +290,26 @@ class UserProfileScreen extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    final trackingManager = TrackingManager();
+
+    // ✅ Get tracking provider from context
+    final trackingProvider = context.read<UserTrackingProvider>();
 
     // ✅ Clear session only (keep history)
-    await trackingManager.clearCurrentUserData(clearHistory: false);
+    await trackingProvider.clearCurrentUserData(clearHistory: false);
 
     // ✅ Clear login data
     await prefs.remove('userData');
     await prefs.remove('isLoggedIn');
     await prefs.remove('loginTime');
     await prefs.remove('employeeId');
+    await prefs.remove('logged_in_emp_id'); // Also remove this
 
     if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => LoginScreen()),
-        (route) => false,
+            (route) => false,
       );
     }
 
     debugPrint("👋 Logged out — session cleared, history kept");
-  }
-}
+  }}

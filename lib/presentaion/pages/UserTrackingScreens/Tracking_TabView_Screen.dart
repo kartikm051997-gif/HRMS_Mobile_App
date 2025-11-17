@@ -8,14 +8,14 @@ import '../../../provider/login_provider/login_provider.dart';
 import 'TackingHistoryScreen.dart';
 import 'UserTrackingScreen.dart';
 
-class TrackingTabViewScreen extends StatefulWidget {
-  const TrackingTabViewScreen({super.key});
+class UserTrackingTabViewScreen extends StatefulWidget {
+  const UserTrackingTabViewScreen({super.key});
 
   @override
-  State<TrackingTabViewScreen> createState() => _TrackingTabViewScreenState();
+  State<UserTrackingTabViewScreen> createState() => _UserTrackingTabViewScreenState();
 }
 
-class _TrackingTabViewScreenState extends State<TrackingTabViewScreen>
+class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 

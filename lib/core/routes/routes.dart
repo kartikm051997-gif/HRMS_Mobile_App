@@ -2,7 +2,7 @@ class AppRoutes {
   static const splashScreen = '/splashscreen';
   static const loginScreen = '/loginScreen';
 
-  static const userTracking = '/userTracking';
+  static const userTrackingScreen = '/userTracking';
   static const adminTracking = '/adminTracking';
   static const deliverablesOverview = '/DeliverablesOverview';
   static const addDeliverable = '/addDeliverable'; // ✅ Lowercase here

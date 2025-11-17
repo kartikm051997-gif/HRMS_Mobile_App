@@ -1,74 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../model/UserTrackingModel/UserTrackingModel.dart';
+import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import 'TrackingDetailScreen.dart';
-import 'UserTrackingScreen.dart';
 
 // ==================== TRACKING HISTORY SCREEN ====================
-class TrackingHistoryScreen extends StatefulWidget {
+class TrackingHistoryScreen extends StatelessWidget {
   const TrackingHistoryScreen({super.key});
-
-  @override
-  State<TrackingHistoryScreen> createState() => _TrackingHistoryScreenState();
-}
-
-class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
-  final TrackingManager _trackingManager = TrackingManager();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadData();
-    _trackingManager.addListener(_onDataChanged);
-  }
-
-  Future<void> _loadData() async {
-    await _trackingManager.loadData();
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
-  void _onDataChanged() {
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-          _trackingManager.trackingRecords.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.history, size: 64, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No tracking history yet',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade600,
-                        fontFamily: AppFonts.poppins,
-                      ),
+      body: Consumer<UserTrackingProvider>(
+        builder: (context, provider, child) {
+          if (provider.trackingRecords.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No tracking history yet',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey.shade600,
+                      fontFamily: AppFonts.poppins,
                     ),
-                  ],
-                ),
-              )
-              : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: _trackingManager.trackingRecords.length,
-                separatorBuilder:
-                    (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final record = _trackingManager.trackingRecords[index];
-                  return _buildHistoryCard(record);
-                },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Check in to start tracking',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade400,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                ],
               ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              // Optionally reload data if needed
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: provider.trackingRecords.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final record = provider.trackingRecords[index];
+                return _buildHistoryCard(context, record);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildHistoryCard(UserTrackingRecordModel record) {
+  Widget _buildHistoryCard(
+    BuildContext context,
+    UserTrackingRecordModel record,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -95,6 +93,7 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header with session ID and date
             Row(
               children: [
                 Container(
@@ -128,6 +127,8 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
               ],
             ),
             const SizedBox(height: 16),
+
+            // Check In Info
             Row(
               children: [
                 Container(
@@ -151,7 +152,7 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
                         'Check In',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: Colors.grey.shade600,
                           fontFamily: AppFonts.poppins,
                         ),
                       ),
@@ -191,6 +192,8 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
                 ),
               ],
             ),
+
+            // Divider
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
@@ -200,6 +203,8 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
                 ],
               ),
             ),
+
+            // Check Out Info
             Row(
               children: [
                 Container(
@@ -219,11 +224,11 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Check Out',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: Colors.grey.shade600,
                           fontFamily: AppFonts.poppins,
                         ),
                       ),
@@ -263,15 +268,68 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
                 ),
               ],
             ),
+
+            // Optional: Show tracking stats
+            if (record.routePoints != null &&
+                record.routePoints!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      Icons.route,
+                      '${record.routePoints!.length}',
+                      'Points',
+                    ),
+                    Container(
+                      width: 1,
+                      height: 30,
+                      color: Colors.grey.shade300,
+                    ),
+                    _buildStatItem(
+                      Icons.place,
+                      '${record.addressCheckpoints?.length ?? 0}',
+                      'Stops',
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _trackingManager.removeListener(_onDataChanged);
-    super.dispose();
+  Widget _buildStatItem(IconData icon, String value, String label) {
+    return Column(
+      children: [
+        Icon(icon, size: 20, color: Colors.blue.shade700),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.blue.shade700,
+            fontFamily: AppFonts.poppins,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            color: Colors.grey.shade600,
+            fontFamily: AppFonts.poppins,
+          ),
+        ),
+      ],
+    );
   }
 }
