@@ -5,10 +5,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart'; // ✅ Add this
 import '../../apibaseScreen/Api_Base_Screens.dart';
 import '../../core/routes/routes.dart';
 import '../../model/login_model/login_model.dart';
-import '../../presentaion/pages/dashboradScreens/UserTrackingScreen.dart';
+import '../UserTrackingProvider/UserTrackingProvider.dart'; // ✅ Add this
 
 /// Allow self-signed certs (dev only)
 class MyHttpOverrides extends HttpOverrides {
@@ -54,20 +55,20 @@ class LoginProvider extends ChangeNotifier {
 
       final response = await http
           .post(
-            Uri.parse(ApiBase.loginEndpoint),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode({
-              'id': emailController.text.trim(),
-              'pass': passwordController.text.trim(),
-            }),
-          )
+        Uri.parse(ApiBase.loginEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'id': emailController.text.trim(),
+          'pass': passwordController.text.trim(),
+        }),
+      )
           .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () => throw TimeoutException('Connection timeout'),
-          );
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Connection timeout'),
+      );
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
@@ -87,10 +88,10 @@ class LoginProvider extends ChangeNotifier {
             _loginData?.status?.toLowerCase() == 'true') {
           _showSnackBar(context, "✅ Login Successful!");
 
-          await _saveLoginSession(jsonResponse); // save session & empId
+          await _saveLoginSession(jsonResponse);
 
-          // 🟢 Add this line below:
-          await handleLoginSuccess(jsonResponse);
+          // ✅ Handle tracking provider login
+          await handleLoginSuccess(context, jsonResponse);
 
           await _verifyDataSaved();
 
@@ -134,6 +135,7 @@ class LoginProvider extends ChangeNotifier {
       // ✅ Extract and save employee ID
       final userId = userData['userId']?.toString() ?? '';
       await prefs.setString('employeeId', userId);
+      await prefs.setString('logged_in_emp_id', userId); // Also save as logged_in_emp_id
 
       if (kDebugMode) {
         print("✅ Saved to SharedPreferences:");
@@ -144,47 +146,51 @@ class LoginProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> handleLoginSuccess(Map<String, dynamic> userData) async {
-    final prefs = await SharedPreferences.getInstance();
-    final newUserId = userData['userId']?.toString() ?? '';
+  // ---------------------------------------------------------------------------
+  // HANDLE LOGIN SUCCESS - CLEAN UP TRACKING DATA
+  // ---------------------------------------------------------------------------
+  Future<void> handleLoginSuccess(
+      BuildContext context,
+      Map<String, dynamic> userData,
+      ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final newUserId = userData['userId']?.toString() ?? '';
 
-    // ✅ Always use singleton instance
-    final trackingManager = TrackingManager();
+      // ✅ Get the tracking provider from context
+      final trackingProvider = context.read<UserTrackingProvider>();
 
-    // Load previous user ID
-    final oldUserId = prefs.getString('employeeId');
+      // Load previous user ID
+      final oldUserId = prefs.getString('employeeId');
 
-    if (kDebugMode) {
-      print("👥 Old User: $oldUserId | New User: $newUserId");
-    }
+      if (kDebugMode) {
+        print("👥 Old User: $oldUserId | New User: $newUserId");
+      }
 
-    // ✅ If new user logs in
-    if (oldUserId != null && oldUserId != newUserId) {
-      // Clear *everything* for previous user
-      await trackingManager.setUserId(oldUserId);
-      await trackingManager.clearCurrentUserData(clearHistory: true);
-      trackingManager.trackingRecords.clear();
-      trackingManager.currentRoutePoints.clear();
-      trackingManager.currentAddressCheckpoints.clear();
+      // ✅ If different user logs in
+      if (oldUserId != null && oldUserId != newUserId) {
+        // Clear everything for previous user
+        await trackingProvider.setUserId(oldUserId);
+        await trackingProvider.clearCurrentUserData(clearHistory: true);
 
-      if (kDebugMode) print("🧹 Cleared old user's full tracking data");
-    } else {
-      // Same user logs in again
-      await trackingManager.clearCurrentUserData(clearHistory: false);
-      if (kDebugMode) print("✅ Same user re-login, kept history");
-    }
+        if (kDebugMode) print("🧹 Cleared old user's full tracking data");
+      } else {
+        // Same user logs in again - keep history
+        await trackingProvider.clearCurrentUserData(clearHistory: false);
+        if (kDebugMode) print("✅ Same user re-login, kept history");
+      }
 
-    // ✅ Set up for the new user
-    await prefs.setString('employeeId', newUserId);
-    await trackingManager.setUserId(newUserId);
+      // ✅ Set up for the new user
+      await prefs.setString('employeeId', newUserId);
+      await prefs.setString('logged_in_emp_id', newUserId);
+      await trackingProvider.setUserId(newUserId);
 
-    // Also clear in-memory caches just in case
-    trackingManager.trackingRecords.clear();
-    trackingManager.currentRoutePoints.clear();
-    trackingManager.currentAddressCheckpoints.clear();
-
-    if (kDebugMode) {
-      print("✅ TrackingManager now active for new user: $newUserId");
+      if (kDebugMode) {
+        print("✅ Tracking provider now active for user: $newUserId");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error in handleLoginSuccess: $e");
+      // Don't throw - allow login to continue even if tracking setup fails
     }
   }
 
@@ -265,9 +271,10 @@ class LoginProvider extends ChangeNotifier {
 
   void _navigateToDashboard(BuildContext context) {
     try {
-      Navigator.of(
-        context,
-      ).pushNamedAndRemoveUntil(AppRoutes.bottomNav, (route) => false);
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.bottomNav,
+            (route) => false,
+      );
     } catch (_) {
       Get.offAllNamed(AppRoutes.bottomNav);
     }

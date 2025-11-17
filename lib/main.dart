@@ -18,9 +18,8 @@ import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplicat
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JoiningFormsScreens/Joining_Forms_TabView_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
+import 'package:hrms_mobile_app/presentaion/pages/UserTrackingScreens/Tracking_TabView_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
-import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/Tracking_TabView_Screen.dart';
-import 'package:hrms_mobile_app/presentaion/pages/dashboradScreens/UserTrackingScreen.dart';
 import 'package:hrms_mobile_app/provider/AdminTrackingProvider/AdminTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
@@ -52,6 +51,7 @@ import 'package:hrms_mobile_app/provider/Employee_management_Provider/Notice_Per
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Payroll_Category_Type_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/employee_tabview_provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/management_approval_provider.dart';
+import 'package:hrms_mobile_app/provider/FaceIdentificationProvider/Face_Identification_Provider_Screen.dart';
 import 'package:hrms_mobile_app/provider/PaySlipsDrawerProvider/PaySlipsDrawerProvider.dart';
 import 'package:hrms_mobile_app/provider/PaySlipsDrawerProvider/PayrollDetailsProvider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Job_Application_Provider.dart';
@@ -63,6 +63,7 @@ import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Referenec_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Resume_Management_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Semi_Filled_Application_Provider.dart';
+import 'package:hrms_mobile_app/provider/UserTrackingProvider/UserTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/F11_Employee_Provider.dart';
@@ -76,6 +77,7 @@ import 'package:hrms_mobile_app/provider/payroll_provider/Mispunch_Reports_Provi
 import 'package:hrms_mobile_app/provider/payroll_provider/Remote_Attendance_Provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'Service/BackgroundTrackingScreen.dart';
 import 'controller/ui_controller/appbar_controllers.dart';
 import 'core/components/BottomNavigationScreen/Bottom_Navigation_Screen.dart';
 import 'core/routes/app_route_observer.dart';
@@ -172,6 +174,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PaySlipsDrawerProvider()),
         ChangeNotifierProvider(create: (_) => PayrollDetailsProvider()),
         ChangeNotifierProvider(create: (_) => AdminTrackingProvider()),
+        ChangeNotifierProvider(create: (_) => UserTrackingProvider()),
+        ChangeNotifierProvider(create: (_) => FaceVerificationProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -216,8 +220,8 @@ class MyApp extends StatelessWidget {
         return SplashScreen();
       case AppRoutes.loginScreen:
         return LoginScreen();
-      case AppRoutes.userTracking:
-        return const TrackingTabViewScreen();
+      case AppRoutes.userTrackingScreen:
+        return const UserTrackingTabViewScreen();
       case AppRoutes.adminTracking:
         return const AdminTrackingScreen();
       case AppRoutes.deliverablesOverview:
@@ -255,7 +259,7 @@ class MyApp extends StatelessWidget {
       case AppRoutes.bottomNav:
         return const BottomNavScreen();
       case AppRoutes.trackingTabViewScreen:
-        return const TrackingTabViewScreen();
+        return const UserTrackingTabViewScreen();
       default:
         return const NotFoundPage();
     }

@@ -2,46 +2,54 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.hrms_mobile_app">
 
-    <!-- 🌍 INTERNET -->
+    <!-- 🌍 Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- 📍 LOCATION PERMISSIONS -->
+    <!-- 📍 Location Permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- 🚀 Foreground Service -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        tools:ignore="PermissionImpliesUnsupportedChromeOS" />
 
-    <!-- 📸 CAMERA -->
+    <!-- 📸 Camera -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
 
-    <!-- ✅ CRITICAL FOR PERSISTENCE -->
+    <!-- 🔋 Battery / WakeLock -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- 🔄 Restart After Reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- 📁 STORAGE (Older Android Compatibility) -->
+    <!-- 🗂️ Storage (Android <=12) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <!-- ✅ FIXED HERE -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"
         tools:replace="android:maxSdkVersion" />
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
-    <!-- 🎧 ANDROID 13+ MEDIA ACCESS -->
+    <!-- Android 13+ Media -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
-        android:label="hrms_mobile_app"
         android:name="${applicationName}"
+        android:label="hrms_mobile_app"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
 
-        <!-- ✅ PERSISTENT BACKGROUND SERVICE -->
+        <!-- 🚀 Flutter Background Service -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="location"
@@ -50,12 +58,16 @@
             android:stopWithTask="false"
             tools:replace="android:exported" />
 
-        <!-- ✅ BOOT RECEIVER - Restart service after device reboot -->
+        <service
+            android:name="id.flutter.flutter_background_service.ForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
+        <!-- 🔄 Boot Restart -->
         <receiver
             android:name="id.flutter.flutter_background_service.BootReceiver"
             android:enabled="true"
-            android:exported="true"
-            tools:replace="android:exported">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
@@ -67,16 +79,16 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAj0Wx6E4wZcM1-Og7ympdaB9kNv-f9JgE" />
 
-        <!-- 🚀 MAIN ACTIVITY -->
+        <!-- 🚀 Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:showWhenLocked="true"
             android:turnScreenOn="true">
 

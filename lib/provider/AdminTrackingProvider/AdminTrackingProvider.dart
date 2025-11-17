@@ -11,6 +11,9 @@ class AdminTrackingProvider with ChangeNotifier {
   // Filter expansion
   bool _isFilterExpanded = false;
 
+
+
+
   // Search results
   bool _hasSearched = false;
   bool _isLoading = false;

@@ -45,549 +45,606 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AdminTrackingProvider(),
-      child: Consumer<AdminTrackingProvider>(
-        builder: (context, provider, child) {
-          return Scaffold(
-            backgroundColor: Colors.grey[50],
-            drawer: const TabletMobileDrawer(),
-            appBar: const CustomAppBar(title: "Admin Tracking"),
-            body: Column(
-              children: [
-                // Filter Toggle Button
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: InkWell(
-                    onTap: provider.toggleFilter,
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
+    final adminTrackingProvider = Provider.of<AdminTrackingProvider>(context);
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.grey[50],
+      drawer: const TabletMobileDrawer(),
+      appBar: const CustomAppBar(title: "Admin Tracking"),
+      body: Column(
+        children: [
+          // ✅ HEADER SECTION (Filter button + expandable filters + TabBar)
+          Column(
+            children: [
+              // Filter Toggle Button
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: InkWell(
+                  onTap: adminTrackingProvider.toggleFilter,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
                       ),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF8E0E6B).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF8E0E6B).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.filter_list,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.filter_list, color: Colors.white),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Filter Options',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                             color: Colors.white,
-                            size: 22,
                           ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Filter Options',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: AppFonts.poppins,
-                            ),
+                        ),
+                        const Spacer(),
+                        AnimatedRotation(
+                          turns:
+                              adminTrackingProvider.isFilterExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 300),
+                          child: const Icon(
+                            Icons.keyboard_arrow_down,
+                            color: Colors.white,
                           ),
-                          const Spacer(),
-                          AnimatedRotation(
-                            turns: provider.isFilterExpanded ? 0.5 : 0,
-                            duration: const Duration(milliseconds: 300),
-                            child: const Icon(
-                              Icons.keyboard_arrow_down,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
 
-                // Filter Section (Expandable)
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  child:
-                      provider.isFilterExpanded
-                          ? Container(
-                            color: Colors.white,
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: Column(
-                              children: [
-                                _SearchableDropdown(
-                                  label: 'Employee ID',
-                                  value: provider.selectedEmployeeId,
-                                  icon: Icons.person,
-                                  onTap:
-                                      () => _showEmployeeSearch(
-                                        context,
-                                        provider,
-                                      ),
-                                ),
-                                const SizedBox(height: 12),
-                                _SearchableDropdown(
-                                  label: 'Branch',
-                                  value: provider.selectedBranch,
-                                  icon: Icons.business,
-                                  onTap:
-                                      () =>
-                                          _showBranchSearch(context, provider),
-                                ),
-                                const SizedBox(height: 12),
-                                _SearchableDropdown(
-                                  label: 'Designation',
-                                  value: provider.selectedDesignation,
-                                  icon: Icons.work,
-                                  onTap:
-                                      () => _showRoleSearch(context, provider),
-                                ),
-                                const SizedBox(height: 12),
-                                _DatePickerField(provider: provider),
-                                const SizedBox(height: 20),
-                                _SearchButton(
-                                  provider: provider,
-                                  onSearch: () {
-                                    if (!provider.isFiltersValid) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Please select all filters',
-                                            style: TextStyle(
-                                              fontFamily: AppFonts.poppins,
-                                            ),
+              // Expandable Filter Section (Scrollable when expanded)
+              if (adminTrackingProvider.isFilterExpanded)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final keyboardHeight =
+                        MediaQuery.of(context).viewInsets.bottom;
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final appBarHeight =
+                        MediaQuery.of(context).padding.top + kToolbarHeight;
+                    final filterButtonHeight = 100.0; // Approximate height
+                    final tabBarHeight =
+                        adminTrackingProvider.hasSearched ? 48.0 : 0.0;
+
+                    final maxFilterHeight =
+                        screenHeight -
+                        appBarHeight -
+                        filterButtonHeight -
+                        tabBarHeight -
+                        keyboardHeight -
+                        50; // Extra padding
+
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            maxFilterHeight > 200 ? maxFilterHeight : 200,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: Column(
+                            children: [
+                              _SearchableDropdown(
+                                label: 'Employee ID',
+                                value: adminTrackingProvider.selectedEmployeeId,
+                                icon: Icons.person,
+                                onTap:
+                                    () => _showEmployeeSearch(
+                                      context,
+                                      adminTrackingProvider,
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+                              _SearchableDropdown(
+                                label: 'Branch',
+                                value: adminTrackingProvider.selectedBranch,
+                                icon: Icons.business,
+                                onTap:
+                                    () => _showBranchSearch(
+                                      context,
+                                      adminTrackingProvider,
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+                              _SearchableDropdown(
+                                label: 'Designation',
+                                value:
+                                    adminTrackingProvider.selectedDesignation,
+                                icon: Icons.work,
+                                onTap:
+                                    () => _showRoleSearch(
+                                      context,
+                                      adminTrackingProvider,
+                                    ),
+                              ),
+                              const SizedBox(height: 12),
+                              _DatePickerField(provider: adminTrackingProvider),
+                              const SizedBox(height: 20),
+                              _SearchButton(
+                                provider: adminTrackingProvider,
+                                onSearch: () async {
+                                  if (!adminTrackingProvider.isFiltersValid) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Please select all filters',
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.poppins,
                                           ),
-                                          backgroundColor: Colors.red,
                                         ),
-                                      );
-                                      return;
-                                    }
-                                    provider.performSearch();
-                                    setState(() {
-                                      _selectedSession = null;
-                                      _tabController.animateTo(
-                                        0,
-                                      ); // History tab
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          )
-                          : const SizedBox.shrink(),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  await adminTrackingProvider.performSearch();
+
+                                  setState(() {
+                                    _selectedSession = null;
+                                    _tabController.animateTo(0);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
-                // Tabs (only show after search)
-                if (provider.hasSearched && provider.isFiltersValid)
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: Colors.grey.shade200),
-                        bottom: BorderSide(color: Colors.grey.shade200),
-                      ),
+              // TabBar Section (Fixed position)
+              if (adminTrackingProvider.hasSearched &&
+                  adminTrackingProvider.isFiltersValid)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Colors.grey.shade200),
+                      bottom: BorderSide(color: Colors.grey.shade200),
                     ),
-                    child: TabBar(
-                      controller: _tabController,
-                      labelColor: AppColor.primaryColor2,
-                      unselectedLabelColor: Colors.grey,
-                      indicatorColor: const Color(0xFF8E0E6B),
-                      indicatorWeight: 3,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
+                  ),
+                  child: TabBar(
+                    labelStyle: TextStyle(fontFamily: AppFonts.poppins),
+                    controller: _tabController,
+                    labelColor: AppColor.primaryColor2,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: const Color(0xFF8E0E6B),
+                    indicatorWeight: 3,
+                    tabs: const [
+                      Tab(icon: Icon(Icons.history), text: 'History'),
+                      Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
+                      Tab(icon: Icon(Icons.location_on), text: 'Map View'),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+
+          // ✅ CONTENT AREA (TabBarView with full remaining height)
+          if (adminTrackingProvider.hasSearched &&
+              adminTrackingProvider.isFiltersValid)
+            Expanded(
+              child:
+                  adminTrackingProvider.isLoading
+                      ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation(Color(0xFF8E0E6B)),
+                        ),
+                      )
+                      : adminTrackingProvider.trackingRecords.isEmpty
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_off,
+                              size: 64,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No tracking records found',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Try different filter criteria',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade400,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : TabBarView(
+                        controller: _tabController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _HistoryTab(
+                            sessions: adminTrackingProvider.trackingRecords,
+                            onViewDetails: _onViewDetails,
+                          ),
+                          _TimelineTab(
+                            session:
+                                _selectedSession ??
+                                (adminTrackingProvider
+                                        .trackingRecords
+                                        .isNotEmpty
+                                    ? adminTrackingProvider
+                                        .trackingRecords
+                                        .first
+                                    : null),
+                          ),
+                          _MapTab(
+                            session:
+                                _selectedSession ??
+                                (adminTrackingProvider
+                                        .trackingRecords
+                                        .isNotEmpty
+                                    ? adminTrackingProvider
+                                        .trackingRecords
+                                        .first
+                                    : null),
+                            onMapCreated: (c) => _mapController = c,
+                          ),
+                        ],
+                      ),
+            ),
+
+          // ✅ Empty state when no search performed
+          if (!adminTrackingProvider.hasSearched ||
+              !adminTrackingProvider.isFiltersValid)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.filter_alt_outlined,
+                      size: 80,
+                      color: Colors.grey.shade300,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Select filters and search',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade600,
                         fontFamily: AppFonts.poppins,
                       ),
-                      tabs: const [
-                        Tab(icon: Icon(Icons.history), text: 'History'),
-                        Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
-                        Tab(icon: Icon(Icons.location_on), text: 'Map View'),
-                      ],
                     ),
-                  ),
-
-                // Content Area
-                Expanded(
-                  child:
-                      provider.isLoading
-                          ? const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: Color(0xFF8E0E6B),
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Loading tracking data...',
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                          : provider.hasSearched && provider.isFiltersValid
-                          ? TabBarView(
-                            controller: _tabController,
-                            children: [
-                              _HistoryTab(
-                                sessions: provider.trackingRecords,
-                                onViewDetails: _onViewDetails,
-                              ),
-                              _TimelineTab(
-                                session:
-                                    _selectedSession ??
-                                    (provider.trackingRecords.isNotEmpty
-                                        ? provider.trackingRecords.first
-                                        : null),
-                              ),
-                              _MapTab(
-                                session:
-                                    _selectedSession ??
-                                    (provider.trackingRecords.isNotEmpty
-                                        ? provider.trackingRecords.first
-                                        : null),
-                                onMapCreated: (controller) {
-                                  _mapController = controller;
-                                },
-                              ),
-                            ],
-                          )
-                          : Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 80,
-                                  color: Colors.grey[300],
-                                ),
-                                const SizedBox(height: 16),
-                                const Text(
-                                  'Select filters and search to view history',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Use the filter button above to get started',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade400,
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+        ],
       ),
     );
   }
+}
 
-  void _showEmployeeSearch(
-    BuildContext context,
-    AdminTrackingProvider provider,
-  ) {
-    String searchQuery = '';
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              final filteredEmployees = provider.getFilteredEmployees(
-                searchQuery,
-              );
-              return DraggableScrollableSheet(
-                initialChildSize: 0.7,
-                minChildSize: 0.5,
-                maxChildSize: 0.9,
-                expand: false,
-                builder:
-                    (context, scrollController) => Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
+void _showEmployeeSearch(BuildContext context, AdminTrackingProvider provider) {
+  String searchQuery = '';
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder:
+        (context) => StatefulBuilder(
+          builder: (context, setState) {
+            final filteredEmployees = provider.getFilteredEmployees(
+              searchQuery,
+            );
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.5,
+              maxChildSize: 0.9,
+              expand: false,
+              builder:
+                  (context, scrollController) => Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
                               ),
-                              const SizedBox(height: 16),
-                              TextField(
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                  hintText: 'Search employee...',
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: Color(0xFF8E0E6B),
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF8E0E6B),
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  setState(() => searchQuery = value);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: scrollController,
-                            itemCount: filteredEmployees.length,
-                            itemBuilder: (context, index) {
-                              final emp = filteredEmployees[index];
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: const Color(
-                                    0xFF8E0E6B,
-                                  ).withOpacity(0.1),
-                                  child: Text(
-                                    emp.name[0],
-                                    style: const TextStyle(
-                                      color: Color(0xFF8E0E6B),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(
-                                  emp.name,
-                                  style: const TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  emp.id,
-                                  style: const TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                ),
-                                onTap: () {
-                                  provider.setEmployeeId(emp.id);
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-              );
-            },
-          ),
-    );
-  }
-
-  void _showBranchSearch(BuildContext context, AdminTrackingProvider provider) {
-    String searchQuery = '';
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              final filteredBranches = provider.getFilteredBranches(
-                searchQuery,
-              );
-              return DraggableScrollableSheet(
-                initialChildSize: 0.6,
-                minChildSize: 0.4,
-                maxChildSize: 0.8,
-                expand: false,
-                builder:
-                    (context, scrollController) => Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextField(
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                  hintText: 'Search branch...',
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: Color(0xFF8E0E6B),
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF8E0E6B),
-                                    ),
-                                  ),
-                                ),
-                                onChanged: (value) {
-                                  setState(() => searchQuery = value);
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: scrollController,
-                            itemCount: filteredBranches.length,
-                            itemBuilder: (context, index) {
-                              final branch = filteredBranches[index];
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.business,
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Search employee...',
+                                prefixIcon: const Icon(
+                                  Icons.search,
                                   color: Color(0xFF8E0E6B),
                                 ),
-                                title: Text(
-                                  branch,
-                                  style: const TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                  ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                onTap: () {
-                                  provider.setBranch(branch);
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-              );
-            },
-          ),
-    );
-  }
-
-  void _showRoleSearch(BuildContext context, AdminTrackingProvider provider) {
-    String searchQuery = '';
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder:
-          (context) => StatefulBuilder(
-            builder: (context, setState) {
-              final filteredRoles = provider.getFilteredRoles(searchQuery);
-              return DraggableScrollableSheet(
-                initialChildSize: 0.5,
-                minChildSize: 0.3,
-                maxChildSize: 0.7,
-                expand: false,
-                builder:
-                    (context, scrollController) => Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              TextField(
-                                autofocus: true,
-                                decoration: InputDecoration(
-                                  hintText: 'Search role...',
-                                  prefixIcon: const Icon(
-                                    Icons.search,
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
                                     color: Color(0xFF8E0E6B),
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF8E0E6B),
-                                    ),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() => searchQuery = value);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: filteredEmployees.length,
+                          itemBuilder: (context, index) {
+                            final emp = filteredEmployees[index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: const Color(
+                                  0xFF8E0E6B,
+                                ).withOpacity(0.1),
+                                child: Text(
+                                  emp.name[0],
+                                  style: const TextStyle(
+                                    color: Color(0xFF8E0E6B),
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                onChanged: (value) {
-                                  setState(() => searchQuery = value);
-                                },
                               ),
-                            ],
-                          ),
+                              title: Text(
+                                emp.name,
+                                style: const TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              subtitle: Text(
+                                emp.id,
+                                style: const TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              onTap: () {
+                                provider.setEmployeeId(emp.id);
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
                         ),
-                        Expanded(
-                          child: ListView.builder(
-                            controller: scrollController,
-                            itemCount: filteredRoles.length,
-                            itemBuilder: (context, index) {
-                              final role = filteredRoles[index];
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.work,
+                      ),
+                    ],
+                  ),
+            );
+          },
+        ),
+  );
+}
+
+void _showBranchSearch(BuildContext context, AdminTrackingProvider provider) {
+  String searchQuery = '';
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder:
+        (context) => StatefulBuilder(
+          builder: (context, setState) {
+            final filteredBranches = provider.getFilteredBranches(searchQuery);
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.8,
+              expand: false,
+              builder:
+                  (context, scrollController) => Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Search branch...',
+                                prefixIcon: const Icon(
+                                  Icons.search,
                                   color: Color(0xFF8E0E6B),
                                 ),
-                                title: Text(
-                                  role,
-                                  style: const TextStyle(
-                                    fontFamily: AppFonts.poppins,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF8E0E6B),
                                   ),
                                 ),
-                                onTap: () {
-                                  provider.setRole(role);
-                                  Navigator.pop(context);
-                                },
-                              );
-                            },
-                          ),
+                              ),
+                              onChanged: (value) {
+                                setState(() => searchQuery = value);
+                              },
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-              );
-            },
-          ),
-    );
-  }
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: filteredBranches.length,
+                          itemBuilder: (context, index) {
+                            final branch = filteredBranches[index];
+                            return ListTile(
+                              leading: const Icon(
+                                Icons.business,
+                                color: Color(0xFF8E0E6B),
+                              ),
+                              title: Text(
+                                branch,
+                                style: const TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              onTap: () {
+                                provider.setBranch(branch);
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+            );
+          },
+        ),
+  );
+}
+
+void _showRoleSearch(BuildContext context, AdminTrackingProvider provider) {
+  String searchQuery = '';
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder:
+        (context) => StatefulBuilder(
+          builder: (context, setState) {
+            final filteredRoles = provider.getFilteredRoles(searchQuery);
+            return DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.7,
+              expand: false,
+              builder:
+                  (context, scrollController) => Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: 'Search role...',
+                                prefixIcon: const Icon(
+                                  Icons.search,
+                                  color: Color(0xFF8E0E6B),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFF8E0E6B),
+                                  ),
+                                ),
+                              ),
+                              onChanged: (value) {
+                                setState(() => searchQuery = value);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: filteredRoles.length,
+                          itemBuilder: (context, index) {
+                            final role = filteredRoles[index];
+                            return ListTile(
+                              leading: const Icon(
+                                Icons.work,
+                                color: Color(0xFF8E0E6B),
+                              ),
+                              title: Text(
+                                role,
+                                style: const TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              onTap: () {
+                                provider.setRole(role);
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+            );
+          },
+        ),
+  );
 }
 
 // ========== REUSABLE WIDGETS ==========
@@ -734,7 +791,7 @@ class _DatePickerField extends StatelessWidget {
 
 class _SearchButton extends StatelessWidget {
   final AdminTrackingProvider provider;
-  final VoidCallback onSearch;
+  final Future<void> Function() onSearch;
 
   const _SearchButton({required this.provider, required this.onSearch});
 
@@ -750,28 +807,43 @@ class _SearchButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: ElevatedButton(
-          onPressed: onSearch,
+          onPressed:
+              provider.isLoading
+                  ? null
+                  : () async {
+                    await onSearch();
+                  },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search, size: 20, color: Colors.white),
-              SizedBox(width: 8),
-              Text(
-                'Search',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+          child:
+              provider.isLoading
+                  ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.8,
+                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                    ),
+                  )
+                  : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.search, size: 20, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'Search',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
         ),
       ),
     );
