@@ -896,47 +896,90 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                                               Color(0xFF8E0E6B),
                                                               Color(0xFFD4145A),
                                                             ],
-                                                            begin: Alignment.centerLeft,
-                                                            end: Alignment.centerRight,
+                                                            begin:
+                                                                Alignment
+                                                                    .centerLeft,
+                                                            end:
+                                                                Alignment
+                                                                    .centerRight,
                                                           ),
-                                                          borderRadius: BorderRadius.circular(14),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                14,
+                                                              ),
                                                         ),
                                                         child: ElevatedButton(
-                                                          onPressed: headerData.isLoading ? null : _handleCheckIn,
+                                                          onPressed:
+                                                              headerData
+                                                                      .isLoading
+                                                                  ? null
+                                                                  : _handleCheckIn,
                                                           style: ElevatedButton.styleFrom(
-                                                            padding: const EdgeInsets.symmetric(vertical: 14),
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 14,
+                                                                ),
                                                             shape: RoundedRectangleBorder(
-                                                              borderRadius: BorderRadius.circular(14),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    14,
+                                                                  ),
                                                             ),
                                                             elevation: 0,
-                                                            backgroundColor: Colors.transparent,   // IMPORTANT
-                                                            shadowColor: Colors.transparent,        // Remove shadow color
+                                                            backgroundColor:
+                                                                Colors
+                                                                    .transparent, // IMPORTANT
+                                                            shadowColor:
+                                                                Colors
+                                                                    .transparent, // Remove shadow color
                                                           ),
-                                                          child: headerData.isLoading
-                                                              ? const SizedBox(
-                                                            width: 20,
-                                                            height: 20,
-                                                            child: CircularProgressIndicator(
-                                                              strokeWidth: 2,
-                                                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                                                            ),
-                                                          )
-                                                              : Row(
-                                                            mainAxisAlignment: MainAxisAlignment.center,
-                                                            children: const [
-                                                              Icon(Icons.login, size: 20, color: Colors.white),
-                                                              SizedBox(width: 8),
-                                                              Text(
-                                                                'Check In',
-                                                                style: TextStyle(
-                                                                  fontSize: 15,
-                                                                  fontWeight: FontWeight.w600,
-                                                                  fontFamily: AppFonts.poppins,
-                                                                  color: Colors.white,
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
+                                                          child:
+                                                              headerData
+                                                                      .isLoading
+                                                                  ? const SizedBox(
+                                                                    width: 20,
+                                                                    height: 20,
+                                                                    child: CircularProgressIndicator(
+                                                                      strokeWidth:
+                                                                          2,
+                                                                      valueColor:
+                                                                          AlwaysStoppedAnimation(
+                                                                            Colors.white,
+                                                                          ),
+                                                                    ),
+                                                                  )
+                                                                  : Row(
+                                                                    mainAxisAlignment:
+                                                                        MainAxisAlignment
+                                                                            .center,
+                                                                    children: const [
+                                                                      Icon(
+                                                                        Icons
+                                                                            .login,
+                                                                        size:
+                                                                            20,
+                                                                        color:
+                                                                            Colors.white,
+                                                                      ),
+                                                                      SizedBox(
+                                                                        width:
+                                                                            8,
+                                                                      ),
+                                                                      Text(
+                                                                        'Check In',
+                                                                        style: TextStyle(
+                                                                          fontSize:
+                                                                              15,
+                                                                          fontWeight:
+                                                                              FontWeight.w600,
+                                                                          fontFamily:
+                                                                              AppFonts.poppins,
+                                                                          color:
+                                                                              Colors.white,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
                                                         ),
                                                       ),
                                                     ),

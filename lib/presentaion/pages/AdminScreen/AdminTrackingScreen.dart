@@ -1,3 +1,4 @@
+import 'package:floating_bottom_bar/animated_bottom_navigation_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,9 @@ import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../provider/AdminTrackingProvider/AdminTrackingProvider.dart';
+import 'HistoryTabScreen.dart';
+import 'MapTabScreen.dart';
+import 'TimeLineScreen.dart';
 
 class AdminTrackingScreen extends StatefulWidget {
   const AdminTrackingScreen({super.key});
@@ -22,6 +26,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
   late TabController _tabController;
   GoogleMapController? _mapController;
   TrackingRecord? _selectedSession;
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -141,67 +146,131 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                           child: Column(
                             children: [
-                              _SearchableDropdown(
-                                label: 'Employee ID',
+                              SimpleSearchDropdown(
+                                label: "Employee",
                                 value: adminTrackingProvider.selectedEmployeeId,
-                                icon: Icons.person,
-                                onTap:
-                                    () => _showEmployeeSearch(
-                                      context,
-                                      adminTrackingProvider,
-                                    ),
+
+                                items:
+                                    adminTrackingProvider
+                                        .getFilteredEmployees("")
+                                        .map((e) => "${e.name} (${e.id})")
+                                        .toList(),
+
+                                onChanged: (selectedText) {
+                                  // Extract only ID from:  Name (ID)
+                                  final id =
+                                      selectedText
+                                          .split("(")
+                                          .last
+                                          .replaceAll(")", "")
+                                          .trim();
+                                  adminTrackingProvider.setEmployeeId(id);
+                                },
                               ),
+
                               const SizedBox(height: 12),
-                              _SearchableDropdown(
-                                label: 'Branch',
+                              SimpleSearchDropdown(
+                                label: "Branch",
                                 value: adminTrackingProvider.selectedBranch,
-                                icon: Icons.business,
-                                onTap:
-                                    () => _showBranchSearch(
-                                      context,
-                                      adminTrackingProvider,
-                                    ),
+                                items: adminTrackingProvider
+                                    .getFilteredBranches(""), // ← use this
+                                onChanged: (value) {
+                                  adminTrackingProvider.setBranch(value);
+                                },
                               ),
+
                               const SizedBox(height: 12),
-                              _SearchableDropdown(
-                                label: 'Designation',
+                              SimpleSearchDropdown(
+                                label: "Role",
                                 value:
                                     adminTrackingProvider.selectedDesignation,
-                                icon: Icons.work,
-                                onTap:
-                                    () => _showRoleSearch(
-                                      context,
-                                      adminTrackingProvider,
-                                    ),
+                                items: adminTrackingProvider.getFilteredRoles(
+                                  "",
+                                ), // ← use this
+                                onChanged: (value) {
+                                  adminTrackingProvider.setRole(value);
+                                },
                               ),
+
                               const SizedBox(height: 12),
                               _DatePickerField(provider: adminTrackingProvider),
                               const SizedBox(height: 20),
-                              _SearchButton(
-                                provider: adminTrackingProvider,
-                                onSearch: () async {
-                                  if (!adminTrackingProvider.isFiltersValid) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Please select all filters',
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                        backgroundColor: Colors.red,
+                              GestureDetector(
+                                onTap:
+                                    _isSearching
+                                        ? null
+                                        : () async {
+                                          if (!adminTrackingProvider
+                                              .isFiltersValid) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Please select all filters',
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        AppFonts.poppins,
+                                                  ),
+                                                ),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                            return;
+                                          }
+
+                                          setState(() {
+                                            _isSearching = true;
+                                          });
+
+                                          await adminTrackingProvider
+                                              .performSearch();
+
+                                          setState(() {
+                                            _isSearching = false;
+                                            _selectedSession = null;
+                                            _tabController.animateTo(0);
+                                          });
+                                        },
+                                child: Container(
+                                  height: 48,
+                                  width: double.infinity,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.primaryColor2,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColor.primaryColor2
+                                            .withOpacity(0.3),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
                                       ),
-                                    );
-                                    return;
-                                  }
-
-                                  await adminTrackingProvider.performSearch();
-
-                                  setState(() {
-                                    _selectedSession = null;
-                                    _tabController.animateTo(0);
-                                  });
-                                },
+                                    ],
+                                  ),
+                                  child:
+                                      _isSearching
+                                          ? const SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                              strokeWidth: 3,
+                                            ),
+                                          )
+                                          : const Text(
+                                            "Search",
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                              fontFamily: AppFonts.poppins,
+                                            ),
+                                          ),
+                                ),
                               ),
                             ],
                           ),
@@ -211,29 +280,63 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                   },
                 ),
 
-              // TabBar Section (Fixed position)
               if (adminTrackingProvider.hasSearched &&
                   adminTrackingProvider.isFiltersValid)
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    border: Border(
-                      top: BorderSide(color: Colors.grey.shade200),
-                      bottom: BorderSide(color: Colors.grey.shade200),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ),
-                  child: TabBar(
-                    labelStyle: TextStyle(fontFamily: AppFonts.poppins),
-                    controller: _tabController,
-                    labelColor: AppColor.primaryColor2,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: const Color(0xFF8E0E6B),
-                    indicatorWeight: 3,
-                    tabs: const [
-                      Tab(icon: Icon(Icons.history), text: 'History'),
-                      Tab(icon: Icon(Icons.timeline), text: 'Timeline'),
-                      Tab(icon: Icon(Icons.location_on), text: 'Map View'),
-                    ],
+                    child: TabBar(
+                      controller: _tabController,
+                      indicatorColor: Colors.transparent,
+                      dividerColor: Colors.transparent,
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
+                      splashFactory: NoSplash.splashFactory,
+
+                      // Animated indicator with smooth transition
+                      indicator: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF8E0E6B).withOpacity(0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.black54,
+                      indicatorSize: TabBarIndicatorSize.tab,
+
+                      labelStyle: const TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+
+                      tabs: const [
+                        Tab(height: 44, text: "History"),
+                        Tab(height: 44, text: "Timeline"),
+                        Tab(height: 44, text: "Map View"),
+                      ],
+                    ),
                   ),
                 ),
             ],
@@ -285,11 +388,11 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                         controller: _tabController,
                         physics: const NeverScrollableScrollPhysics(),
                         children: [
-                          _HistoryTab(
+                          HistoryTabScreen(
                             sessions: adminTrackingProvider.trackingRecords,
                             onViewDetails: _onViewDetails,
                           ),
-                          _TimelineTab(
+                          TimelineTabScreen(
                             session:
                                 _selectedSession ??
                                 (adminTrackingProvider
@@ -300,7 +403,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                                         .first
                                     : null),
                           ),
-                          _MapTab(
+                          MapTabScreen(
                             session:
                                 _selectedSession ??
                                 (adminTrackingProvider
@@ -358,353 +461,165 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
   }
 }
 
-void _showEmployeeSearch(BuildContext context, AdminTrackingProvider provider) {
-  String searchQuery = '';
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder:
-        (context) => StatefulBuilder(
-          builder: (context, setState) {
-            final filteredEmployees = provider.getFilteredEmployees(
-              searchQuery,
-            );
-            return DraggableScrollableSheet(
-              initialChildSize: 0.7,
-              minChildSize: 0.5,
-              maxChildSize: 0.9,
-              expand: false,
-              builder:
-                  (context, scrollController) => Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                hintText: 'Search employee...',
-                                prefixIcon: const Icon(
-                                  Icons.search,
-                                  color: Color(0xFF8E0E6B),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF8E0E6B),
-                                  ),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() => searchQuery = value);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: filteredEmployees.length,
-                          itemBuilder: (context, index) {
-                            final emp = filteredEmployees[index];
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: const Color(
-                                  0xFF8E0E6B,
-                                ).withOpacity(0.1),
-                                child: Text(
-                                  emp.name[0],
-                                  style: const TextStyle(
-                                    color: Color(0xFF8E0E6B),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                emp.name,
-                                style: const TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              subtitle: Text(
-                                emp.id,
-                                style: const TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              onTap: () {
-                                provider.setEmployeeId(emp.id);
-                                Navigator.pop(context);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-            );
-          },
-        ),
-  );
-}
-
-void _showBranchSearch(BuildContext context, AdminTrackingProvider provider) {
-  String searchQuery = '';
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder:
-        (context) => StatefulBuilder(
-          builder: (context, setState) {
-            final filteredBranches = provider.getFilteredBranches(searchQuery);
-            return DraggableScrollableSheet(
-              initialChildSize: 0.6,
-              minChildSize: 0.4,
-              maxChildSize: 0.8,
-              expand: false,
-              builder:
-                  (context, scrollController) => Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                hintText: 'Search branch...',
-                                prefixIcon: const Icon(
-                                  Icons.search,
-                                  color: Color(0xFF8E0E6B),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF8E0E6B),
-                                  ),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() => searchQuery = value);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: filteredBranches.length,
-                          itemBuilder: (context, index) {
-                            final branch = filteredBranches[index];
-                            return ListTile(
-                              leading: const Icon(
-                                Icons.business,
-                                color: Color(0xFF8E0E6B),
-                              ),
-                              title: Text(
-                                branch,
-                                style: const TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              onTap: () {
-                                provider.setBranch(branch);
-                                Navigator.pop(context);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-            );
-          },
-        ),
-  );
-}
-
-void _showRoleSearch(BuildContext context, AdminTrackingProvider provider) {
-  String searchQuery = '';
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder:
-        (context) => StatefulBuilder(
-          builder: (context, setState) {
-            final filteredRoles = provider.getFilteredRoles(searchQuery);
-            return DraggableScrollableSheet(
-              initialChildSize: 0.5,
-              minChildSize: 0.3,
-              maxChildSize: 0.7,
-              expand: false,
-              builder:
-                  (context, scrollController) => Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 4,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                hintText: 'Search role...',
-                                prefixIcon: const Icon(
-                                  Icons.search,
-                                  color: Color(0xFF8E0E6B),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF8E0E6B),
-                                  ),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() => searchQuery = value);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount: filteredRoles.length,
-                          itemBuilder: (context, index) {
-                            final role = filteredRoles[index];
-                            return ListTile(
-                              leading: const Icon(
-                                Icons.work,
-                                color: Color(0xFF8E0E6B),
-                              ),
-                              title: Text(
-                                role,
-                                style: const TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              onTap: () {
-                                provider.setRole(role);
-                                Navigator.pop(context);
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-            );
-          },
-        ),
-  );
-}
-
-// ========== REUSABLE WIDGETS ==========
-
-class _SearchableDropdown extends StatelessWidget {
+class SimpleSearchDropdown extends StatefulWidget {
   final String label;
   final String? value;
-  final IconData icon;
-  final VoidCallback onTap;
+  final List<String> items;
+  final ValueChanged<String> onChanged;
 
-  const _SearchableDropdown({
+  const SimpleSearchDropdown({
+    super.key,
     required this.label,
     required this.value,
-    required this.icon,
-    required this.onTap,
+    required this.items,
+    required this.onChanged,
   });
 
   @override
+  State<SimpleSearchDropdown> createState() => _SimpleSearchDropdownState();
+}
+
+class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
+  bool isOpen = false;
+  String search = '';
+
+  @override
   Widget build(BuildContext context) {
+    final filtered =
+        widget.items
+            .where((item) => item.toLowerCase().contains(search.toLowerCase()))
+            .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: Colors.grey[700],
+            color: AppColor.primaryColor1,
             fontFamily: AppFonts.poppins,
           ),
         ),
         const SizedBox(height: 6),
-        InkWell(
-          onTap: onTap,
+
+        // MAIN DROPDOWN BUTTON
+        GestureDetector(
+          onTap: () => setState(() => isOpen = !isOpen),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: isOpen ? AppColor.primaryColor1 : Colors.grey.shade300,
+                width: 1.3,
+              ),
             ),
             child: Row(
               children: [
-                Icon(icon, size: 20, color: const Color(0xFF8E0E6B)),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    value ?? 'Select $label',
+                    widget.value ?? "Select ${widget.label}",
                     style: TextStyle(
                       fontFamily: AppFonts.poppins,
                       fontSize: 14,
-                      color: value != null ? Colors.black87 : Colors.grey[600],
+                      color:
+                          widget.value == null
+                              ? Colors.grey[600]
+                              : AppColor.primaryColor1,
                     ),
                   ),
                 ),
-                Icon(Icons.arrow_drop_down, color: Colors.grey[600]),
+                Icon(
+                  isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                  color: AppColor.primaryColor1,
+                ),
               ],
             ),
           ),
         ),
+
+        // DROPDOWN BODY
+        if (isOpen)
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColor.primaryColor1, width: 1.3),
+            ),
+            child: Column(
+              children: [
+                // SEARCH FIELD
+                TextField(
+                  style: const TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Search...",
+                    hintStyle: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 14,
+                      color: AppColor.primaryColor1.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20,
+                      color: AppColor.primaryColor1,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColor.primaryColor1,
+                        width: 1.3,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: AppColor.primaryColor1,
+                        width: 1.8,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onChanged: (v) => setState(() => search = v),
+                ),
+
+                const SizedBox(height: 10),
+
+                // LIST
+                SizedBox(
+                  height: 160,
+                  child: ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      return ListTile(
+                        title: Text(
+                          item,
+                          style: TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 14,
+                            color: AppColor.primaryColor1,
+                          ),
+                        ),
+                        onTap: () {
+                          widget.onChanged(item);
+                          setState(() => isOpen = false);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -742,18 +657,44 @@ class _DatePickerField extends StatelessWidget {
                   data: Theme.of(context).copyWith(
                     colorScheme: const ColorScheme.light(
                       primary: Color(0xFF8E0E6B),
+                      onPrimary: Colors.white,
+                      onSurface: Colors.black,
+                    ),
+                    textTheme: TextTheme(
+                      headlineLarge: TextStyle(fontFamily: AppFonts.poppins),
+                      headlineMedium: TextStyle(fontFamily: AppFonts.poppins),
+                      headlineSmall: TextStyle(fontFamily: AppFonts.poppins),
+                      titleLarge: TextStyle(fontFamily: AppFonts.poppins),
+                      bodyLarge: TextStyle(fontFamily: AppFonts.poppins),
+                      bodyMedium: TextStyle(fontFamily: AppFonts.poppins),
+                      bodySmall: TextStyle(fontFamily: AppFonts.poppins),
+                      labelLarge: TextStyle(fontFamily: AppFonts.poppins),
+                    ),
+                    datePickerTheme: DatePickerThemeData(
+                      headerHeadlineStyle: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                      dayStyle: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 14,
+                      ),
+                      yearStyle: TextStyle(fontFamily: AppFonts.poppins),
                     ),
                   ),
                   child: child!,
                 );
               },
             );
+
             if (picked != null) {
               provider.setDate(picked);
             }
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(10),
@@ -776,1036 +717,12 @@ class _DatePickerField extends StatelessWidget {
                     fontSize: 14,
                     color:
                         provider.selectedDate != null
-                            ? Colors.black87
+                            ? AppColor.primaryColor1
                             : Colors.grey[600],
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SearchButton extends StatelessWidget {
-  final AdminTrackingProvider provider;
-  final Future<void> Function() onSearch;
-
-  const _SearchButton({required this.provider, required this.onSearch});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: ElevatedButton(
-          onPressed:
-              provider.isLoading
-                  ? null
-                  : () async {
-                    await onSearch();
-                  },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-          child:
-              provider.isLoading
-                  ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.8,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                  : const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search, size: 20, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Search',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-        ),
-      ),
-    );
-  }
-}
-
-// ========== HISTORY TAB ==========
-
-class _HistoryTab extends StatelessWidget {
-  final List<TrackingRecord> sessions;
-  final Function(TrackingRecord) onViewDetails;
-
-  const _HistoryTab({required this.sessions, required this.onViewDetails});
-
-  @override
-  Widget build(BuildContext context) {
-    if (sessions.isEmpty) {
-      return const Center(
-        child: Text(
-          'No history data available',
-          style: TextStyle(fontFamily: AppFonts.poppins),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final session = sessions[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.calendar_today,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            DateFormat(
-                              'EEEE, dd MMM yyyy',
-                            ).format(session.date),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                          Text(
-                            session.employeeName,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    // Check In
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.login,
-                            color: Colors.green,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Check In',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                session.checkInTime,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                session.trackingPoints.first.address,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Check Out
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.logout,
-                            color: Colors.red,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Check Out',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                session.checkOutTime ?? 'Not checked out',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              if (session.trackingPoints.isNotEmpty)
-                                Text(
-                                  session.trackingPoints.last.address,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[600],
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Stats
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _StatItem(
-                            icon: Icons.location_on,
-                            label: 'Locations',
-                            value: '${session.trackingPoints.length}',
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey.shade300,
-                          ),
-                          _StatItem(
-                            icon: Icons.straighten,
-                            label: 'Distance',
-                            value:
-                                '${(session.totalDistance / 1000).toStringAsFixed(1)} km',
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.grey.shade300,
-                          ),
-                          _StatItem(
-                            icon: Icons.access_time,
-                            label: 'Duration',
-                            value:
-                                '${session.totalDuration.inHours}h ${session.totalDuration.inMinutes % 60}m',
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // View Details Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => onViewDetails(session),
-                        icon: const Icon(Icons.visibility),
-                        label: const Text(
-                          'View Details',
-                          style: TextStyle(
-                            fontFamily: AppFonts.poppins,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF8E0E6B),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _StatItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 24, color: const Color(0xFF8E0E6B)),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.grey[600],
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ========== TIMELINE TAB ==========
-
-class _TimelineTab extends StatelessWidget {
-  final TrackingRecord? session;
-
-  const _TimelineTab({required this.session});
-
-  @override
-  Widget build(BuildContext context) {
-    if (session == null || session!.trackingPoints.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.timeline_outlined, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            const Text(
-              'No tracking data available',
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Select a session from History to view details',
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final points = session!.trackingPoints;
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: points.length,
-      itemBuilder: (context, index) {
-        final point = points[index];
-        final isCheckIn = index == 0;
-        final isCheckOut = index == points.length - 1;
-
-        if (isCheckIn) {
-          return _CheckInCard(point: point);
-        } else if (isCheckOut) {
-          return _CheckOutCard(point: point);
-        } else {
-          return _TrackingPointCard(point: point, index: index);
-        }
-      },
-    );
-  }
-}
-
-class _CheckInCard extends StatelessWidget {
-  final TrackingPoint point;
-
-  const _CheckInCard({required this.point});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF4CAF50), width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFF4CAF50),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.login, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Check In',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF4CAF50),
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  point.time,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        point.address,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[700],
-                          fontFamily: AppFonts.poppins,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrackingPointCard extends StatelessWidget {
-  final TrackingPoint point;
-  final int index;
-
-  const _TrackingPointCard({required this.point, required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFF9800), width: 1.5),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFFFF9800),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$index',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: AppFonts.poppins,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        point.address,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      point.time,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(Icons.straighten, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${point.distanceFromPrevious.toInt()} m',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-                  ],
-                ),
-                if (point.waitTime != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.timer, size: 14, color: Colors.blue),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Waited: ${point.waitTime!.inMinutes} min',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: AppFonts.poppins,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckOutCard extends StatelessWidget {
-  final TrackingPoint point;
-
-  const _CheckOutCard({required this.point});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFEBEE),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF44336), width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: const BoxDecoration(
-              color: Color(0xFFF44336),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.logout, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Check Out',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFF44336),
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  point.time,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        point.address,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[700],
-                          fontFamily: AppFonts.poppins,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ========== MAP TAB ==========
-
-class _MapTab extends StatelessWidget {
-  final TrackingRecord? session;
-  final Function(GoogleMapController) onMapCreated;
-
-  const _MapTab({required this.session, required this.onMapCreated});
-
-  @override
-  Widget build(BuildContext context) {
-    if (session == null || session!.trackingPoints.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.map_outlined, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            const Text(
-              'No tracking data available',
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Select a session from History to view map',
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                fontSize: 13,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final points = session!.trackingPoints;
-    final Set<Marker> markers = {};
-    final Set<Polyline> polylines = {};
-
-    // Create markers
-    for (int i = 0; i < points.length; i++) {
-      final point = points[i];
-      final isCheckIn = i == 0;
-      final isCheckOut = i == points.length - 1;
-
-      markers.add(
-        Marker(
-          markerId: MarkerId('point_$i'),
-          position: point.location,
-          icon:
-              isCheckIn
-                  ? BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueGreen,
-                  )
-                  : isCheckOut
-                  ? BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed,
-                  )
-                  : BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueOrange,
-                  ),
-          infoWindow: InfoWindow(
-            title:
-                isCheckIn
-                    ? 'Check In'
-                    : isCheckOut
-                    ? 'Check Out'
-                    : 'Stop $i',
-            snippet: '${point.time} - ${point.address}',
-          ),
-        ),
-      );
-    }
-
-    // Create polyline
-    polylines.add(
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: points.map((p) => p.location).toList(),
-        color: const Color(0xFF8E0E6B),
-        width: 5,
-        geodesic: true,
-        startCap: Cap.roundCap,
-        endCap: Cap.roundCap,
-        jointType: JointType.round,
-      ),
-    );
-
-    return Stack(
-      children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: points.first.location,
-            zoom: 14,
-          ),
-          markers: markers,
-          polylines: polylines,
-          onMapCreated: (controller) {
-            onMapCreated(controller);
-            _fitMapBounds(controller, points);
-          },
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: true,
-          mapToolbarEnabled: false,
-          gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-            Factory<OneSequenceGestureRecognizer>(
-              () => EagerGestureRecognizer(),
-            ),
-          },
-        ),
-
-        // Info Card
-        Positioned(
-          top: 16,
-          left: 16,
-          right: 16,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.person,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            session!.employeeName,
-                            style: const TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                          Text(
-                            session!.employeeId,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                              fontFamily: AppFonts.poppins,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _MapInfoItem(
-                        icon: Icons.location_on,
-                        label: 'Locations',
-                        value: '${points.length}',
-                      ),
-                      Container(
-                        width: 1,
-                        height: 35,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      _MapInfoItem(
-                        icon: Icons.straighten,
-                        label: 'Distance',
-                        value:
-                            '${(session!.totalDistance / 1000).toStringAsFixed(1)} km',
-                      ),
-                      Container(
-                        width: 1,
-                        height: 35,
-                        color: Colors.white.withOpacity(0.3),
-                      ),
-                      _MapInfoItem(
-                        icon: Icons.access_time,
-                        label: 'Duration',
-                        value: '${session!.totalDuration.inMinutes} min',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _fitMapBounds(
-    GoogleMapController controller,
-    List<TrackingPoint> points,
-  ) {
-    if (points.isEmpty) return;
-
-    double minLat = points.first.location.latitude;
-    double maxLat = points.first.location.latitude;
-    double minLng = points.first.location.longitude;
-    double maxLng = points.first.location.longitude;
-
-    for (var point in points) {
-      if (point.location.latitude < minLat) minLat = point.location.latitude;
-      if (point.location.latitude > maxLat) maxLat = point.location.latitude;
-      if (point.location.longitude < minLng) minLng = point.location.longitude;
-      if (point.location.longitude > maxLng) maxLng = point.location.longitude;
-    }
-
-    final bounds = LatLngBounds(
-      southwest: LatLng(minLat, minLng),
-      northeast: LatLng(maxLat, maxLng),
-    );
-
-    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
-  }
-}
-
-class _MapInfoItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _MapInfoItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 22),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: Colors.white70,
-            fontFamily: AppFonts.poppins,
           ),
         ),
       ],

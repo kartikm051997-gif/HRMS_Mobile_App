@@ -33,6 +33,13 @@ class LoginProvider extends ChangeNotifier {
   LoginApiModel? get loginData => _loginData;
   String? get errorMessage => _errorMessage;
 
+  bool rememberMe = false;
+
+  void toggleRemember() {
+    rememberMe = !rememberMe;
+    notifyListeners();
+  }
+
   LoginProvider() {
     HttpOverrides.global = MyHttpOverrides();
   }

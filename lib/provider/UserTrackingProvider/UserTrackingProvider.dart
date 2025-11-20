@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/Material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -26,6 +27,8 @@ class UserTrackingProvider extends ChangeNotifier {
   List<AddressCheckpoint> _currentAddressCheckpoints = [];
   String? _currentUserId;
   Timer? _syncTimer;
+  bool _isSearching = false;
+
 
   // Getters
   List<UserTrackingRecordModel> get trackingRecords => _trackingRecords;
@@ -42,6 +45,7 @@ class UserTrackingProvider extends ChangeNotifier {
   // Constants
   static const double minDistanceMeters = 100.0;
   static const double minPointDistance = 20.0;
+
 
   // Initialize
   Future<void> initialize() async {
@@ -65,6 +69,13 @@ class UserTrackingProvider extends ChangeNotifier {
       if (kDebugMode) print('❌ Provider initialization error: $e');
     }
   }
+
+  //date controller
+
+  final adminDateController = TextEditingController();
+
+
+
 
   void _setupLocationCallbacks() {
     _locationService.onLocationUpdate = (LatLng location) {

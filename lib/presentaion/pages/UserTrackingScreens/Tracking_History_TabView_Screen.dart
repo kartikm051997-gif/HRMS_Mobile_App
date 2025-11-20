@@ -12,7 +12,8 @@ class UserTrackingTabViewScreen extends StatefulWidget {
   const UserTrackingTabViewScreen({super.key});
 
   @override
-  State<UserTrackingTabViewScreen> createState() => _UserTrackingTabViewScreenState();
+  State<UserTrackingTabViewScreen> createState() =>
+      _UserTrackingTabViewScreenState();
 }
 
 class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
