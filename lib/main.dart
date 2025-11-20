@@ -18,7 +18,7 @@ import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplicat
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JoiningFormsScreens/Joining_Forms_TabView_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/ResumeManagementScreens/ResumeManagementScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/SemiFilledApplicationScreens/Semi_Filled_Application_Screens.dart';
-import 'package:hrms_mobile_app/presentaion/pages/UserTrackingScreens/Tracking_TabView_Screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/UserTrackingScreens/Tracking_History_TabView_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
 import 'package:hrms_mobile_app/provider/AdminTrackingProvider/AdminTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
@@ -63,6 +63,7 @@ import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Referenec_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Resume_Management_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Semi_Filled_Application_Provider.dart';
+import 'package:hrms_mobile_app/provider/UserTrackingProvider/TrackingDetailProvider.dart';
 import 'package:hrms_mobile_app/provider/UserTrackingProvider/UserTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';

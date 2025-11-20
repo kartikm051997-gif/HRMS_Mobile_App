@@ -26,6 +26,16 @@ class AdminTrackingProvider with ChangeNotifier {
     EmployeeModel(id: 'EMP003', name: 'Amit Patel'),
     EmployeeModel(id: 'EMP004', name: 'Sneha Reddy'),
     EmployeeModel(id: 'EMP005', name: 'Vijay Singh'),
+    EmployeeModel(id: 'EMP005', name: 'g Singh'),
+    EmployeeModel(id: 'EMP005', name: 'h h'),
+    EmployeeModel(id: 'EMP005', name: 't h'),
+    EmployeeModel(id: 'EMP005', name: 't f'),
+    EmployeeModel(id: 'EMP005', name: 'e h'),
+    EmployeeModel(id: 'EMP005', name: 'w k'),
+    EmployeeModel(id: 'EMP005', name: 'h j'),
+    EmployeeModel(id: 'EMP005', name: 'r o'),
+    EmployeeModel(id: 'EMP005', name: 'e j'),
+    EmployeeModel(id: 'EMP005', name: 'w yi'),
   ];
 
   final List<String> _branches = [
@@ -45,6 +55,9 @@ class AdminTrackingProvider with ChangeNotifier {
     'HR',
     'Finance',
   ];
+
+  final adminDateController = TextEditingController();
+
 
   // Getters
   String? get selectedEmployeeId => _selectedEmployeeId;
