@@ -424,34 +424,36 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
               !adminTrackingProvider.isFiltersValid)
             Expanded(
               child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.filter_alt_outlined,
-                      size: 80,
-                      color: Colors.grey.shade300,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Select filters and search',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
-                        fontFamily: AppFonts.poppins,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.filter_alt_outlined,
+                        size: 80,
+                        color: Colors.grey.shade300,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Use the filter button above to get started',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade400,
-                        fontFamily: AppFonts.poppins,
+                      const SizedBox(height: 16),
+                      Text(
+                        'Select filters and search',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade600,
+                          fontFamily: AppFonts.poppins,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Use the filter button above to get started',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade400,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
