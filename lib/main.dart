@@ -63,7 +63,6 @@ import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Recruitment_Referenec_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Resume_Management_Provider.dart';
 import 'package:hrms_mobile_app/provider/RecruitmentScreensProviders/Semi_Filled_Application_Provider.dart';
-import 'package:hrms_mobile_app/provider/UserTrackingProvider/TrackingDetailProvider.dart';
 import 'package:hrms_mobile_app/provider/UserTrackingProvider/UserTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/All_Employee_Provider.dart';
 import 'package:hrms_mobile_app/provider/employeeProvider/Employee_Basic_Provider.dart';
@@ -77,7 +76,6 @@ import 'package:hrms_mobile_app/provider/payroll_provider/Attendance_Log_provide
 import 'package:hrms_mobile_app/provider/payroll_provider/Mispunch_Reports_Provider.dart';
 import 'package:hrms_mobile_app/provider/payroll_provider/Remote_Attendance_Provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'Service/BackgroundTrackingScreen.dart';
 import 'controller/ui_controller/appbar_controllers.dart';
 import 'core/components/BottomNavigationScreen/Bottom_Navigation_Screen.dart';
