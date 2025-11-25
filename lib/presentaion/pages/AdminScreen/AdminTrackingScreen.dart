@@ -1,6 +1,3 @@
-import 'package:floating_bottom_bar/animated_bottom_navigation_bar.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
