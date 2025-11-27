@@ -36,9 +36,18 @@ class _EmployeeManualPunchesScreenState
   int _getDaysInMonth(String? monthYear) {
     if (monthYear == null) return 31;
     final months = {
-      'January': 31, 'February': 28, 'March': 31, 'April': 30,
-      'May': 31, 'June': 30, 'July': 31, 'August': 31,
-      'September': 30, 'October': 31, 'November': 30, 'December': 31,
+      'January': 31,
+      'February': 28,
+      'March': 31,
+      'April': 30,
+      'May': 31,
+      'June': 30,
+      'July': 31,
+      'August': 31,
+      'September': 30,
+      'October': 31,
+      'November': 30,
+      'December': 31,
     };
     String monthName = monthYear.split(' ')[0];
     return months[monthName] ?? 31;
@@ -46,21 +55,31 @@ class _EmployeeManualPunchesScreenState
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'P': return const Color(0xFF0F6FFF);
-      case 'A': return const Color(0xFFDC2626);
-      case 'L': return const Color(0xFFD97706);
-      case 'H': return const Color(0xFF7C3AED);
-      default: return const Color(0xFFE5E7EB);
+      case 'P':
+        return const Color(0xFF0F6FFF);
+      case 'A':
+        return const Color(0xFFDC2626);
+      case 'L':
+        return const Color(0xFFD97706);
+      case 'H':
+        return const Color(0xFF7C3AED);
+      default:
+        return const Color(0xFFE5E7EB);
     }
   }
 
   String _getStatusLabel(String status) {
     switch (status) {
-      case 'P': return 'Present';
-      case 'A': return 'Absent';
-      case 'L': return 'Leave';
-      case 'H': return 'Holiday';
-      default: return 'N/A';
+      case 'P':
+        return 'Present';
+      case 'A':
+        return 'Absent';
+      case 'L':
+        return 'Leave';
+      case 'H':
+        return 'Holiday';
+      default:
+        return 'N/A';
     }
   }
 
@@ -84,7 +103,10 @@ class _EmployeeManualPunchesScreenState
                 int daysInMonth = _getDaysInMonth(provider.selectedMonth);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Column(
                     children: [
                       _buildSearchBar(),
@@ -96,8 +118,10 @@ class _EmployeeManualPunchesScreenState
                         itemBuilder: (context, index) {
                           final employee = provider.manualPunches[index];
 
-                          String empName = (employee['name'] ?? '').toLowerCase();
-                          String empId = (employee['empId'] ?? '').toLowerCase();
+                          String empName =
+                              (employee['name'] ?? '').toLowerCase();
+                          String empId =
+                              (employee['empId'] ?? '').toLowerCase();
 
                           if (_employeeSearchQuery.isNotEmpty) {
                             if (!empName.contains(_employeeSearchQuery) &&
@@ -132,16 +156,20 @@ class _EmployeeManualPunchesScreenState
         hintStyle: TextStyle(fontFamily: AppFonts.poppins),
         filled: true,
         fillColor: Colors.white,
-        suffixIcon: _employeeSearchQuery.isNotEmpty
-            ? IconButton(
-          onPressed: () {
-            _employeeSearchController.clear();
-            setState(() => _employeeSearchQuery = "");
-          },
-          icon: const Icon(Icons.clear, color: Colors.grey),
-        )
-            : null,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        suffixIcon:
+            _employeeSearchQuery.isNotEmpty
+                ? IconButton(
+                  onPressed: () {
+                    _employeeSearchController.clear();
+                    setState(() => _employeeSearchQuery = "");
+                  },
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                )
+                : null,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 20,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
@@ -267,15 +295,16 @@ class _EmployeeManualPunchesScreenState
           decoration: BoxDecoration(
             color: hasData ? bgColor : const Color(0xFFF3F4F6),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: hasData
-                ? [
-              BoxShadow(
-                color: bgColor.withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ]
-                : [],
+            boxShadow:
+                hasData
+                    ? [
+                      BoxShadow(
+                        color: bgColor.withOpacity(0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                    : [],
             border: Border.all(
               color: hasData ? bgColor.withOpacity(0.2) : Colors.transparent,
               width: 1,
@@ -297,7 +326,8 @@ class _EmployeeManualPunchesScreenState
                           fontFamily: AppFonts.poppins,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: hasData ? Colors.white : const Color(0xFFD1D5DB),
+                          color:
+                              hasData ? Colors.white : const Color(0xFFD1D5DB),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -339,8 +369,10 @@ class _EmployeeManualPunchesScreenState
       final checkInParts = checkIn.split(':');
       final checkOutParts = checkOut.split(':');
 
-      int checkInMinutes = int.parse(checkInParts[0]) * 60 + int.parse(checkInParts[1]);
-      int checkOutMinutes = int.parse(checkOutParts[0]) * 60 + int.parse(checkOutParts[1]);
+      int checkInMinutes =
+          int.parse(checkInParts[0]) * 60 + int.parse(checkInParts[1]);
+      int checkOutMinutes =
+          int.parse(checkOutParts[0]) * 60 + int.parse(checkOutParts[1]);
 
       // Handle case where checkout is next day
       if (checkOutMinutes < checkInMinutes) {
@@ -362,9 +394,8 @@ class _EmployeeManualPunchesScreenState
     late TextEditingController checkOutController;
     late TextEditingController descriptionController;
     String? selectedStatus = dayData?['status'] ?? 'P';
-    List<String>? times = dayData?['times'] != null
-        ? List<String>.from(dayData!['times'])
-        : [];
+    List<String>? times =
+        dayData?['times'] != null ? List<String>.from(dayData!['times']) : [];
 
     checkInController = TextEditingController(
       text: (times?.isNotEmpty ?? false) ? times![0] : '',
@@ -387,370 +418,394 @@ class _EmployeeManualPunchesScreenState
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, animation, secondaryAnimation) {
         return ScaleTransition(
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.elasticOut),
+          scale: Tween<double>(begin: 0.8, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.elasticOut),
+          ),
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0F6FFF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.edit_calendar,
-                              color: Color(0xFF0F6FFF),
-                              size: 24,
-                            ),
+            child: SingleChildScrollView(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F6FFF).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Attendance Details',
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A1A2E),
-                                  ),
-                                ),
-                                Text(
-                                  'Day $day',
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontSize: 12,
-                                    color: const Color(0xFF9CA3AF),
-                                  ),
-                                ),
-                              ],
-                            ),
+                          child: const Icon(
+                            Icons.edit_calendar,
+                            color: Color(0xFF0F6FFF),
+                            size: 24,
                           ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close),
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 20),
-
-                      // Status Selection
-                      Text(
-                        'Status',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: selectedStatus,
-                            items: [
-                              DropdownMenuItem(
-                                value: 'P',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF0F6FFF),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Present',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Attendance Details',
+                                style: TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF1A1A2E),
                                 ),
                               ),
-                              DropdownMenuItem(
-                                value: 'A',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFDC2626),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Absent',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'L',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFD97706),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Leave',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'H',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF7C3AED),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Holiday',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                              Text(
+                                'Day $day',
+                                style: TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                  fontSize: 12,
+                                  color: const Color(0xFF9CA3AF),
                                 ),
                               ),
                             ],
-                            onChanged: (value) {
-                              selectedStatus = value;
-                            },
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                          color: const Color(0xFF9CA3AF),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const Divider(),
+                    const SizedBox(height: 20),
 
-                      // Check-in Time
-                      Text(
-                        'Check-in Time',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
+                    // Status Selection
+                    Text(
+                      'Status',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
                       ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: checkInController,
-                        decoration: InputDecoration(
-                          hintText: 'HH:MM',
-                          prefixIcon: const Icon(Icons.login, color: Color(0xFF0F6FFF)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFF0F6FFF), width: 2),
-                          ),
-                        ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Check-out Time
-                      Text(
-                        'Check-out Time',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: checkOutController,
-                        decoration: InputDecoration(
-                          hintText: 'HH:MM',
-                          prefixIcon: const Icon(Icons.logout, color: Color(0xFFF59E0B)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFFF59E0B), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Description
-                      Text(
-                        'Description (Optional)',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: descriptionController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'Enter description here...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFF0F6FFF), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFE5E7EB)),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF6B7280),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: selectedStatus,
+                          items: [
+                            DropdownMenuItem(
+                              value: 'P',
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0F6FFF),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Present',
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
+                            DropdownMenuItem(
+                              value: 'A',
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFDC2626),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Absent',
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'L',
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFD97706),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Leave',
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            DropdownMenuItem(
+                              value: 'H',
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF7C3AED),
+                                        borderRadius: BorderRadius.circular(3),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Holiday',
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          onChanged: (value) {
+                            selectedStatus = value;
+                          },
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Check-in Time
+                    Text(
+                      'Check-in Time',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: checkInController,
+                      decoration: InputDecoration(
+                        hintText: 'HH:MM',
+                        prefixIcon: const Icon(
+                          Icons.login,
+                          color: Color(0xFF0F6FFF),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // Handle submission here
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Attendance updated successfully'),
-                                    backgroundColor: const Color(0xFF0F6FFF),
-                                    duration: const Duration(seconds: 2),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF0F6FFF),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Check-out Time
+                    Text(
+                      'Check-out Time',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: checkOutController,
+                      decoration: InputDecoration(
+                        hintText: 'HH:MM',
+                        prefixIcon: const Icon(
+                          Icons.logout,
+                          color: Color(0xFFF59E0B),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFF59E0B),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Description
+                    Text(
+                      'Description (Optional)',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Enter description here...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE5E7EB),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF0F6FFF),
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFE5E7EB)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Handle submission here
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    'Attendance updated successfully',
                                   ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F6FFF),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                                  backgroundColor: const Color(0xFF0F6FFF),
+                                  duration: const Duration(seconds: 2),
                                 ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F6FFF),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Text(
-                                'Submit',
-                                style: TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
+                            ),
+                            child: Text(
+                              'Submit',
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ));
-        },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
+            ),
+          ),
         );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(opacity: animation, child: child);
       },
     );
   }
@@ -869,7 +924,7 @@ class _EmployeeManualPunchesScreenState
                       setState(() => _showFilters = false);
                     },
                     child: const Text(
-                      "View Attendance",
+                      "View Attendance ",
                       style: TextStyle(
                         color: Colors.white,
                         fontFamily: AppFonts.poppins,
@@ -884,3 +939,4 @@ class _EmployeeManualPunchesScreenState
     );
   }
 }
+//updated
