@@ -367,9 +367,10 @@ class _EmployeeManualPunchesScreenState
                 ],
               ),
             ),
-            crossFadeState: _showFilters
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
+            crossFadeState:
+                _showFilters
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 300),
           ),
 
@@ -439,10 +440,7 @@ class _EmployeeManualPunchesScreenState
       onChanged: (value) {
         setState(() => _employeeSearchQuery = value.toLowerCase());
       },
-      style: const TextStyle(
-        fontFamily: AppFonts.poppins,
-        fontSize: 14,
-      ),
+      style: const TextStyle(fontFamily: AppFonts.poppins, fontSize: 14),
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.search_rounded, color: _primaryColor),
         hintText: 'Search by name or ID...',
@@ -453,15 +451,16 @@ class _EmployeeManualPunchesScreenState
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        suffixIcon: _employeeSearchQuery.isNotEmpty
-            ? IconButton(
-                onPressed: () {
-                  _employeeSearchController.clear();
-                  setState(() => _employeeSearchQuery = '');
-                },
-                icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
-              )
-            : null,
+        suffixIcon:
+            _employeeSearchQuery.isNotEmpty
+                ? IconButton(
+                  onPressed: () {
+                    _employeeSearchController.clear();
+                    setState(() => _employeeSearchQuery = '');
+                  },
+                  icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
+                )
+                : null,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 14,
           horizontal: 20,
@@ -539,7 +538,10 @@ class _EmployeeManualPunchesScreenState
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.5),
+                width: 2,
+              ),
             ),
             child: CircleAvatar(
               radius: 28,
@@ -574,7 +576,10 @@ class _EmployeeManualPunchesScreenState
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _buildHeaderChip(Icons.badge_outlined, employee['empId'] ?? '-'),
+                    _buildHeaderChip(
+                      Icons.badge_outlined,
+                      employee['empId'] ?? '-',
+                    ),
                     const SizedBox(width: 8),
                     Flexible(
                       child: _buildHeaderChip(
@@ -656,10 +661,22 @@ class _EmployeeManualPunchesScreenState
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          _buildStatItem('Present', stats['presentDays'].toString(), _presentColor),
-          _buildStatItem('Absent', stats['absentDays'].toString(), _absentColor),
+          _buildStatItem(
+            'Present',
+            stats['presentDays'].toString(),
+            _presentColor,
+          ),
+          _buildStatItem(
+            'Absent',
+            stats['absentDays'].toString(),
+            _absentColor,
+          ),
           _buildStatItem('Leave', stats['leaveDays'].toString(), _leaveColor),
-          _buildStatItem('Holiday', stats['holidays'].toString(), _holidayColor),
+          _buildStatItem(
+            'Holiday',
+            stats['holidays'].toString(),
+            _holidayColor,
+          ),
         ],
       ),
     );
@@ -708,8 +725,9 @@ class _EmployeeManualPunchesScreenState
     String monthYear,
   ) {
     // Sort days and get only days with data
-    final sortedDays = attendance.keys.toList()
-      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+    final sortedDays =
+        attendance.keys.toList()
+          ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
 
     return Container(
       decoration: BoxDecoration(
@@ -723,9 +741,7 @@ class _EmployeeManualPunchesScreenState
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade200),
-              ),
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
             child: Row(
               children: [
@@ -831,9 +847,7 @@ class _EmployeeManualPunchesScreenState
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : Colors.grey.shade50,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.shade100),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
       ),
       child: Row(
         children: [
@@ -861,104 +875,110 @@ class _EmployeeManualPunchesScreenState
 
           // Check In
           Expanded(
-            child: status == 'P'
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.login_rounded,
-                        size: 14,
-                        color: _presentColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        checkIn,
-                        style: const TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+            child:
+                status == 'P'
+                    ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.login_rounded,
+                          size: 14,
                           color: _presentColor,
                         ),
-                      ),
-                    ],
-                  )
-                : Center(
-                    child: Text(
-                      '-',
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontSize: 13,
-                        color: Colors.grey.shade400,
+                        const SizedBox(width: 4),
+                        Text(
+                          checkIn,
+                          style: const TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: _presentColor,
+                          ),
+                        ),
+                      ],
+                    )
+                    : Center(
+                      child: Text(
+                        '-',
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 13,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
                     ),
-                  ),
           ),
 
           // Check Out
           Expanded(
-            child: status == 'P'
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.logout_rounded,
-                        size: 14,
-                        color: _secondaryColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        checkOut,
-                        style: const TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+            child:
+                status == 'P'
+                    ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 14,
                           color: _secondaryColor,
                         ),
-                      ),
-                    ],
-                  )
-                : Center(
-                    child: Text(
-                      '-',
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontSize: 13,
-                        color: Colors.grey.shade400,
+                        const SizedBox(width: 4),
+                        Text(
+                          checkOut,
+                          style: const TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: _secondaryColor,
+                          ),
+                        ),
+                      ],
+                    )
+                    : Center(
+                      child: Text(
+                        '-',
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 13,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
                     ),
-                  ),
           ),
 
           // Working Hours
           Expanded(
-            child: status == 'P'
-                ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      workTime['display'] ?? '-',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue.shade700,
+            child:
+                status == 'P'
+                    ? Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        workTime['display'] ?? '-',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    )
+                    : Center(
+                      child: Text(
+                        '-',
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 13,
+                          color: Colors.grey.shade400,
+                        ),
                       ),
                     ),
-                  )
-                : Center(
-                    child: Text(
-                      '-',
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontSize: 13,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                  ),
           ),
 
           // Status Badge

@@ -393,7 +393,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
 
       return InkWell(
         onTap: () {
-          Get.toNamed(route);
+          // Close drawer first
+          Navigator.of(context).pop();
+          // Use offNamed to replace current screen, so back button goes to home
+          Get.offNamed(route);
         },
         borderRadius: BorderRadius.circular(6),
         splashColor: AppColor.primaryColor2.withOpacity(0.3),

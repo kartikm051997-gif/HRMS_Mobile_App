@@ -43,7 +43,10 @@ class TabletAppbarNavigationBtn extends StatelessWidget {
       final bool isSelected = appBarController.selectedPage.value == targetPage;
       return GestureDetector(
         onTap: () {
-          Get.toNamed(targetPage);
+          // Close drawer first
+          Navigator.of(context).pop();
+          // Use offNamed to replace current screen, so back button goes to home
+          Get.offNamed(targetPage);
         },
         child: MouseRegion(
           cursor: SystemMouseCursors.click,
