@@ -11,12 +11,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BackgroundTrackingService {
   static final BackgroundTrackingService _instance =
-  BackgroundTrackingService._internal();
+      BackgroundTrackingService._internal();
   factory BackgroundTrackingService() => _instance;
   BackgroundTrackingService._internal();
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   Future<void> initializeService() async {
     final service = FlutterBackgroundService();
@@ -34,15 +34,16 @@ class BackgroundTrackingService {
 
     await notificationsPlugin
         .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     // ✅ Initialize notifications
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const InitializationSettings initializationSettings =
-    InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(android: initializationSettingsAndroid);
 
     await notificationsPlugin.initialize(initializationSettings);
 
@@ -77,13 +78,19 @@ class BackgroundTrackingService {
     if (!isRunning) {
       // ✅ Save tracking state BEFORE starting service
       final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('employeeId') ??
-          prefs.getString('logged_in_emp_id');
+      final userId =
+          prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
 
       if (userId != null) {
         await prefs.setBool('is_checked_in_$userId', true);
-        await prefs.setString('tracking_start_time',
-            DateTime.now().toIso8601String());
+        await prefs.setString(
+          'tracking_start_time',
+          DateTime.now().toIso8601String(),
+        );
+        await prefs.setBool(
+          'service_should_run_$userId',
+          true,
+        ); // ✅ Mark service should run
         if (kDebugMode) print('✅ Saved tracking state for user: $userId');
       }
 
@@ -91,9 +98,18 @@ class BackgroundTrackingService {
       if (kDebugMode) print('🚀 Background tracking service started');
 
       // ✅ Verify service started
-      await Future.delayed(const Duration(seconds: 1));
+      await Future.delayed(
+        const Duration(seconds: 2),
+      ); // ✅ Increased delay for better verification
       bool verified = await service.isRunning();
       if (kDebugMode) print('✅ Service running: $verified');
+
+      // ✅ If service failed to start, try again after delay
+      if (!verified) {
+        if (kDebugMode) print('⚠️ Service not running, retrying...');
+        await Future.delayed(const Duration(seconds: 2));
+        await service.startService();
+      }
     } else {
       if (kDebugMode) print('⚠️ Service already running');
     }
@@ -102,18 +118,30 @@ class BackgroundTrackingService {
   Future<void> stopTracking() async {
     final service = FlutterBackgroundService();
 
-    // ✅ Clear tracking state BEFORE stopping
+    // ✅ Clear tracking
+
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getString('employeeId') ??
-        prefs.getString('logged_in_emp_id');
+    final userId =
+        prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
 
     if (userId != null) {
       await prefs.setBool('is_checked_in_$userId', false);
+      await prefs.setBool(
+        'service_should_run_$userId',
+        false,
+      ); // ✅ Mark service should stop
       if (kDebugMode) print('✅ Cleared tracking state');
     }
 
     service.invoke('stopService');
     if (kDebugMode) print('🛑 Background tracking service stopped');
+
+    // ✅ Wait a bit and verify service stopped
+    await Future.delayed(const Duration(seconds: 1));
+    bool stillRunning = await service.isRunning();
+    if (stillRunning && kDebugMode) {
+      print('⚠️ Service still running after stop command');
+    }
   }
 
   @pragma('vm:entry-point')
@@ -133,13 +161,13 @@ class BackgroundTrackingService {
     }
 
     final FlutterLocalNotificationsPlugin notificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+        FlutterLocalNotificationsPlugin();
 
     // ✅ Initialize notifications in background isolate
     const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
-    InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(android: initializationSettingsAndroid);
     await notificationsPlugin.initialize(initializationSettings);
 
     StreamSubscription<Position>? positionStream;
@@ -164,10 +192,18 @@ class BackgroundTrackingService {
       }
 
       final isCheckedIn = prefs.getBool('is_checked_in_$userId') ?? false;
-      if (!isCheckedIn) {
-        if (kDebugMode) print('⚠️ User not checked in');
+      final shouldRun = prefs.getBool('service_should_run_$userId') ?? false;
+
+      if (!isCheckedIn && !shouldRun) {
+        if (kDebugMode)
+          print('⚠️ User not checked in and service should not run');
         service.stopSelf();
         return;
+      }
+
+      // ✅ If checked in but service shouldn't run, mark it should
+      if (isCheckedIn && !shouldRun) {
+        await prefs.setBool('service_should_run_$userId', true);
       }
 
       if (kDebugMode) print('✅ Service running for user: $userId');
@@ -183,7 +219,7 @@ class BackgroundTrackingService {
       positionStream = Geolocator.getPositionStream(
         locationSettings: locationSettings,
       ).listen(
-            (Position position) async {
+        (Position position) async {
           try {
             lastUpdateTime = DateTime.now();
 
@@ -199,7 +235,9 @@ class BackgroundTrackingService {
               // ✅ Skip if less than 20 meters (GPS drift)
               if (distanceFromLast < 20.0) {
                 if (kDebugMode && pointCount % 10 == 0) {
-                  print('⏭️ Skipping GPS drift: ${distanceFromLast.toStringAsFixed(1)}m');
+                  print(
+                    '⏭️ Skipping GPS drift: ${distanceFromLast.toStringAsFixed(1)}m',
+                  );
                 }
                 return;
               }
@@ -215,23 +253,28 @@ class BackgroundTrackingService {
             if (routeJson != null) {
               try {
                 final decoded = json.decode(routeJson) as List;
-                routePoints = decoded
-                    .map((p) => {
-                  'lat': p['lat'] as double,
-                  'lng': p['lng'] as double,
-                })
-                    .toList();
+                routePoints =
+                    decoded
+                        .map(
+                          (p) => {
+                            'lat': p['lat'] as double,
+                            'lng': p['lng'] as double,
+                          },
+                        )
+                        .toList();
               } catch (e) {
                 if (kDebugMode) print('⚠️ Error decoding route: $e');
                 routePoints = [];
               }
             }
 
-            // ✅ Add new point with timestamp
             routePoints.add({
               'lat': position.latitude,
               'lng': position.longitude,
+              'timestamp': DateTime.now().millisecondsSinceEpoch.toDouble(),
             });
+
+
 
             // ✅ Save immediately with error handling
             try {
@@ -247,8 +290,10 @@ class BackgroundTrackingService {
 
               if (kDebugMode) {
                 print('📍 BG Service: Point #$pointCount saved');
-                print('   Location: ${position.latitude.toStringAsFixed(6)}, '
-                    '${position.longitude.toStringAsFixed(6)}');
+                print(
+                  '   Location: ${position.latitude.toStringAsFixed(6)}, '
+                  '${position.longitude.toStringAsFixed(6)}',
+                );
                 print('   Total stored: ${routePoints.length}');
               }
             } catch (e) {
@@ -288,158 +333,179 @@ class BackgroundTrackingService {
       );
 
       // ✅ Address checkpoint tracking (every 60 seconds)
-      addressCheckTimer = Timer.periodic(
-        const Duration(seconds: 60),
-            (timer) async {
-          try {
-            final position = await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.high,
-              timeLimit: const Duration(seconds: 15),
-            );
+      addressCheckTimer = Timer.periodic(const Duration(seconds: 60), (
+        timer,
+      ) async {
+        try {
+          final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 15),
+          );
 
-            final placemarks = await placemarkFromCoordinates(
-              position.latitude,
-              position.longitude,
-            );
+          final placemarks = await placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
 
-            if (placemarks.isNotEmpty) {
-              Placemark place = placemarks[0];
-              List<String> addressParts = [];
+          if (placemarks.isNotEmpty) {
+            Placemark place = placemarks[0];
+            List<String> addressParts = [];
 
-              if (place.name != null && place.name!.isNotEmpty) {
-                addressParts.add(place.name!);
-              }
-              if (place.street != null && place.street!.isNotEmpty) {
-                addressParts.add(place.street!);
-              }
-              if (place.locality != null && place.locality!.isNotEmpty) {
-                addressParts.add(place.locality!);
-              }
+            if (place.name != null && place.name!.isNotEmpty) {
+              addressParts.add(place.name!);
+            }
+            if (place.street != null && place.street!.isNotEmpty) {
+              addressParts.add(place.street!);
+            }
+            if (place.locality != null && place.locality!.isNotEmpty) {
+              addressParts.add(place.locality!);
+            }
 
-              String currentAddress = addressParts.join(', ');
-              if (currentAddress.isEmpty) currentAddress = 'Unknown Location';
+            String currentAddress = addressParts.join(', ');
+            if (currentAddress.isEmpty) currentAddress = 'Unknown Location';
 
-              if (lastAddress == null || lastAddress != currentAddress) {
-                final prefs = await SharedPreferences.getInstance();
-                final checkpointsKey = 'address_checkpoints_$userId';
+            if (lastAddress == null || lastAddress != currentAddress) {
+              final prefs = await SharedPreferences.getInstance();
+              final checkpointsKey = 'address_checkpoints_$userId';
 
-                List<Map<String, dynamic>> checkpoints = [];
-                final checkpointsJson = prefs.getString(checkpointsKey);
+              List<Map<String, dynamic>> checkpoints = [];
+              final checkpointsJson = prefs.getString(checkpointsKey);
 
-                if (checkpointsJson != null) {
-                  try {
-                    final decoded = json.decode(checkpointsJson) as List;
-                    checkpoints = decoded.cast<Map<String, dynamic>>();
-                  } catch (e) {
-                    checkpoints = [];
-                  }
+              if (checkpointsJson != null) {
+                try {
+                  final decoded = json.decode(checkpointsJson) as List;
+                  checkpoints = decoded.cast<Map<String, dynamic>>();
+                } catch (e) {
+                  checkpoints = [];
                 }
+              }
 
-                double distanceFromLast = 0.0;
-                if (checkpoints.isNotEmpty) {
-                  final lastCheckpoint = checkpoints.last;
-                  distanceFromLast = Geolocator.distanceBetween(
-                    lastCheckpoint['latitude'] as double,
-                    lastCheckpoint['longitude'] as double,
-                    position.latitude,
-                    position.longitude,
+              double distanceFromLast = 0.0;
+              if (checkpoints.isNotEmpty) {
+                final lastCheckpoint = checkpoints.last;
+                distanceFromLast = Geolocator.distanceBetween(
+                  lastCheckpoint['latitude'] as double,
+                  lastCheckpoint['longitude'] as double,
+                  position.latitude,
+                  position.longitude,
+                );
+              }
+
+              if (checkpoints.isEmpty || distanceFromLast >= 50.0) {
+                checkpoints.add({
+                  'latitude': position.latitude,
+                  'longitude': position.longitude,
+                  'address': currentAddress,
+                  'timestamp': DateTime.now().toIso8601String(),
+                  'distanceFromPrevious': distanceFromLast,
+                });
+
+                await prefs.setString(checkpointsKey, json.encode(checkpoints));
+                lastAddress = currentAddress;
+
+                if (kDebugMode) {
+                  print(
+                    '🏠 BG Checkpoint #${checkpoints.length}: $currentAddress',
                   );
                 }
-
-                if (checkpoints.isEmpty || distanceFromLast >= 50.0) {
-                  checkpoints.add({
-                    'latitude': position.latitude,
-                    'longitude': position.longitude,
-                    'address': currentAddress,
-                    'timestamp': DateTime.now().toIso8601String(),
-                    'distanceFromPrevious': distanceFromLast,
-                  });
-
-                  await prefs.setString(
-                      checkpointsKey, json.encode(checkpoints));
-                  lastAddress = currentAddress;
-
-                  if (kDebugMode) {
-                    print('🏠 BG Checkpoint #${checkpoints.length}: $currentAddress');
-                  }
-                }
               }
             }
-          } catch (e) {
-            if (kDebugMode) print('❌ Address check error: $e');
           }
-        },
-      );
+        } catch (e) {
+          if (kDebugMode) print('❌ Address check error: $e');
+        }
+      });
 
       // ✅ Health check timer (every 2 minutes)
-      healthCheckTimer = Timer.periodic(
-        const Duration(minutes: 2),
-            (timer) async {
-          try {
-            final prefs = await SharedPreferences.getInstance();
-            final isStillCheckedIn =
-                prefs.getBool('is_checked_in_$userId') ?? false;
+      healthCheckTimer = Timer.periodic(const Duration(minutes: 2), (
+        timer,
+      ) async {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          final isStillCheckedIn =
+              prefs.getBool('is_checked_in_$userId') ?? false;
 
-            if (!isStillCheckedIn) {
-              if (kDebugMode) print('✅ User checked out, stopping service');
-              positionStream?.cancel();
-              addressCheckTimer?.cancel();
-              persistenceTimer?.cancel();
-              timer.cancel();
-              service.stopSelf();
-              return;
+          final shouldRun =
+              prefs.getBool('service_should_run_$userId') ?? false;
+
+          if (!isStillCheckedIn && !shouldRun) {
+            if (kDebugMode) print('✅ User checked out, stopping service');
+            positionStream?.cancel();
+            addressCheckTimer?.cancel();
+            persistenceTimer?.cancel();
+            timer.cancel();
+            service.stopSelf();
+            return;
+          }
+
+          // ✅ Auto-restart if service died but should be running
+          if (shouldRun && !isStillCheckedIn) {
+            if (kDebugMode)
+              print(
+                '🔄 Service should run but not checked in, checking again...',
+              );
+            await Future.delayed(const Duration(seconds: 5));
+            final recheck = prefs.getBool('is_checked_in_$userId') ?? false;
+            if (recheck) {
+              if (kDebugMode)
+                print('✅ User checked back in, continuing service');
+            } else {
+              // Clear should run flag if still not checked in
+              await prefs.setBool('service_should_run_$userId', false);
             }
+          }
 
-            if (lastUpdateTime != null) {
-              final timeSinceLastUpdate =
-              DateTime.now().difference(lastUpdateTime!);
-              if (timeSinceLastUpdate.inMinutes > 5) {
-                if (kDebugMode) {
-                  print('⚠️ No location updates for '
-                      '${timeSinceLastUpdate.inMinutes} minutes');
-                }
+          if (lastUpdateTime != null) {
+            final timeSinceLastUpdate = DateTime.now().difference(
+              lastUpdateTime!,
+            );
+            if (timeSinceLastUpdate.inMinutes > 5) {
+              if (kDebugMode) {
+                print(
+                  '⚠️ No location updates for '
+                  '${timeSinceLastUpdate.inMinutes} minutes',
+                );
               }
             }
-
-            if (kDebugMode) {
-              print('💓 Health Check: Service alive, $pointCount points saved');
-            }
-          } catch (e) {
-            if (kDebugMode) print('❌ Health check error: $e');
           }
-        },
-      );
+
+          if (kDebugMode) {
+            print('💓 Health Check: Service alive, $pointCount points saved');
+          }
+        } catch (e) {
+          if (kDebugMode) print('❌ Health check error: $e');
+        }
+      });
 
       // ✅ NEW: Persistence timer - keeps service alive
-      persistenceTimer = Timer.periodic(
-        const Duration(seconds: 30),
-            (timer) async {
-          try {
-            // Update notification to keep service alive
-            await notificationsPlugin.show(
-              888,
-              '🎯 Tracking Active',
-              'Service running • $pointCount points tracked',
-              const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  'tracking_channel',
-                  'Location Tracking',
-                  icon: '@mipmap/ic_launcher',
-                  ongoing: true,
-                  autoCancel: false,
-                  playSound: false,
-                  priority: Priority.max,
-                  importance: Importance.max,
-                  enableVibration: false,
-                  showWhen: true,
-                ),
+      persistenceTimer = Timer.periodic(const Duration(seconds: 30), (
+        timer,
+      ) async {
+        try {
+          // Update notification to keep service alive
+          await notificationsPlugin.show(
+            888,
+            '🎯 Tracking Active',
+            'Service running • $pointCount points tracked',
+            const NotificationDetails(
+              android: AndroidNotificationDetails(
+                'tracking_channel',
+                'Location Tracking',
+                icon: '@mipmap/ic_launcher',
+                ongoing: true,
+                autoCancel: false,
+                playSound: false,
+                priority: Priority.max,
+                importance: Importance.max,
+                enableVibration: false,
+                showWhen: true,
               ),
-            );
-          } catch (e) {
-            if (kDebugMode) print('❌ Persistence update error: $e');
-          }
-        },
-      );
+            ),
+          );
+        } catch (e) {
+          if (kDebugMode) print('❌ Persistence update error: $e');
+        }
+      });
 
       // ✅ Stop service command
       service.on('stopService').listen((event) {
@@ -448,13 +514,25 @@ class BackgroundTrackingService {
         addressCheckTimer?.cancel();
         healthCheckTimer?.cancel();
         persistenceTimer?.cancel();
+
+        // Clear service should run flag
+        try {
+          final prefs = SharedPreferences.getInstance();
+          prefs.then((p) async {
+            await p.setBool('service_should_run_$userId', false);
+          });
+        } catch (e) {
+          if (kDebugMode) print('⚠️ Error clearing service flag: $e');
+        }
+
         service.stopSelf();
       });
 
       if (kDebugMode) print('✅ All timers and listeners started');
     } catch (e) {
       if (kDebugMode) print('❌ Fatal error in service: $e');
-      service.stopSelf();
+      // ✅ Don't stop service on error - let it continue
+      // Service will keep running and attempt recovery
     }
   }
 
@@ -466,8 +544,8 @@ class BackgroundTrackingService {
   }
 
   static Future<double> _calculateDistance(
-      List<Map<String, double>> points,
-      ) async {
+    List<Map<String, double>> points,
+  ) async {
     if (points.length < 2) return 0.0;
 
     double total = 0.0;

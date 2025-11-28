@@ -16,52 +16,178 @@ class EmployeeManualPunchesScreen extends StatefulWidget {
 
 class _EmployeeManualPunchesScreenState
     extends State<EmployeeManualPunchesScreen>
-    with TickerProviderStateMixin {
-  bool _showFilters = false;
+    with SingleTickerProviderStateMixin {
+  bool _showFilters = true;
   late TextEditingController _employeeSearchController;
   String _employeeSearchQuery = '';
+  late AnimationController _animationController;
+
+  // Colors
+  static const Color _primaryColor = Color(0xFF8E0E6B);
+  static const Color _secondaryColor = Color(0xFFD4145A);
+  static const Color _presentColor = Color(0xFF10B981);
+  static const Color _absentColor = Color(0xFFEF4444);
+  static const Color _leaveColor = Color(0xFFF59E0B);
+  static const Color _holidayColor = Color(0xFF8B5CF6);
 
   @override
   void initState() {
     super.initState();
     _employeeSearchController = TextEditingController();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
   }
 
   @override
   void dispose() {
     _employeeSearchController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   int _getDaysInMonth(String? monthYear) {
     if (monthYear == null) return 31;
+    final parts = monthYear.split(' ');
+    if (parts.length < 2) return 31;
+    
+    final monthName = parts[0];
+    final year = int.tryParse(parts[1]) ?? 2025;
+    
     final months = {
-      'January': 31, 'February': 28, 'March': 31, 'April': 30,
-      'May': 31, 'June': 30, 'July': 31, 'August': 31,
-      'September': 30, 'October': 31, 'November': 30, 'December': 31,
+      'January': 31,
+      'February': _isLeapYear(year) ? 29 : 28,
+      'March': 31,
+      'April': 30,
+      'May': 31,
+      'June': 30,
+      'July': 31,
+      'August': 31,
+      'September': 30,
+      'October': 31,
+      'November': 30,
+      'December': 31,
     };
-    String monthName = monthYear.split(' ')[0];
     return months[monthName] ?? 31;
   }
 
+  bool _isLeapYear(int year) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+  }
+
   Color _getStatusColor(String status) {
-    switch (status) {
-      case 'P': return const Color(0xFF0F6FFF);
-      case 'A': return const Color(0xFFDC2626);
-      case 'L': return const Color(0xFFD97706);
-      case 'H': return const Color(0xFF7C3AED);
-      default: return const Color(0xFFE5E7EB);
+    switch (status.toUpperCase()) {
+      case 'P':
+        return _presentColor;
+      case 'A':
+        return _absentColor;
+      case 'L':
+        return _leaveColor;
+      case 'H':
+        return _holidayColor;
+      default:
+        return Colors.grey.shade300;
     }
   }
 
   String _getStatusLabel(String status) {
-    switch (status) {
-      case 'P': return 'Present';
-      case 'A': return 'Absent';
-      case 'L': return 'Leave';
-      case 'H': return 'Holiday';
-      default: return 'N/A';
+    switch (status.toUpperCase()) {
+      case 'P':
+        return 'Present';
+      case 'A':
+        return 'Absent';
+      case 'L':
+        return 'Leave';
+      case 'H':
+        return 'Holiday';
+      default:
+        return 'N/A';
     }
+  }
+
+  // Calculate working hours from check-in and check-out
+  Map<String, dynamic> _calculateWorkingTime(List<dynamic>? times) {
+    if (times == null || times.length < 2) {
+      return {'hours': 0, 'minutes': 0, 'display': '-'};
+    }
+
+    try {
+      final checkIn = times.first.toString();
+      final checkOut = times.last.toString();
+
+      final checkInParts = checkIn.split(':');
+      final checkOutParts = checkOut.split(':');
+
+      int checkInMinutes =
+          int.parse(checkInParts[0]) * 60 + int.parse(checkInParts[1]);
+      int checkOutMinutes =
+          int.parse(checkOutParts[0]) * 60 + int.parse(checkOutParts[1]);
+
+      // Handle case where checkout is next day
+      if (checkOutMinutes < checkInMinutes) {
+        checkOutMinutes += 24 * 60;
+      }
+
+      int totalMinutes = checkOutMinutes - checkInMinutes;
+      int hours = totalMinutes ~/ 60;
+      int minutes = totalMinutes % 60;
+
+      return {
+        'hours': hours,
+        'minutes': minutes,
+        'totalMinutes': totalMinutes,
+        'display': '${hours}h ${minutes}m',
+      };
+    } catch (e) {
+      return {'hours': 0, 'minutes': 0, 'display': '-'};
+    }
+  }
+
+  // Calculate total monthly working hours
+  Map<String, dynamic> _calculateMonthlyStats(Map<String, dynamic> attendance) {
+    int totalMinutes = 0;
+    int presentDays = 0;
+    int absentDays = 0;
+    int leaveDays = 0;
+    int holidays = 0;
+
+    attendance.forEach((day, data) {
+      if (data is Map) {
+        String status = data['status'] ?? 'N/A';
+        List<dynamic>? times = data['times'];
+
+        switch (status.toUpperCase()) {
+          case 'P':
+            presentDays++;
+            final workTime = _calculateWorkingTime(times);
+            totalMinutes += (workTime['totalMinutes'] ?? 0) as int;
+            break;
+          case 'A':
+            absentDays++;
+            break;
+          case 'L':
+            leaveDays++;
+            break;
+          case 'H':
+            holidays++;
+            break;
+        }
+      }
+    });
+
+    int totalHours = totalMinutes ~/ 60;
+    int remainingMinutes = totalMinutes % 60;
+
+    return {
+      'totalHours': totalHours,
+      'totalMinutes': remainingMinutes,
+      'display': '${totalHours}h ${remainingMinutes}m',
+      'presentDays': presentDays,
+      'absentDays': absentDays,
+      'leaveDays': leaveDays,
+      'holidays': holidays,
+    };
   }
 
   @override
@@ -70,51 +196,238 @@ class _EmployeeManualPunchesScreenState
 
     return Scaffold(
       drawer: const TabletMobileDrawer(),
-      appBar: const CustomAppBar(title: "Attendance Punches"),
-      backgroundColor: const Color(0xFFF5F7FA),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildFilterHeader(provider),
-            Consumer<EmployeeManualPunchesProvider>(
+      appBar: const CustomAppBar(title: "Manual Punches"),
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: Column(
+        children: [
+          _buildFilterSection(provider),
+          Expanded(
+            child: Consumer<EmployeeManualPunchesProvider>(
               builder: (context, provider, child) {
                 if (provider.isLoading) return _buildLoadingState();
                 if (provider.manualPunches.isEmpty) return _buildEmptyState();
 
                 int daysInMonth = _getDaysInMonth(provider.selectedMonth);
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      _buildSearchBar(),
-                      const SizedBox(height: 20),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: provider.manualPunches.length,
-                        itemBuilder: (context, index) {
-                          final employee = provider.manualPunches[index];
+                return FadeTransition(
+                  opacity: _animationController,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    itemCount: provider.manualPunches.length,
+                    itemBuilder: (context, index) {
+                      final employee = provider.manualPunches[index];
 
-                          String empName = (employee['name'] ?? '').toLowerCase();
-                          String empId = (employee['empId'] ?? '').toLowerCase();
+                      String empName = (employee['name'] ?? '').toLowerCase();
+                      String empId = (employee['empId'] ?? '').toLowerCase();
 
-                          if (_employeeSearchQuery.isNotEmpty) {
-                            if (!empName.contains(_employeeSearchQuery) &&
-                                !empId.contains(_employeeSearchQuery)) {
-                              return const SizedBox.shrink();
-                            }
-                          }
+                      if (_employeeSearchQuery.isNotEmpty) {
+                        if (!empName.contains(_employeeSearchQuery) &&
+                            !empId.contains(_employeeSearchQuery)) {
+                          return const SizedBox.shrink();
+                        }
+                      }
 
-                          return _buildEmployeeSection(employee, daysInMonth);
+                      return TweenAnimationBuilder<double>(
+                        duration: Duration(milliseconds: 400 + (index * 100)),
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        builder: (context, value, child) {
+                          return Transform.translate(
+                            offset: Offset(0, 20 * (1 - value)),
+                            child: Opacity(opacity: value, child: child),
+                          );
                         },
-                      ),
-                    ],
+                        child: _buildEmployeeCard(
+                          employee,
+                          daysInMonth,
+                          provider.selectedMonth ?? '',
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection(EmployeeManualPunchesProvider provider) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // Header
+          InkWell(
+            onTap: () => setState(() => _showFilters = !_showFilters),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [_primaryColor, _secondaryColor],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.filter_list_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Filter Attendance',
+                          style: TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                        if (provider.selectedLocation != null)
+                          Text(
+                            '${provider.selectedLocation} • ${provider.selectedMonth ?? ""}',
+                            style: TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              fontSize: 12,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _showFilters ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Filters
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  CustomSearchDropdownWithSearch(
+                    isMandatory: true,
+                    labelText: "Location",
+                    items: provider.location,
+                    selectedValue: provider.selectedLocation,
+                    onChanged: provider.setSelectedLocation,
+                  ),
+                  const SizedBox(height: 12),
+                  CustomSearchDropdownWithSearch(
+                    isMandatory: true,
+                    labelText: "Month",
+                    items: provider.months,
+                    selectedValue: provider.selectedMonth,
+                    onChanged: provider.setSelectedMonth,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildGradientButton(
+                    onPressed: () {
+                      if (provider.selectedLocation != null &&
+                          provider.selectedMonth != null) {
+                        provider.fetchManualPunches(
+                          location: provider.selectedLocation!,
+                          month: provider.selectedMonth!,
+                        );
+                        setState(() => _showFilters = false);
+                      }
+                    },
+                    text: 'View Attendance',
+                    icon: Icons.visibility_rounded,
+                  ),
+                ],
+              ),
+            ),
+            crossFadeState: _showFilters
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 300),
+          ),
+
+          // Search Bar (when data is loaded)
+          if (provider.manualPunches.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _buildSearchBar(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradientButton({
+    required VoidCallback onPressed,
+    required String text,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [_primaryColor, _secondaryColor],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  text,
+                  style: const TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -126,82 +439,125 @@ class _EmployeeManualPunchesScreenState
       onChanged: (value) {
         setState(() => _employeeSearchQuery = value.toLowerCase());
       },
+      style: const TextStyle(
+        fontFamily: AppFonts.poppins,
+        fontSize: 14,
+      ),
       decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.search, color: Color(0xFF0F6FFF)),
-        hintText: "Search employee name or ID...",
-        hintStyle: TextStyle(fontFamily: AppFonts.poppins),
+        prefixIcon: Icon(Icons.search_rounded, color: _primaryColor),
+        hintText: 'Search by name or ID...',
+        hintStyle: TextStyle(
+          fontFamily: AppFonts.poppins,
+          fontSize: 14,
+          color: Colors.grey.shade400,
+        ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Colors.grey.shade50,
         suffixIcon: _employeeSearchQuery.isNotEmpty
             ? IconButton(
-          onPressed: () {
-            _employeeSearchController.clear();
-            setState(() => _employeeSearchQuery = "");
-          },
-          icon: const Icon(Icons.clear, color: Colors.grey),
-        )
+                onPressed: () {
+                  _employeeSearchController.clear();
+                  setState(() => _employeeSearchQuery = '');
+                },
+                icon: Icon(Icons.clear_rounded, color: Colors.grey.shade400),
+              )
             : null,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 20,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey.shade200),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Color(0xFF0F6FFF), width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: _primaryColor, width: 1.5),
         ),
       ),
     );
   }
 
-  Widget _buildEmployeeSection(Map<String, dynamic> employee, int daysInMonth) {
+  Widget _buildEmployeeCard(
+    Map<String, dynamic> employee,
+    int daysInMonth,
+    String monthYear,
+  ) {
+    final attendance = employee['attendance'] as Map<String, dynamic>? ?? {};
+    final stats = _calculateMonthlyStats(attendance);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildEmployeeHeader(employee),
-          const Divider(height: 1),
-          _buildCalendarGrid(employee['attendance'] ?? {}, daysInMonth),
+          // Employee Header
+          _buildEmployeeHeader(employee, stats),
+          
+          // Stats Summary
+          _buildStatsSummary(stats),
+          
+          // Attendance Grid
+          _buildAttendanceList(attendance, daysInMonth, monthYear),
         ],
       ),
     );
   }
 
-  Widget _buildEmployeeHeader(Map<String, dynamic> employee) {
-    return Padding(
-      padding: const EdgeInsets.all(18),
+  Widget _buildEmployeeHeader(
+    Map<String, dynamic> employee,
+    Map<String, dynamic> stats,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [_primaryColor, _secondaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: const Color(0xFF0F6FFF).withOpacity(0.15),
-            child: Text(
-              (employee['name'] ?? 'U')[0].toUpperCase(),
-              style: const TextStyle(
-                fontFamily: AppFonts.poppins,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F6FFF),
+          // Avatar
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 28,
+              backgroundColor: Colors.white,
+              child: Text(
+                (employee['name'] ?? 'U')[0].toUpperCase(),
+                style: const TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: _primaryColor,
+                ),
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
+          
+          // Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,17 +567,51 @@ class _EmployeeManualPunchesScreenState
                   style: const TextStyle(
                     fontFamily: AppFonts.poppins,
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
+                Row(
+                  children: [
+                    _buildHeaderChip(Icons.badge_outlined, employee['empId'] ?? '-'),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: _buildHeaderChip(
+                        Icons.work_outline_rounded,
+                        employee['designation'] ?? '-',
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          // Total Hours
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
                 Text(
-                  "ID: ${employee['empId']} • ${employee['designation'] ?? '-'}",
+                  stats['display'] ?? '-',
                   style: const TextStyle(
                     fontFamily: AppFonts.poppins,
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Total',
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 10,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -232,545 +622,395 @@ class _EmployeeManualPunchesScreenState
     );
   }
 
-  Widget _buildCalendarGrid(Map<String, dynamic> attendance, int daysInMonth) {
-    return Padding(
-      padding: const EdgeInsets.all(18),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: daysInMonth,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 7,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: 1.1,
-        ),
-        itemBuilder: (context, index) {
-          int day = index + 1;
-          Map<String, dynamic>? dayData = attendance[day.toString()];
-          return _buildDayTile(day, dayData);
-        },
+  Widget _buildHeaderChip(IconData icon, String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white.withOpacity(0.9)),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withOpacity(0.9),
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDayTile(int day, Map<String, dynamic>? dayData) {
-    String status = dayData?['status'] ?? 'N/A';
-    Color bgColor = _getStatusColor(status);
-    bool hasData = status != 'N/A';
+  Widget _buildStatsSummary(Map<String, dynamic> stats) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _buildStatItem('Present', stats['presentDays'].toString(), _presentColor),
+          _buildStatItem('Absent', stats['absentDays'].toString(), _absentColor),
+          _buildStatItem('Leave', stats['leaveDays'].toString(), _leaveColor),
+          _buildStatItem('Holiday', stats['holidays'].toString(), _holidayColor),
+        ],
+      ),
+    );
+  }
 
-    return GestureDetector(
-      onTap: () => _showEditPunchDialog(day, dayData),
-      child: ScaleTransition(
-        scale: AlwaysStoppedAnimation(1.0),
-        child: Container(
-          decoration: BoxDecoration(
-            color: hasData ? bgColor : const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: hasData
-                ? [
-              BoxShadow(
-                color: bgColor.withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
-            ]
-                : [],
-            border: Border.all(
-              color: hasData ? bgColor.withOpacity(0.2) : Colors.transparent,
-              width: 1,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: color.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAttendanceList(
+    Map<String, dynamic> attendance,
+    int daysInMonth,
+    String monthYear,
+  ) {
+    // Sort days and get only days with data
+    final sortedDays = attendance.keys.toList()
+      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Table Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade200),
+              ),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 50,
+                  child: Text(
+                    'Date',
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Check In',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Check Out',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    'Working',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 60,
+                  child: Text(
+                    'Status',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => _showEditPunchDialog(day, dayData),
-              borderRadius: BorderRadius.circular(12),
-              child: Center(
-                child: SingleChildScrollView(
-                  child: Column(
+
+          // Table Rows
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sortedDays.length,
+            itemBuilder: (context, index) {
+              final day = sortedDays[index];
+              final dayData = attendance[day] as Map<String, dynamic>?;
+              
+              return _buildDayRow(day, dayData, index);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDayRow(String day, Map<String, dynamic>? dayData, int index) {
+    final status = dayData?['status'] ?? 'N/A';
+    final times = dayData?['times'] as List<dynamic>?;
+    final statusColor = _getStatusColor(status);
+    final workTime = _calculateWorkingTime(times);
+
+    String checkIn = '-';
+    String checkOut = '-';
+
+    if (times != null && times.isNotEmpty) {
+      checkIn = times.first.toString();
+      if (times.length > 1) {
+        checkOut = times.last.toString();
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: index.isEven ? Colors.white : Colors.grey.shade50,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade100),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Date
+          SizedBox(
+            width: 50,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                day.padLeft(2, '0'),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+            ),
+          ),
+
+          // Check In
+          Expanded(
+            child: status == 'P'
+                ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Icon(
+                        Icons.login_rounded,
+                        size: 14,
+                        color: _presentColor,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
-                        day.toString(),
-                        style: TextStyle(
+                        checkIn,
+                        style: const TextStyle(
                           fontFamily: AppFonts.poppins,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: hasData ? Colors.white : const Color(0xFFD1D5DB),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _presentColor,
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      if (status != 'N/A')
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            status,
-                            style: TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
                     ],
+                  )
+                : Center(
+                    child: Text(
+                      '-',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
                   ),
+          ),
+
+          // Check Out
+          Expanded(
+            child: status == 'P'
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        size: 14,
+                        color: _secondaryColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        checkOut,
+                        style: const TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _secondaryColor,
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: Text(
+                      '-',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ),
+          ),
+
+          // Working Hours
+          Expanded(
+            child: status == 'P'
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      workTime['display'] ?? '-',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      '-',
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ),
+          ),
+
+          // Status Badge
+          SizedBox(
+            width: 60,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: statusColor.withOpacity(0.3)),
+              ),
+              child: Text(
+                status,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  String _calculateWorkingHours(String checkIn, String checkOut) {
-    if (checkIn.isEmpty || checkOut.isEmpty) return '0h 0m';
-
-    try {
-      final checkInParts = checkIn.split(':');
-      final checkOutParts = checkOut.split(':');
-
-      int checkInMinutes = int.parse(checkInParts[0]) * 60 + int.parse(checkInParts[1]);
-      int checkOutMinutes = int.parse(checkOutParts[0]) * 60 + int.parse(checkOutParts[1]);
-
-      // Handle case where checkout is next day
-      if (checkOutMinutes < checkInMinutes) {
-        checkOutMinutes += 24 * 60;
-      }
-
-      int diffMinutes = checkOutMinutes - checkInMinutes;
-      int hours = diffMinutes ~/ 60;
-      int minutes = diffMinutes % 60;
-
-      return '${hours}h ${minutes}m';
-    } catch (e) {
-      return '0h 0m';
-    }
-  }
-
-  void _showEditPunchDialog(int day, Map<String, dynamic>? dayData) {
-    late TextEditingController checkInController;
-    late TextEditingController checkOutController;
-    late TextEditingController descriptionController;
-    String? selectedStatus = dayData?['status'] ?? 'P';
-    List<String>? times = dayData?['times'] != null
-        ? List<String>.from(dayData!['times'])
-        : [];
-
-    checkInController = TextEditingController(
-      text: (times?.isNotEmpty ?? false) ? times![0] : '',
-    );
-    checkOutController = TextEditingController(
-      text: (times?.length ?? 0) > 1 ? times![1] : '',
-    );
-    descriptionController = TextEditingController();
-
-    String workingHours = _calculateWorkingHours(
-      checkInController.text,
-      checkOutController.text,
-    );
-
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      barrierColor: Colors.black.withOpacity(0.5),
-      transitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return ScaleTransition(
-            scale: Tween<double>(begin: 0.8, end: 1.0).animate(
-              CurvedAnimation(parent: animation, curve: Curves.elasticOut),
-            ),
-            child: Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: SingleChildScrollView(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0F6FFF).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.edit_calendar,
-                              color: Color(0xFF0F6FFF),
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Attendance Details',
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A1A2E),
-                                  ),
-                                ),
-                                Text(
-                                  'Day $day',
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontSize: 12,
-                                    color: const Color(0xFF9CA3AF),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.close),
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      const SizedBox(height: 20),
-
-                      // Status Selection
-                      Text(
-                        'Status',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: selectedStatus,
-                            items: [
-                              DropdownMenuItem(
-                                value: 'P',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF0F6FFF),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Present',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'A',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFDC2626),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Absent',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'L',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFD97706),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Leave',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              DropdownMenuItem(
-                                value: 'H',
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 12,
-                                        height: 12,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF7C3AED),
-                                          borderRadius: BorderRadius.circular(3),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Holiday',
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              selectedStatus = value;
-                            },
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Check-in Time
-                      Text(
-                        'Check-in Time',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: checkInController,
-                        decoration: InputDecoration(
-                          hintText: 'HH:MM',
-                          prefixIcon: const Icon(Icons.login, color: Color(0xFF0F6FFF)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFF0F6FFF), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Check-out Time
-                      Text(
-                        'Check-out Time',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: checkOutController,
-                        decoration: InputDecoration(
-                          hintText: 'HH:MM',
-                          prefixIcon: const Icon(Icons.logout, color: Color(0xFFF59E0B)),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFFF59E0B), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Description
-                      Text(
-                        'Description (Optional)',
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: descriptionController,
-                        maxLines: 3,
-                        decoration: InputDecoration(
-                          hintText: 'Enter description here...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide:
-                            const BorderSide(color: Color(0xFF0F6FFF), width: 2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(context),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFE5E7EB)),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF6B7280),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // Handle submission here
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text('Attendance updated successfully'),
-                                    backgroundColor: const Color(0xFF0F6FFF),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F6FFF),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child: Text(
-                                'Submit',
-                                style: TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ));
-        },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: animation,
-          child: child,
-        );
-      },
     );
   }
 
   Widget _buildLoadingState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 60),
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            color: Color(0xFF0F6FFF),
-            strokeWidth: 3,
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const CircularProgressIndicator(
+              color: _primaryColor,
+              strokeWidth: 3,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
-            'Loading attendance records...',
+            'Loading attendance data...',
             style: TextStyle(
               fontFamily: AppFonts.poppins,
-              color: const Color(0xFF9CA3AF),
               fontSize: 14,
+              color: Colors.grey.shade600,
             ),
           ),
         ],
@@ -779,107 +1019,53 @@ class _EmployeeManualPunchesScreenState
   }
 
   Widget _buildEmptyState() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 60),
-      child: Column(
-        children: [
-          Icon(
-            Icons.inbox_outlined,
-            size: 48,
-            color: const Color(0xFF0F6FFF).withOpacity(0.3),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            "No Records Found",
-            style: TextStyle(
-              fontFamily: AppFonts.poppins,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF1A1A2E),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterHeader(EmployeeManualPunchesProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.filter_alt_rounded, color: Color(0xFF0F6FFF)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  "Filters",
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
               ),
-              IconButton(
-                onPressed: () => setState(() => _showFilters = !_showFilters),
-                icon: Icon(
-                  _showFilters ? Icons.expand_less : Icons.expand_more,
-                ),
+              child: Icon(
+                Icons.calendar_today_rounded,
+                size: 48,
+                color: Colors.grey.shade400,
               ),
-            ],
-          ),
-          if (_showFilters) const SizedBox(height: 8),
-          if (_showFilters)
-            Column(
-              children: [
-                CustomSearchDropdownWithSearch(
-                  isMandatory: true,
-                  labelText: "Location",
-                  items: provider.location,
-                  selectedValue: provider.selectedLocation,
-                  onChanged: provider.setSelectedLocation,
-                ),
-                const SizedBox(height: 10),
-                CustomSearchDropdownWithSearch(
-                  isMandatory: true,
-                  labelText: "Month",
-                  items: provider.months,
-                  selectedValue: provider.selectedMonth,
-                  onChanged: provider.setSelectedMonth,
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  height: 46,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF0F6FFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      provider.fetchManualPunches(
-                        location: provider.selectedLocation!,
-                        month: provider.selectedMonth!,
-                      );
-                      setState(() => _showFilters = false);
-                    },
-                    child: const Text(
-                      "View Attendance",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'No Attendance Records',
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Select location and month to view\nemployee attendance data',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontSize: 14,
+                color: Colors.grey.shade500,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildGradientButton(
+              onPressed: () => setState(() => _showFilters = true),
+              text: 'Open Filters',
+              icon: Icons.filter_list_rounded,
+            ),
+          ],
+        ),
       ),
     );
   }

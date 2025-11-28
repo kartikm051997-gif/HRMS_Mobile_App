@@ -33,6 +33,7 @@ class AppRoutes {
   static const String bottomNav = "/bottomNav";
   static const String trackingTabViewScreen = "/TrackingTabViewScreen";
   static const String trackingDetailScreen = '/trackingdetail';
+  static const String assetDetails = '/AssetDetails';
 
 
 

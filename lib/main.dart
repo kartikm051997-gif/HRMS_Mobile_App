@@ -4,6 +4,7 @@ import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/AdminScreen/AdminTrackingScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/EmployeeAssetScreens/EmployeeAssetScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/AllEmployeeScreens/All_Employee_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreens/EmployeeBasicDeatils.dart';
@@ -41,6 +42,7 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/payslip_
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/pf_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/reference_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
+import 'package:hrms_mobile_app/provider/EmployeeAssetProvider/EmployeeAssetProvider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Abscond_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Active_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/All_Employees_Provider.dart';
@@ -179,6 +181,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserTrackingProvider()),
         ChangeNotifierProvider(create: (_) => FaceVerificationProvider()),
         ChangeNotifierProvider(create: (_) => FaceVerificationProvider()),
+        ChangeNotifierProvider(create: (_) => EmployeeAssetProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
@@ -265,6 +268,8 @@ class MyApp extends StatelessWidget {
         return const BottomNavScreen();
       case AppRoutes.trackingTabViewScreen:
         return const UserTrackingTabViewScreen();
+      case AppRoutes.assetDetails:
+        return const EmployeeAssetScreen ();
       default:
         return const NotFoundPage();
     }

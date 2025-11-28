@@ -1,3 +1,4 @@
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.hrms_mobile_app">
@@ -49,19 +50,21 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
 
-        <!-- 🚀 Flutter Background Service -->
+        <!-- 🚀 Flutter Background Service - Enhanced for Persistence -->
         <service
             android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="location"
             android:exported="false"
             android:enabled="true"
             android:stopWithTask="false"
+            android:isolatedProcess="false"
             tools:replace="android:exported" />
 
         <service
             android:name="id.flutter.flutter_background_service.ForegroundService"
             android:foregroundServiceType="location"
-            android:exported="false" />
+            android:exported="false"
+            android:stopWithTask="false" />
 
         <!-- 🔄 Boot Restart -->
         <receiver
@@ -89,6 +92,8 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+
+            > Vignesh Ivf:
             android:showWhenLocked="true"
             android:turnScreenOn="true">
 

@@ -34,6 +34,7 @@ class HelperUtil {
       AppRoutes.offerLetters,
       AppRoutes.bottomNav,
       AppRoutes.trackingTabViewScreen,
+      AppRoutes.assetDetails,
     ];
 
     return validRoutes.contains(route);

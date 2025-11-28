@@ -195,6 +195,12 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
                           targetPage: AppRoutes.paySlips,
                           fontSize: navItemFontSize,
                         ),
+                        TabletAppbarNavigationBtn(
+                          leadingIcon: Icons.person_search,
+                          title: 'Asset Details',
+                          targetPage: AppRoutes.assetDetails,
+                          fontSize: navItemFontSize,
+                        ),
                       ],
                     ),
                   ),

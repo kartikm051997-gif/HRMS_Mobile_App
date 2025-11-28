@@ -153,17 +153,36 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
 
     if (state == AppLifecycleState.resumed) {
       final provider = context.read<UserTrackingProvider>();
-      if (provider.isCheckedIn) {
-        provider.syncWithBackground();
-        if (kDebugMode) print('🔄 Syncing from background...');
-      }
+      
+      // ✅ Always call onAppResumed to sync data from background service
+      provider.onAppResumed().then((_) {
+        if (mounted) {
+          _updateMapMarkersWithRoute();
+          if (kDebugMode) print('🔄 Synced from background on resume');
+        }
+      });
     }
   }
 
   Future<void> _initializeApp() async {
     final provider = context.read<UserTrackingProvider>();
     await provider.initialize();
-    _updateMapMarkersWithRoute();
+    
+    // ✅ Update map after initialization
+    if (mounted) {
+      _updateMapMarkersWithRoute();
+      
+      // ✅ If checked in, animate to the last known location
+      if (provider.isCheckedIn && provider.currentRoutePoints.isNotEmpty) {
+        final lastPoint = provider.currentRoutePoints.last;
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(lastPoint, 15),
+        );
+        if (kDebugMode) {
+          print('📍 Restored ${provider.currentRoutePoints.length} route points');
+        }
+      }
+    }
   }
 
   // ✅ ADD THIS: Apply custom map style
