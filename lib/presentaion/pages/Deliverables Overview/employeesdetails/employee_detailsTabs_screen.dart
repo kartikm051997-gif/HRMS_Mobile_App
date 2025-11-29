@@ -5,7 +5,6 @@ import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employ
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/pf_cscreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/task_Details_screen.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
@@ -190,7 +189,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               empDesignation: widget.empDesignation,
               empBranch: widget.empBranch,
             ),
-            DocumentListScreen(
+            LetterScreen(
               empId: widget.empId,
               empPhoto: widget.empPhoto,
               empName: widget.empName,
@@ -586,3 +585,4 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     );
   }
 }
+

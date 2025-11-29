@@ -1,6 +1,4 @@
-// File: screens/attendance_calendar_screen.dart
 import 'package:flutter/material.dart';
-import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/attendance_screens/year_month_picker.dart';
 import 'package:provider/provider.dart';
@@ -24,47 +22,102 @@ class AttendanceCalendarScreen extends StatefulWidget {
       _AttendanceCalendarScreenState();
 }
 
-class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
+class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // Gradient colors - Light attractive theme
+  static const Color primaryColor = Color(0xFF8E0E6B);
+  static const Color secondaryColor = Color(0xFFD4145A);
+
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+
     Future.microtask(() {
       context.read<AttendanceProvider>().initialize();
+      _animationController.forward();
     });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       body: Consumer<AttendanceProvider>(
         builder: (context, provider, child) {
           return provider.isLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1976D2)),
-              )
-              : Column(
-                children: [
-                  _buildCalendarHeader(provider),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            _buildCalendarGrid(provider),
-                            const SizedBox(height: 20),
-                            if (provider.selectedDate != null)
-                              _buildSelectedDateInfo(provider),
-                            const SizedBox(height: 20),
-                            _buildAttendanceSummary(provider),
-                          ],
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const CircularProgressIndicator(
+                          color: primaryColor,
+                          strokeWidth: 3,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Loading attendance...",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              );
+                )
+              : FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Column(
+                    children: [
+                      _buildCalendarHeader(provider),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                _buildCalendarGrid(provider),
+                                const SizedBox(height: 16),
+                                _buildLegend(),
+                                const SizedBox(height: 16),
+                                if (provider.selectedDate != null)
+                                  _buildSelectedDateInfo(provider),
+                                if (provider.selectedDate != null)
+                                  const SizedBox(height: 16),
+                                _buildAttendanceSummary(provider),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
         },
       ),
     );
@@ -72,14 +125,14 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   Widget _buildCalendarHeader(AttendanceProvider provider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 4,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -88,34 +141,57 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           Expanded(
             child: GestureDetector(
               onTap: () => _showMonthYearPicker(context, provider),
-              child: Row(
-                children: [
-                  Text(
-                    provider.monthYearString,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF202124),
-                      fontFamily: AppFonts.poppins,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(
-                    Icons.arrow_drop_down,
-                    color: Color(0xFF5F6368),
-                    size: 24,
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      provider.monthYearString,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-          Row(
-            children: [
-              _buildNavButton(Icons.chevron_left, provider.previousMonth),
-              const SizedBox(width: 8),
-              _buildNavButton(Icons.chevron_right, provider.nextMonth),
-            ],
-          ),
+          const SizedBox(width: 12),
+          _buildNavButton(Icons.chevron_left_rounded, provider.previousMonth),
+          const SizedBox(width: 8),
+          _buildNavButton(Icons.chevron_right_rounded, provider.nextMonth),
         ],
       ),
     );
@@ -125,11 +201,18 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(12),
         onTap: onPressed,
         child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Icon(icon, color: const Color(0xFF5F6368), size: 24),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: primaryColor.withOpacity(0.2),
+            ),
+          ),
+          child: Icon(icon, color: primaryColor, size: 24),
         ),
       ),
     );
@@ -139,48 +222,56 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
-        children: [_buildWeekdayHeader(), _buildCalendarDays(provider)],
+        children: [
+          _buildWeekdayHeader(),
+          _buildCalendarDays(provider),
+        ],
       ),
     );
   }
 
   Widget _buildWeekdayHeader() {
-    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, secondaryColor],
+        ),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
       ),
       child: Row(
-        children:
-            weekdays
-                .map(
-                  (day) => Expanded(
-                    child: Text(
-                      day,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF70757A),
-                        letterSpacing: 0.8,
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
+        children: weekdays
+            .map(
+              (day) => Expanded(
+                child: Text(
+                  day,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                    fontFamily: AppFonts.poppins,
                   ),
-                )
-                .toList(),
+                ),
+              ),
+            )
+            .toList(),
       ),
     );
   }
@@ -191,25 +282,23 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
     List<Widget> dayWidgets = [];
 
-    // Add empty cells for days before month starts
     for (int i = 0; i < firstDayOfMonth; i++) {
       dayWidgets.add(const SizedBox());
     }
 
-    // Add day cells - ALL dates are now enabled
     for (int day = 1; day <= daysInMonth; day++) {
       dayWidgets.add(_buildDayCell(day, provider));
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 7,
         childAspectRatio: 1.0,
-        mainAxisSpacing: 4,
-        crossAxisSpacing: 4,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
         children: dayWidgets,
       ),
     );
@@ -222,20 +311,35 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     final hasEvent = provider.hasEvent(day);
     final isWorkingDay = provider.isWorkingDay(day);
 
+    Color bgColor = Colors.transparent;
+    Color textColor = const Color(0xFF1E293B);
+    Color borderColor = Colors.transparent;
+
+    if (isSelected) {
+      bgColor = primaryColor;
+      textColor = Colors.white;
+    } else if (isToday) {
+      bgColor = primaryColor.withOpacity(0.1);
+      textColor = primaryColor;
+      borderColor = primaryColor;
+    } else if (!isWorkingDay) {
+      textColor = Colors.grey[400]!;
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: () => provider.selectDate(day), // All dates are clickable
-        child: Container(
-          margin: const EdgeInsets.all(2),
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => provider.selectDate(day),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: _getDayCellBackgroundColor(isToday, isSelected, attendance),
-            borderRadius: BorderRadius.circular(20),
-            border:
-                isToday && !isSelected
-                    ? Border.all(color: const Color(0xFF1976D2), width: 2)
-                    : null,
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: borderColor,
+              width: isToday && !isSelected ? 2 : 0,
+            ),
           ),
           child: Stack(
             children: [
@@ -247,37 +351,30 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                       day.toString(),
                       style: TextStyle(
                         fontFamily: AppFonts.poppins,
-
                         fontSize: 14,
-                        fontWeight:
-                            isToday || isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                        color: _getDayTextColor(
-                          isToday,
-                          isSelected,
-                          isWorkingDay,
-                          attendance,
-                        ),
+                        fontWeight: isToday || isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: textColor,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    // Attendance status indicator
                     if (attendance != null)
                       Container(
-                        width: 4,
-                        height: 4,
+                        width: 6,
+                        height: 6,
                         decoration: BoxDecoration(
-                          color: _getStatusColor(attendance.status),
+                          color: isSelected
+                              ? Colors.white
+                              : _getStatusColor(attendance.status),
                           shape: BoxShape.circle,
                         ),
                       )
                     else
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                   ],
                 ),
               ),
-              // Event indicator (top-right corner)
               if (hasEvent)
                 Positioned(
                   top: 4,
@@ -285,8 +382,8 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
                   child: Container(
                     width: 6,
                     height: 6,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF1976D2),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : primaryColor,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -298,6 +395,58 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     );
   }
 
+  Widget _buildLegend() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildLegendItem("On Time", const Color(0xFF10B981)),
+          _buildLegendItem("Late", const Color(0xFFF59E0B)),
+          _buildLegendItem("Very Late", const Color(0xFFEF4444)),
+          _buildLegendItem("Today", primaryColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: AppFonts.poppins,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSelectedDateInfo(AttendanceProvider provider) {
     final selectedDate = provider.selectedDate!;
     final attendance = provider.getAttendanceForDay(selectedDate.day);
@@ -306,153 +455,243 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  _formatSelectedDate(selectedDate),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF202124),
-                    fontFamily: AppFonts.poppins,
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  overflow: TextOverflow.ellipsis, // prevent overflow
-                ),
-              ),
-              TextButton(
-                onPressed: provider.clearSelection,
-                child: const Text(
-                  'Clear',
-                  style: TextStyle(
-                    color: Color(0xFF1976D2),
-                    fontSize: 14,
-                    fontFamily: AppFonts.poppins,
+                  child: const Icon(
+                    Icons.event_note_rounded,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            isWorkingDay ? 'Working Day' : 'Weekend',
-            style: TextStyle(
-              fontFamily: AppFonts.poppins,
-
-              fontSize: 12,
-              color:
-                  isWorkingDay
-                      ? const Color(0xFF34A853)
-                      : const Color(0xFFFF6D01),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (attendance != null) ...[
-            _buildInfoRow(
-              Icons.login,
-              'Check-in',
-              attendance.inTime,
-              const Color(0xFF34A853),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.logout,
-              'Check-out',
-              attendance.outTime,
-              const Color(0xFFEA4335),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              Icons.info_outline,
-              'Status',
-              _getStatusText(attendance.status),
-              _getStatusColor(attendance.status),
-            ),
-          ] else if (hasEvent) ...[
-            _buildInfoRow(
-              Icons.event,
-              'Event',
-              'Holiday/Special Event',
-              const Color(0xFF1976D2),
-            ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F3F4),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, size: 20, color: Colors.grey[600]),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'No attendance record for this day',
-                      style: TextStyle(
-                        color: Color(0xFF70757A),
-                        fontSize: 14,
-                        fontFamily: AppFonts.poppins,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatSelectedDate(selectedDate),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          isWorkingDay ? 'Working Day' : 'Weekend',
+                          style: const TextStyle(
+                            fontFamily: AppFonts.poppins,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: provider.clearSelection,
+                  icon: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.close_rounded,
+                      color: Colors.white,
+                      size: 18,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
+
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: attendance != null
+                ? Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTimeCard(
+                              'Check-in',
+                              attendance.inTime,
+                              Icons.login_rounded,
+                              const Color(0xFF10B981),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTimeCard(
+                              'Check-out',
+                              attendance.outTime,
+                              Icons.logout_rounded,
+                              const Color(0xFFEF4444),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(attendance.status)
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _getStatusColor(attendance.status)
+                                .withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _getStatusIcon(attendance.status),
+                              color: _getStatusColor(attendance.status),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Status: ${_getStatusText(attendance.status)}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: _getStatusColor(attendance.status),
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : hasEvent
+                    ? _buildInfoCard(
+                        Icons.celebration_rounded,
+                        'Holiday/Special Event',
+                        primaryColor,
+                      )
+                    : _buildInfoCard(
+                        Icons.info_outline_rounded,
+                        'No attendance record for this day',
+                        Colors.grey[500]!,
+                      ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, size: 16, color: color),
+  Widget _buildTimeCard(
+      String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
         ),
-        const SizedBox(width: 12),
-        Text(
-          '$label: ',
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF70757A),
-            fontWeight: FontWeight.w500,
-            fontFamily: AppFonts.poppins,
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+              fontFamily: AppFonts.poppins,
+            ),
           ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            color: color,
-            fontWeight: FontWeight.w600,
-            fontFamily: AppFonts.poppins,
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontFamily: AppFonts.poppins,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoCard(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 14,
+              fontFamily: AppFonts.poppins,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -460,101 +699,166 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     final summary = provider.getAttendanceSummary();
 
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Monthly Summary',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF202124),
-              fontFamily: AppFonts.poppins,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Present Days',
-                  summary.presentDays.toString(),
-                  const Color(0xFF34A853),
-                  Icons.check_circle_outline,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'On Time',
-                  summary.onTimeDays.toString(),
-                  const Color(0xFF1976D2),
-                  Icons.schedule,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSummaryCard(
-                  'Late Arrivals',
-                  summary.lateDays.toString(),
-                  const Color(0xFFFBBC04),
-                  Icons.access_time,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildSummaryCard(
-                  'Very Late',
-                  summary.veryLateDays.toString(),
-                  const Color(0xFFEA4335),
-                  Icons.warning_outlined,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          // Header
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.analytics_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 14),
                 const Text(
-                  'Total Working Days:',
+                  'Monthly Summary',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF70757A),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                     fontFamily: AppFonts.poppins,
                   ),
                 ),
-                Text(
-                  summary.totalWorkingDays.toString(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF202124),
-                    fontFamily: AppFonts.poppins,
+              ],
+            ),
+          ),
+
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSummaryCard(
+                        'Present',
+                        summary.presentDays.toString(),
+                        const Color(0xFF10B981),
+                        Icons.check_circle_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        'On Time',
+                        summary.onTimeDays.toString(),
+                        primaryColor,
+                        Icons.schedule_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSummaryCard(
+                        'Late',
+                        summary.lateDays.toString(),
+                        const Color(0xFFF59E0B),
+                        Icons.access_time_rounded,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildSummaryCard(
+                        'Very Late',
+                        summary.veryLateDays.toString(),
+                        const Color(0xFFEF4444),
+                        Icons.warning_rounded,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        primaryColor.withOpacity(0.08),
+                        secondaryColor.withOpacity(0.08),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: primaryColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.work_rounded,
+                            color: primaryColor,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Total Working Days',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [primaryColor, secondaryColor],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          summary.totalWorkingDays.toString(),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -574,19 +878,26 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 22),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
               color: color,
               fontFamily: AppFonts.poppins,
             ),
@@ -594,9 +905,9 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
           const SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF70757A),
+              color: Colors.grey[600],
               fontWeight: FontWeight.w500,
               fontFamily: AppFonts.poppins,
             ),
@@ -608,48 +919,29 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
   }
 
   // Helper methods
-  Color _getDayCellBackgroundColor(
-    bool isToday,
-    bool isSelected,
-    AttendanceRecord? attendance,
-  ) {
-    if (isSelected) {
-      return const Color(0xFF1976D2);
-    }
-    if (isToday) {
-      return Colors.transparent;
-    }
-    return Colors.transparent;
-  }
-
-  Color _getDayTextColor(
-    bool isToday,
-    bool isSelected,
-    bool isWorkingDay,
-    AttendanceRecord? attendance,
-  ) {
-    if (isSelected) {
-      return Colors.white;
-    }
-    if (isToday) {
-      return const Color(0xFF1976D2);
-    }
-    if (!isWorkingDay) {
-      return const Color(0xFFBDBDBD);
-    }
-    return const Color(0xFF202124);
-  }
-
   Color _getStatusColor(AttendanceStatus status) {
     switch (status) {
       case AttendanceStatus.onTime:
-        return const Color(0xFF34A853);
+        return const Color(0xFF10B981);
       case AttendanceStatus.late:
-        return const Color(0xFFFBBC04);
+        return const Color(0xFFF59E0B);
       case AttendanceStatus.veryLate:
-        return const Color(0xFFEA4335);
+        return const Color(0xFFEF4444);
       default:
-        return const Color(0xFF9AA0A6);
+        return Colors.grey;
+    }
+  }
+
+  IconData _getStatusIcon(AttendanceStatus status) {
+    switch (status) {
+      case AttendanceStatus.onTime:
+        return Icons.check_circle_rounded;
+      case AttendanceStatus.late:
+        return Icons.access_time_rounded;
+      case AttendanceStatus.veryLate:
+        return Icons.warning_rounded;
+      default:
+        return Icons.help_outline_rounded;
     }
   }
 
@@ -668,27 +960,12 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
 
   String _formatSelectedDate(DateTime date) {
     const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     const weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
     ];
 
     final weekday = weekdays[date.weekday - 1];
@@ -697,22 +974,40 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen> {
     return '$weekday, ${date.day} $month ${date.year}';
   }
 
-  // Dialog methods
   void _showMonthYearPicker(BuildContext context, AttendanceProvider provider) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
-          title: const Text(
-            'Select Month & Year',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              fontFamily: AppFonts.poppins,
-            ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.calendar_month_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Select Month & Year',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+            ],
           ),
           content: SizedBox(
             width: double.maxFinite,

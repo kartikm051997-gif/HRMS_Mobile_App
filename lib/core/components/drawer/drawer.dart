@@ -3,10 +3,8 @@ import 'package:get/get.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../provider/login_provider/login_provider.dart';
-import '../../constants/appcolor_dart.dart';
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
-import 'drawer_button.dart';
 import '../../../controller/ui_controller/appbar_controllers.dart';
 
 class TabletMobileDrawer extends StatefulWidget {
@@ -16,429 +14,938 @@ class TabletMobileDrawer extends StatefulWidget {
   State<TabletMobileDrawer> createState() => _TabletMobileDrawerState();
 }
 
-class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
+class _TabletMobileDrawerState extends State<TabletMobileDrawer>
+    with SingleTickerProviderStateMixin {
   bool _isPayrollExpanded = false;
   bool _isEmployeesExpanded = false;
   bool _isRecruitmentExpanded = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // Modern gradient colors
+  static const Color primaryColor = Color(0xFF8E0E6B);
+  static const Color secondaryColor = Color(0xFFD4145A);
+  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color textColor = Color(0xFF1E293B);
+  static const Color subtextColor = Color(0xFF64748B);
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final loginProvider = Provider.of<LoginProvider>(context);
     final user = loginProvider.loginData?.user;
-    double screenWidth = MediaQuery.of(context).size.width;
-    double navItemFontSize = 17;
     final AppBarController appBarController = Get.find<AppBarController>();
 
     return Drawer(
-      child: SizedBox(
-        width: screenWidth,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white, // Changed to white background
-          ),
-          child: Column(
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColor.primaryColor1, AppColor.primaryColor2],
-                  ),
-                ),
-                padding: EdgeInsets.zero,
+      backgroundColor: backgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topRight: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Column(
+          children: [
+            // Modern Header
+            _buildModernHeader(user),
+
+            // Navigation Items
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          Scaffold.of(context).closeEndDrawer();
-                        },
-                        child: Image.network(
-                          AppImages.logo,
-                          height: 28,
-                          width: 28,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          },
-                          errorBuilder:
-                              (context, error, stackTrace) => Image.asset(
-                                AppImages.logo,
-                                fit: BoxFit.cover,
-                              ),
-                        ),
-                      ),
+                    // Section Label
+                    _buildSectionLabel("MAIN MENU"),
+                    const SizedBox(height: 8),
+
+                    // Main Navigation Items
+                    _buildNavItem(
+                      icon: Icons.location_on_rounded,
+                      title: 'User Tracking',
+                      route: AppRoutes.userTrackingScreen,
+                      index: 0,
                     ),
-                    Padding(
+                    _buildNavItem(
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: 'Admin Tracking',
+                      route: AppRoutes.adminTracking,
+                      index: 1,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.dashboard_rounded,
+                      title: 'Deliverables Overview',
+                      route: AppRoutes.deliverablesOverview,
+                      index: 2,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.people_alt_rounded,
+                      title: 'Employee Management',
+                      route: AppRoutes.employeeManagement,
+                      index: 3,
+                    ),
+
+                    const SizedBox(height: 16),
+                    _buildSectionLabel("MODULES"),
+                    const SizedBox(height: 8),
+
+                    // Expandable Sections
+                    _buildPayrollSection(appBarController),
+                    const SizedBox(height: 4),
+                    _buildEmployeesSection(appBarController),
+                    const SizedBox(height: 4),
+                    _buildRecruitmentSection(appBarController),
+
+                    const SizedBox(height: 16),
+                    _buildSectionLabel("OTHERS"),
+                    const SizedBox(height: 8),
+
+                    _buildNavItem(
+                      icon: Icons.receipt_long_rounded,
+                      title: 'PaySlips',
+                      route: AppRoutes.paySlips,
+                      index: 4,
+                    ),
+                    _buildNavItem(
+                      icon: Icons.inventory_2_rounded,
+                      title: 'Asset Details',
+                      route: AppRoutes.assetDetails,
+                      index: 5,
+                    ),
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+
+            // Footer
+            _buildFooter(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernHeader(dynamic user) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 20,
+        left: 20,
+        right: 20,
+        bottom: 24,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, secondaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x307C3AED),
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Logo and Close Button Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Logo
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Image.network(
+                  AppImages.logo,
+                  height: 24,
+                  width: 24,
+                  color: Colors.white,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.business_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+              // Close Button
+              GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // User Info Row
+          Row(
+            children: [
+              // Avatar with Gradient Border
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 32,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  backgroundImage:
+                      (user?.avatar != null && user!.avatar!.isNotEmpty)
+                          ? NetworkImage(
+                              "https://app.draravindsivf.com/hrms/${user.avatar}",
+                            )
+                          : null,
+                  child: (user?.avatar == null || user!.avatar!.isEmpty)
+                      ? Text(
+                          user?.fullname != null && user!.fullname!.isNotEmpty
+                              ? user.fullname![0].toUpperCase()
+                              : "U",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(width: 16),
+
+              // User Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.fullname ?? "Welcome!",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: AppFonts.poppins,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
-                            radius: 40, // Set a fixed radius
-                            backgroundColor: Colors.grey.shade300,
-                            backgroundImage:
-                                (user?.avatar != null &&
-                                        user!.avatar!.isNotEmpty)
-                                    ? NetworkImage(
-                                      "https://app.draravindsivf.com/hrms/${user.avatar}",
-                                    )
-                                    : null,
-                            child:
-                                (user?.avatar == null || user!.avatar!.isEmpty)
-                                    ? Text(
-                                      user?.fullname != null &&
-                                              user!.fullname!.isNotEmpty
-                                          ? user.fullname![0].toUpperCase()
-                                          : "U",
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    )
-                                    : null,
+                          const Icon(
+                            Icons.location_on_rounded,
+                            color: Colors.white70,
+                            size: 12,
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user?.fullname ?? "User",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                  fontFamily: AppFonts.poppins,
-                                ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              user?.branch ?? "Branch",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                                fontFamily: AppFonts.poppins,
                               ),
-                              const SizedBox(height: 8),
-
-                              Text(
-                                user?.branch ?? "Branch Unknown",
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
-                                  fontFamily: AppFonts.poppins,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-
-                          /// Branch Name
                         ],
                       ),
                     ),
                   ],
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Dashboard
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.dashboard,
-                          title: 'User Tracking',
-                          targetPage: AppRoutes.userTrackingScreen,
-                          fontSize: navItemFontSize,
-                        ),
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.admin_panel_settings,
-                          title: 'Admin Tracking',
-                          targetPage: AppRoutes.adminTracking,
-                          fontSize: navItemFontSize,
-                        ),
-
-                        // Deliverables Overview
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.message_outlined,
-                          title: 'Deliverables Overview',
-                          targetPage: AppRoutes.deliverablesOverview,
-                          fontSize: navItemFontSize,
-                        ),
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.person_search,
-                          title: 'Employee Management',
-                          targetPage: AppRoutes.employeeManagement,
-                          fontSize: navItemFontSize,
-                        ),
-
-                        // Payroll with Submenu
-                        _buildPayrollSection(navItemFontSize, appBarController),
-                        _buildEmployeesSection(
-                          navItemFontSize,
-                          appBarController,
-                        ),
-                        _buildRecruitmentSection(
-                          navItemFontSize,
-                          appBarController,
-                        ),
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.person_search,
-                          title: 'PaySlips',
-                          targetPage: AppRoutes.paySlips,
-                          fontSize: navItemFontSize,
-                        ),
-                        TabletAppbarNavigationBtn(
-                          leadingIcon: Icons.person_search,
-                          title: 'Asset Details',
-                          targetPage: AppRoutes.assetDetails,
-                          fontSize: navItemFontSize,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: subtextColor.withOpacity(0.7),
+          fontFamily: AppFonts.poppins,
+          letterSpacing: 1.2,
         ),
       ),
     );
   }
 
-  Widget _buildPayrollSection(
-    double fontSize,
-    AppBarController appBarController,
-  ) {
-    return Obx(() {
-      // Check if any payroll submenu is active
-      bool isAnyPayrollActive = _isAnyPayrollRouteActive(
-        appBarController.selectedPage.value,
-      );
+  Widget _buildNavItem({
+    required IconData icon,
+    required String title,
+    required String route,
+    required int index,
+  }) {
+    final AppBarController appBarController = Get.find<AppBarController>();
 
-      return Column(
-        children: [
-          // Main Payroll Button - Simplified without container
-          InkWell(
-            onTap: () {
-              setState(() {
-                _isPayrollExpanded = !_isPayrollExpanded;
-              });
-            },
-            borderRadius: BorderRadius.circular(8),
-            splashColor: AppColor.primaryColor2.withOpacity(0.3),
-            highlightColor: AppColor.primaryColor2.withOpacity(0.1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+    return Obx(() {
+      bool isSelected = appBarController.selectedPage.value == route;
+
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: Duration(milliseconds: 300 + (index * 50)),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(-20 * (1 - value), 0),
+            child: Opacity(opacity: value, child: child),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 2),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                // Use Get.back() instead of Navigator.pop() for consistency
+                Get.back();
+                Get.offNamed(route);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? primaryColor.withOpacity(0.1)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isSelected
+                      ? Border.all(color: primaryColor.withOpacity(0.3))
+                      : null,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? primaryColor.withOpacity(0.15)
+                            : subtextColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isSelected ? primaryColor : subtextColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: isSelected ? primaryColor : textColor,
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                    if (isSelected)
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildExpandableSection({
+    required IconData icon,
+    required String title,
+    required bool isExpanded,
+    required VoidCallback onTap,
+    required List<Widget> children,
+    required bool isAnyChildActive,
+  }) {
+    return Column(
+      children: [
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    _isPayrollExpanded
-                        ? AppColor.primaryColor2.withOpacity(0.1)
-                        : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
+                color: isExpanded || isAnyChildActive
+                    ? primaryColor.withOpacity(0.08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.account_balance_wallet,
-                    color:
-                        isAnyPayrollActive
-                            ? AppColor.primaryColor2
-                            : const Color.fromARGB(255, 63, 63, 63),
-                    size: 24,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: isExpanded || isAnyChildActive
+                          ? const LinearGradient(
+                              colors: [primaryColor, secondaryColor],
+                            )
+                          : null,
+                      color: isExpanded || isAnyChildActive
+                          ? null
+                          : subtextColor.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: isExpanded || isAnyChildActive
+                          ? Colors.white
+                          : subtextColor,
+                      size: 20,
+                    ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Text(
-                      'Payroll',
+                      title,
                       style: TextStyle(
-                        color:
-                            isAnyPayrollActive
-                                ? AppColor.primaryColor2
-                                : const Color.fromARGB(255, 63, 63, 63),
-                        fontSize: fontSize,
-                        fontWeight:
-                            isAnyPayrollActive
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                        color: isExpanded || isAnyChildActive
+                            ? primaryColor
+                            : textColor,
+                        fontSize: 14,
+                        fontWeight: isExpanded || isAnyChildActive
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         fontFamily: AppFonts.poppins,
                       ),
                     ),
                   ),
                   AnimatedRotation(
-                    turns: _isPayrollExpanded ? 0.5 : 0,
+                    turns: isExpanded ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
-                      Icons.keyboard_arrow_down,
-                      color:
-                          isAnyPayrollActive
-                              ? AppColor.primaryColor2
-                              : const Color.fromARGB(255, 63, 63, 63),
-                      size: 24,
+                      Icons.keyboard_arrow_down_rounded,
+                      color: isExpanded || isAnyChildActive
+                          ? primaryColor
+                          : subtextColor,
+                      size: 22,
                     ),
                   ),
                 ],
               ),
             ),
           ),
+        ),
 
-          // Submenu Items
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: _isPayrollExpanded ? null : 0,
-            child: AnimatedOpacity(
-              opacity: _isPayrollExpanded ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: Container(
-                margin: const EdgeInsets.only(left: 20, top: 8),
-                child: Column(
-                  children: [
-                    _buildSubmenuItem(
-                      icon: Icons.schedule,
-                      title: 'Attendance Log',
-                      route: AppRoutes.attendanceLog,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.home_work,
-                      title: 'Remote Attendance',
-                      route: AppRoutes.remoteAttendance,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.report_problem,
-                      title: 'Mispunch Reports',
-                      route: AppRoutes.mispunchReports,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.punch_clock,
-                      title: 'Employee Manual Punches',
-                      route: AppRoutes.employeeManualPunches,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.savings,
-                      title: 'PF',
-                      route: AppRoutes.pf,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.rate_review,
-                      title: 'Payroll Review',
-                      route: AppRoutes.payrollReview,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.local_hospital,
-                      title: 'ESI',
-                      route: AppRoutes.esi,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.account_balance,
-                      title: 'NEFT',
-                      route: AppRoutes.neft,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.access_time,
-                      title: 'Late Punch Reports',
-                      route: AppRoutes.latePunchReports,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                    _buildSubmenuItem(
-                      icon: Icons.description,
-                      title: 'Salary Report',
-                      route: AppRoutes.salaryReport,
-                      fontSize: fontSize - 2,
-                      appBarController: appBarController,
-                    ),
-                  ],
+        // Submenu with Animation
+        AnimatedCrossFade(
+          firstChild: const SizedBox(height: 0, width: double.infinity),
+          secondChild: Container(
+            margin: const EdgeInsets.only(left: 24, top: 4),
+            padding: const EdgeInsets.only(left: 12),
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: primaryColor.withOpacity(0.2),
+                  width: 2,
                 ),
               ),
             ),
+            child: Column(children: children),
           ),
-        ],
-      );
-    });
+          crossFadeState:
+              isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 250),
+          sizeCurve: Curves.easeInOut,
+        ),
+      ],
+    );
   }
 
   Widget _buildSubmenuItem({
     required IconData icon,
     required String title,
     required String route,
-    required double fontSize,
     required AppBarController appBarController,
   }) {
     return Obx(() {
       bool isSelected = appBarController.selectedPage.value == route;
 
-      return InkWell(
-        onTap: () {
-          // Close drawer first
-          Navigator.of(context).pop();
-          // Use offNamed to replace current screen, so back button goes to home
-          Get.offNamed(route);
-        },
-        borderRadius: BorderRadius.circular(6),
-        splashColor: AppColor.primaryColor2.withOpacity(0.3),
-        highlightColor: AppColor.primaryColor2.withOpacity(0.1),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color:
-                    isSelected
-                        ? AppColor.primaryColor2
-                        : const Color.fromARGB(255, 63, 63, 63),
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color:
-                        isSelected
-                            ? AppColor.primaryColor2
-                            : const Color.fromARGB(255, 63, 63, 63),
-                    fontSize: fontSize,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontFamily: AppFonts.poppins,
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            // Use Get.back() instead of Navigator.pop() for consistency
+            Get.back();
+            Get.offNamed(route);
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+            margin: const EdgeInsets.symmetric(vertical: 2),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? primaryColor.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? primaryColor : subtextColor,
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      color: isSelected ? primaryColor : textColor.withOpacity(0.8),
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontFamily: AppFonts.poppins,
+                    ),
                   ),
                 ),
-              ),
-            ],
+                if (isSelected)
+                  Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       );
     });
   }
 
-  // Helper method to check if any payroll route is active
+  Widget _buildPayrollSection(AppBarController appBarController) {
+    return Obx(() {
+      bool isAnyPayrollActive = _isAnyPayrollRouteActive(
+        appBarController.selectedPage.value,
+      );
+
+      return _buildExpandableSection(
+        icon: Icons.account_balance_wallet_rounded,
+        title: 'Payroll',
+        isExpanded: _isPayrollExpanded,
+        isAnyChildActive: isAnyPayrollActive,
+        onTap: () => setState(() => _isPayrollExpanded = !_isPayrollExpanded),
+        children: [
+          _buildSubmenuItem(
+            icon: Icons.schedule_rounded,
+            title: 'Attendance Log',
+            route: AppRoutes.attendanceLog,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.home_work_rounded,
+            title: 'Remote Attendance',
+            route: AppRoutes.remoteAttendance,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.report_problem_rounded,
+            title: 'Mispunch Reports',
+            route: AppRoutes.mispunchReports,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.punch_clock_rounded,
+            title: 'Employee Manual Punches',
+            route: AppRoutes.employeeManualPunches,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.savings_rounded,
+            title: 'PF',
+            route: AppRoutes.pf,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.rate_review_rounded,
+            title: 'Payroll Review',
+            route: AppRoutes.payrollReview,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.local_hospital_rounded,
+            title: 'ESI',
+            route: AppRoutes.esi,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.account_balance_rounded,
+            title: 'NEFT',
+            route: AppRoutes.neft,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.access_time_rounded,
+            title: 'Late Punch Reports',
+            route: AppRoutes.latePunchReports,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.description_rounded,
+            title: 'Salary Report',
+            route: AppRoutes.salaryReport,
+            appBarController: appBarController,
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildEmployeesSection(AppBarController appBarController) {
+    return Obx(() {
+      bool isAnyEmployeeActive = _isAnyEmployeeRouteActive(
+        appBarController.selectedPage.value,
+      );
+
+      return _buildExpandableSection(
+        icon: Icons.people_rounded,
+        title: 'Employees',
+        isExpanded: _isEmployeesExpanded,
+        isAnyChildActive: isAnyEmployeeActive,
+        onTap: () => setState(() => _isEmployeesExpanded = !_isEmployeesExpanded),
+        children: [
+          _buildSubmenuItem(
+            icon: Icons.group_rounded,
+            title: 'All',
+            route: AppRoutes.allEmployees,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.work_rounded,
+            title: 'Professionals',
+            route: AppRoutes.professionals,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.badge_rounded,
+            title: 'Employees',
+            route: AppRoutes.employees,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.school_rounded,
+            title: 'Students',
+            route: AppRoutes.students,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.apartment_rounded,
+            title: 'F11 Employees',
+            route: AppRoutes.f11Employees,
+            appBarController: appBarController,
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildRecruitmentSection(AppBarController appBarController) {
+    return Obx(() {
+      bool isAnyRecruitmentActive = _isAnyRecruitmentRouteActive(
+        appBarController.selectedPage.value,
+      );
+
+      return _buildExpandableSection(
+        icon: Icons.group_work_rounded,
+        title: 'Recruitment',
+        isExpanded: _isRecruitmentExpanded,
+        isAnyChildActive: isAnyRecruitmentActive,
+        onTap: () =>
+            setState(() => _isRecruitmentExpanded = !_isRecruitmentExpanded),
+        children: [
+          _buildSubmenuItem(
+            icon: Icons.description_rounded,
+            title: 'Resume Management',
+            route: AppRoutes.resumeManagement,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.work_outline_rounded,
+            title: 'Job Applications',
+            route: AppRoutes.jobApplications,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.edit_document,
+            title: 'Semi Filled Application',
+            route: AppRoutes.semiFilledApplication,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.how_to_reg_rounded,
+            title: 'Joining Forms',
+            route: AppRoutes.joiningForms,
+            appBarController: appBarController,
+          ),
+          _buildSubmenuItem(
+            icon: Icons.mail_rounded,
+            title: 'Offer Letters',
+            route: AppRoutes.offerLetters,
+            appBarController: appBarController,
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildFooter() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // App Version
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "HRMS Mobile",
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                  Text(
+                    "Version 1.0.0",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: subtextColor,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Logout Button
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Handle logout
+                  _showLogoutDialog();
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [primaryColor, secondaryColor],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.logout_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        "Logout",
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog() {
+    // Get provider reference BEFORE showing dialog
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: Colors.red,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Text(
+              "Logout",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          "Are you sure you want to logout?",
+          style: TextStyle(
+            fontFamily: AppFonts.poppins,
+            color: Color(0xFF64748B),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                color: subtextColor,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              // Use pre-fetched provider - logout() handles navigation
+              loginProvider.logout();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              "Logout",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper methods to check active routes
   bool _isAnyPayrollRouteActive(String currentRoute) {
     List<String> payrollRoutes = [
       AppRoutes.attendanceLog,
@@ -452,259 +959,28 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer> {
       AppRoutes.latePunchReports,
       AppRoutes.salaryReport,
     ];
-
     return payrollRoutes.contains(currentRoute);
   }
 
-  Widget _buildEmployeesSection(
-    double fontSize,
-    AppBarController appBarController,
-  ) {
-    return Column(
-      children: [
-        // Main Employees Button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _isEmployeesExpanded = !_isEmployeesExpanded;
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          splashColor: AppColor.primaryColor2.withOpacity(0.3),
-          highlightColor: AppColor.primaryColor2.withOpacity(0.1),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color:
-                  _isEmployeesExpanded
-                      ? AppColor.primaryColor2.withOpacity(0.1)
-                      : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.people,
-                  color:
-                      _isEmployeesExpanded
-                          ? AppColor.primaryColor2
-                          : const Color.fromARGB(255, 63, 63, 63),
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Employees',
-                    style: TextStyle(
-                      color:
-                          _isEmployeesExpanded
-                              ? AppColor.primaryColor2
-                              : const Color.fromARGB(255, 63, 63, 63),
-                      fontSize: fontSize,
-                      fontWeight:
-                          _isEmployeesExpanded
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: _isEmployeesExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    color:
-                        _isEmployeesExpanded
-                            ? AppColor.primaryColor2
-                            : const Color.fromARGB(255, 63, 63, 63),
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Submenu Items
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          height: _isEmployeesExpanded ? null : 0,
-          child: AnimatedOpacity(
-            opacity: _isEmployeesExpanded ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: Container(
-              margin: const EdgeInsets.only(left: 20, top: 8),
-              child: Column(
-                children: [
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'All',
-                    route: AppRoutes.allEmployees,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.work,
-                    title: 'Professionals',
-                    route: AppRoutes.professionals,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.badge,
-                    title: 'Employees',
-                    route: AppRoutes.employees,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.school,
-                    title: 'Students',
-                    route: AppRoutes.students,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.apartment,
-                    title: 'F11 Employees',
-                    route: AppRoutes.f11Employees,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  bool _isAnyEmployeeRouteActive(String currentRoute) {
+    List<String> employeeRoutes = [
+      AppRoutes.allEmployees,
+      AppRoutes.professionals,
+      AppRoutes.employees,
+      AppRoutes.students,
+      AppRoutes.f11Employees,
+    ];
+    return employeeRoutes.contains(currentRoute);
   }
 
-  Widget _buildRecruitmentSection(
-    double fontSize,
-    AppBarController appBarController,
-  ) {
-    return Column(
-      children: [
-        // Main Employees Button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _isRecruitmentExpanded = !_isRecruitmentExpanded;
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          splashColor: AppColor.primaryColor2.withOpacity(0.3),
-          highlightColor: AppColor.primaryColor2.withOpacity(0.1),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color:
-                  _isRecruitmentExpanded
-                      ? AppColor.primaryColor2.withOpacity(0.1)
-                      : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.group_work,
-                  color:
-                      _isRecruitmentExpanded
-                          ? AppColor.primaryColor2
-                          : const Color.fromARGB(255, 63, 63, 63),
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Recruitment',
-                    style: TextStyle(
-                      color:
-                          _isRecruitmentExpanded
-                              ? AppColor.primaryColor2
-                              : const Color.fromARGB(255, 63, 63, 63),
-                      fontSize: fontSize,
-                      fontWeight:
-                          _isRecruitmentExpanded
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                ),
-                AnimatedRotation(
-                  turns: _isRecruitmentExpanded ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.keyboard_arrow_down,
-                    color:
-                        _isRecruitmentExpanded
-                            ? AppColor.primaryColor2
-                            : const Color.fromARGB(255, 63, 63, 63),
-                    size: 24,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // Submenu Items
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          height: _isRecruitmentExpanded ? null : 0,
-          child: AnimatedOpacity(
-            opacity: _isRecruitmentExpanded ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 200),
-            child: Container(
-              margin: const EdgeInsets.only(left: 20, top: 8),
-              child: Column(
-                children: [
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'Resume Management',
-                    route: AppRoutes.resumeManagement,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'Job Applications',
-                    route: AppRoutes.jobApplications,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'Semi Filled Application',
-                    route: AppRoutes.semiFilledApplication,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'Joining Forms',
-                    route: AppRoutes.joiningForms,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                  _buildSubmenuItem(
-                    icon: Icons.group,
-                    title: 'Offer Letters',
-                    route: AppRoutes.offerLetters,
-                    fontSize: fontSize - 2,
-                    appBarController: appBarController,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  bool _isAnyRecruitmentRouteActive(String currentRoute) {
+    List<String> recruitmentRoutes = [
+      AppRoutes.resumeManagement,
+      AppRoutes.jobApplications,
+      AppRoutes.semiFilledApplication,
+      AppRoutes.joiningForms,
+      AppRoutes.offerLetters,
+    ];
+    return recruitmentRoutes.contains(currentRoute);
   }
 }

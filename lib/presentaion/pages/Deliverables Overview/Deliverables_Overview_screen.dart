@@ -17,11 +17,11 @@ class DeliverablesOverviewScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final deliverablesOverviewProvider =
-        Provider.of<DeliverablesOverviewProvider>(context);
+    Provider.of<DeliverablesOverviewProvider>(context);
 
     return Scaffold(
       backgroundColor:
-          Colors.grey[50], // Light background for professional look
+      Colors.grey[50], // Light background for professional look
       drawer: const TabletMobileDrawer(),
       appBar: const CustomAppBar(title: "Deliverables Overview"),
       body: Padding(
@@ -73,8 +73,8 @@ class DeliverablesOverviewScreen extends StatelessWidget {
                     ),
                     child: CustomSearchField(
                       controller:
-                          deliverablesOverviewProvider
-                              .serachFieldDateController,
+                      deliverablesOverviewProvider
+                          .serachFieldDateController,
                       hintText: "Search employees...",
                     ),
                   ),
@@ -95,9 +95,9 @@ class DeliverablesOverviewScreen extends StatelessWidget {
   }
 
   Widget _buildFilterButton(
-    BuildContext context,
-    DeliverablesOverviewProvider provider,
-  ) {
+      BuildContext context,
+      DeliverablesOverviewProvider provider,
+      ) {
     return GestureDetector(
       onTap: () {
         provider.toggleFilters();
@@ -139,9 +139,9 @@ class DeliverablesOverviewScreen extends StatelessWidget {
   }
 
   Widget _buildPageSizeDropdown(
-    BuildContext context,
-    DeliverablesOverviewProvider provider,
-  ) {
+      BuildContext context,
+      DeliverablesOverviewProvider provider,
+      ) {
     return Container(
       width: MediaQuery.of(context).size.width / 4,
       height: 44,
@@ -166,20 +166,20 @@ class DeliverablesOverviewScreen extends StatelessWidget {
           isExpanded: true,
           icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
           items:
-              [5, 10, 15, 20].map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(
-                    "$e",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                      fontFamily: AppFonts.poppins,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
+          [5, 10, 15, 20].map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: Text(
+                "$e",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  fontFamily: AppFonts.poppins,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
           onChanged: (val) {
             if (val != null) {
               provider.setPageSize(val);
@@ -292,9 +292,9 @@ class DeliverablesOverviewScreen extends StatelessWidget {
   }
 
   Widget _buildProfessionalEmployeeCard(
-    BuildContext context,
-    Map<String, dynamic> emp,
-  ) {
+      BuildContext context,
+      Map<String, dynamic> emp,
+      ) {
     final empId = (emp["empId"] ?? "").toString();
     final String empPhoto = (emp["photo"] as String?) ?? "";
     final String empName = (emp["name"] as String?) ?? "N/A";
@@ -327,12 +327,12 @@ class DeliverablesOverviewScreen extends StatelessWidget {
               MaterialPageRoute(
                 builder:
                     (_) => EmployeeDetailsScreen(
-                      empId: empId,
-                      empPhoto: empPhoto,
-                      empName: empName,
-                      empDesignation: empDesignation,
-                      empBranch: empBranch,
-                    ),
+                  empId: empId,
+                  empPhoto: empPhoto,
+                  empName: empName,
+                  empDesignation: empDesignation,
+                  empBranch: empBranch,
+                ),
               ),
             );
           },
@@ -366,15 +366,15 @@ class DeliverablesOverviewScreen extends StatelessWidget {
                         ),
                       ),
                       child:
-                          empPhoto.isNotEmpty
-                              ? Image.network(
-                                empPhoto,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (context, error, stackTrace) =>
-                                        _buildDefaultAvatar(empName),
-                              )
-                              : _buildDefaultAvatar(empName),
+                      empPhoto.isNotEmpty
+                          ? Image.network(
+                        empPhoto,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) =>
+                            _buildDefaultAvatar(empName),
+                      )
+                          : _buildDefaultAvatar(empName),
                     ),
                   ),
                 ),

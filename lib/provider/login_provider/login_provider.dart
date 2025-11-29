@@ -5,11 +5,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
-import 'package:provider/provider.dart'; // ✅ Add this
 import '../../apibaseScreen/Api_Base_Screens.dart';
 import '../../core/routes/routes.dart';
 import '../../model/login_model/login_model.dart';
-import '../UserTrackingProvider/UserTrackingProvider.dart'; // ✅ Add this
 
 /// Allow self-signed certs (dev only)
 class MyHttpOverrides extends HttpOverrides {
@@ -45,11 +43,11 @@ class LoginProvider extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // LOGIN API
+  // LOGIN API - Uses GetX for navigation to avoid context issues
   // ---------------------------------------------------------------------------
   Future<void> login(BuildContext context) async {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      _showSnackBar(context, "Please fill all fields");
+      _showGetXSnackBar("Please fill all fields", isError: true);
       return;
     }
 
@@ -62,27 +60,24 @@ class LoginProvider extends ChangeNotifier {
 
       final response = await http
           .post(
-        Uri.parse(ApiBase.loginEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'id': emailController.text.trim(),
-          'pass': passwordController.text.trim(),
-        }),
-      )
+            Uri.parse(ApiBase.loginEndpoint),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'id': emailController.text.trim(),
+              'pass': passwordController.text.trim(),
+            }),
+          )
           .timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw TimeoutException('Connection timeout'),
-      );
+            const Duration(seconds: 30),
+            onTimeout: () => throw TimeoutException('Connection timeout'),
+          );
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
         print("📦 Response Body: ${response.body}");
-      }
-      if (_loginData != null) {
-        print("✅ Restored user: ${_loginData?.user?.fullname}");
       }
 
       if (response.statusCode == 200) {
@@ -93,36 +88,66 @@ class LoginProvider extends ChangeNotifier {
             _loginData?.status == '1' ||
             _loginData?.status?.toLowerCase() == 'ok' ||
             _loginData?.status?.toLowerCase() == 'true') {
-          _showSnackBar(context, "✅ Login Successful!");
-
+          // Save session data
           await _saveLoginSession(jsonResponse);
-
-          // ✅ Handle tracking provider login
-          await handleLoginSuccess(context, jsonResponse);
-
           await _verifyDataSaved();
 
           _clearFields();
 
-          await Future.delayed(const Duration(milliseconds: 400));
-          _navigateToDashboard(context);
+          _showGetXSnackBar("Login Successful!", isError: false);
+
+          // ✅ Use GetX navigation - doesn't need context
+          await Future.delayed(const Duration(milliseconds: 300));
+          Get.offAllNamed(AppRoutes.bottomNav);
         } else {
           _errorMessage = _loginData?.message ?? "Invalid ID or Password";
-          _showSnackBar(context, _errorMessage!);
+          _showGetXSnackBar(_errorMessage!, isError: true);
         }
       } else {
         _errorMessage = "Login failed (HTTP ${response.statusCode})";
-        _showSnackBar(context, _errorMessage!);
+        _showGetXSnackBar(_errorMessage!, isError: true);
       }
     } on TimeoutException catch (e) {
-      _showSnackBar(context, "⏱️ Timeout: $e");
+      _showGetXSnackBar("Timeout: $e", isError: true);
     } on SocketException {
-      _showSnackBar(context, "❌ Network error. Check connection.");
+      _showGetXSnackBar("Network error. Check connection.", isError: true);
     } catch (e) {
-      _showSnackBar(context, "❌ Error: $e");
+      _showGetXSnackBar("Error: $e", isError: true);
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // LOGOUT - Clears session and navigates to login
+  // ---------------------------------------------------------------------------
+  Future<void> logout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Clear all login session data
+      await prefs.remove('isLoggedIn');
+      await prefs.remove('loginTime');
+      await prefs.remove('userData');
+      await prefs.remove('employeeId');
+      await prefs.remove('logged_in_emp_id');
+
+      // Clear local state
+      _loginData = null;
+      _errorMessage = null;
+      _clearFields();
+
+      notifyListeners();
+
+      if (kDebugMode) print("✅ Logout successful - session cleared");
+
+      // ✅ Use GetX navigation - doesn't need context
+      Get.offAllNamed(AppRoutes.loginScreen);
+    } catch (e) {
+      if (kDebugMode) print("❌ Error during logout: $e");
+      // Still try to navigate to login
+      Get.offAllNamed(AppRoutes.loginScreen);
     }
   }
 
@@ -139,10 +164,10 @@ class LoginProvider extends ChangeNotifier {
       await prefs.setBool('isLoggedIn', true);
       await prefs.setInt('loginTime', DateTime.now().millisecondsSinceEpoch);
 
-      // ✅ Extract and save employee ID
+      // Extract and save employee ID
       final userId = userData['userId']?.toString() ?? '';
       await prefs.setString('employeeId', userId);
-      await prefs.setString('logged_in_emp_id', userId); // Also save as logged_in_emp_id
+      await prefs.setString('logged_in_emp_id', userId);
 
       if (kDebugMode) {
         print("✅ Saved to SharedPreferences:");
@@ -150,54 +175,6 @@ class LoginProvider extends ChangeNotifier {
       }
     } catch (e) {
       if (kDebugMode) print("❌ Error saving session: $e");
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // HANDLE LOGIN SUCCESS - CLEAN UP TRACKING DATA
-  // ---------------------------------------------------------------------------
-  Future<void> handleLoginSuccess(
-      BuildContext context,
-      Map<String, dynamic> userData,
-      ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final newUserId = userData['userId']?.toString() ?? '';
-
-      // ✅ Get the tracking provider from context
-      final trackingProvider = context.read<UserTrackingProvider>();
-
-      // Load previous user ID
-      final oldUserId = prefs.getString('employeeId');
-
-      if (kDebugMode) {
-        print("👥 Old User: $oldUserId | New User: $newUserId");
-      }
-
-      // ✅ If different user logs in
-      if (oldUserId != null && oldUserId != newUserId) {
-        // Clear everything for previous user
-        await trackingProvider.setUserId(oldUserId);
-        await trackingProvider.clearCurrentUserData(clearHistory: true);
-
-        if (kDebugMode) print("🧹 Cleared old user's full tracking data");
-      } else {
-        // Same user logs in again - keep history
-        await trackingProvider.clearCurrentUserData(clearHistory: false);
-        if (kDebugMode) print("✅ Same user re-login, kept history");
-      }
-
-      // ✅ Set up for the new user
-      await prefs.setString('employeeId', newUserId);
-      await prefs.setString('logged_in_emp_id', newUserId);
-      await trackingProvider.setUserId(newUserId);
-
-      if (kDebugMode) {
-        print("✅ Tracking provider now active for user: $newUserId");
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error in handleLoginSuccess: $e");
-      // Don't throw - allow login to continue even if tracking setup fails
     }
   }
 
@@ -222,7 +199,6 @@ class LoginProvider extends ChangeNotifier {
 
       // 2 days (2880 minutes)
       if (now.difference(loginDate).inMinutes >= 2880) {
-        // ❌ Session expired, clear only login data (not employeeId)
         await prefs.remove('isLoggedIn');
         await prefs.remove('loginTime');
         await prefs.remove('userData');
@@ -263,28 +239,19 @@ class LoginProvider extends ChangeNotifier {
   }
 
   // ---------------------------------------------------------------------------
-  // SNACKBAR / NAVIGATION / UTILITIES
+  // GETX SNACKBAR - Doesn't need BuildContext (safe after async)
   // ---------------------------------------------------------------------------
-  void _showSnackBar(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        duration: const Duration(seconds: 3),
-        backgroundColor: msg.contains("✅") ? Colors.green : Colors.red,
-      ),
+  void _showGetXSnackBar(String message, {required bool isError}) {
+    Get.snackbar(
+      isError ? 'Error' : 'Success',
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: isError ? Colors.red : Colors.green,
+      colorText: Colors.white,
+      duration: const Duration(seconds: 2),
+      margin: const EdgeInsets.all(10),
+      borderRadius: 10,
     );
-  }
-
-  void _navigateToDashboard(BuildContext context) {
-    try {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        AppRoutes.bottomNav,
-            (route) => false,
-      );
-    } catch (_) {
-      Get.offAllNamed(AppRoutes.bottomNav);
-    }
   }
 
   void _clearFields() {
@@ -300,7 +267,7 @@ class LoginProvider extends ChangeNotifier {
   }
 }
 
-/// TimeoutException class (for clarity)
+/// TimeoutException class
 class TimeoutException implements Exception {
   final String message;
   TimeoutException(this.message);
