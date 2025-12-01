@@ -375,111 +375,116 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen>
             ],
           ),
           const SizedBox(height: 16),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE8E8F0)),
-            ),
-            child: DropdownButtonFormField<String>(
-              value: provider.selectedEmployee,
-              hint: const Text(
-                'Search or select employee...',
-                style: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontFamily: AppFonts.poppins,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE8E8F0)),
+              ),
+              child: DropdownButtonFormField<String>(
+                value: provider.selectedEmployee,
+                hint: const Text(
+                  'Search or select employee...',
+                  style: TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 14,
+                  ),
+                ),
+                decoration: const InputDecoration(
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    color: Color(0xFF9CA3AF),
+                    size: 22,
+                  ),
+                ),
+                style: const TextStyle(
                   fontSize: 14,
+                  color: Color(0xFF1A1A2E),
+                  fontFamily: AppFonts.poppins,
                 ),
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFF8E0E6B),
+                  size: 20,
                 ),
-                prefixIcon: Icon(
-                  Icons.search_rounded,
-                  color: Color(0xFF9CA3AF),
-                  size: 22,
-                ),
-              ),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF1A1A2E),
-                fontFamily: AppFonts.poppins,
-              ),
-              icon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Color(0xFF8E0E6B),
-                size: 20,
-              ),
-              isExpanded: true,
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              items:
-                  provider.employees.map((emp) {
-                    return DropdownMenuItem(
-                      value: emp.id,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                isExpanded: true,
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                items:
+                    provider.employees.map((emp) {
+                      return DropdownMenuItem(
+                        value: emp.id,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                                ),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                emp.name.isNotEmpty
-                                    ? emp.name[0].toUpperCase()
-                                    : 'E',
-                                style: const TextStyle(
-                                  fontFamily: AppFonts.poppins,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              child: Center(
+                                child: Text(
+                                  emp.name.isNotEmpty
+                                      ? emp.name[0].toUpperCase()
+                                      : 'E',
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    emp.name,
-                                    style: const TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1A1A2E),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      emp.name,
+                                      style: const TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1A1A2E),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    '${emp.id} • ${emp.designation}',
-                                    style: const TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                      fontSize: 11,
-                                      color: Color(0xFF9CA3AF),
+                                    Text(
+                                      '${emp.id} • ${emp.designation}',
+                                      style: const TextStyle(
+                                        fontFamily: AppFonts.poppins,
+                                        fontSize: 11,
+                                        color: Color(0xFF9CA3AF),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-              onChanged: provider.setSelectedEmployee,
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                onChanged: provider.setSelectedEmployee,
+              ),
             ),
           ),
         ],
@@ -533,67 +538,72 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen>
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FA),
+          ClipRRect(
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFE8E8F0)),
-            ),
-            child: DropdownButtonFormField<String>(
-              value: provider.selectedLocation,
-              hint: const Text(
-                'Select location...',
-                style: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontFamily: AppFonts.poppins,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE8E8F0)),
+              ),
+              child: DropdownButtonFormField<String>(
+                value: provider.selectedLocation,
+                hint: const Text(
+                  'Select location...',
+                  style: TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 14,
+                  ),
+                ),
+                decoration: const InputDecoration(
+                  filled: true,
+                  fillColor: Colors.transparent,
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                style: const TextStyle(
                   fontSize: 14,
+                  color: Color(0xFF1A1A2E),
+                  fontFamily: AppFonts.poppins,
                 ),
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Color(0xFF667eea),
+                  size: 20,
                 ),
-              ),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF1A1A2E),
-                fontFamily: AppFonts.poppins,
-              ),
-              icon: const Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: Color(0xFF667eea),
-                size: 20,
-              ),
-              isExpanded: true,
-              dropdownColor: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              items:
-                  provider.locations.map((loc) {
-                    return DropdownMenuItem(
-                      value: loc,
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.business_rounded,
-                            color: Color(0xFF667eea),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            loc,
-                            style: const TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 14,
-                              color: Color(0xFF1A1A2E),
+                isExpanded: true,
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                items:
+                    provider.locations.map((loc) {
+                      return DropdownMenuItem(
+                        value: loc,
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.business_rounded,
+                              color: Color(0xFF667eea),
+                              size: 18,
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (value) => provider.setSelectedLocation(value),
+                            const SizedBox(width: 10),
+                            Text(
+                              loc,
+                              style: const TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 14,
+                                color: Color(0xFF1A1A2E),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                onChanged: (value) => provider.setSelectedLocation(value),
+              ),
             ),
           ),
 
@@ -658,7 +668,7 @@ class _PaySlipDrawerScreenState extends State<PaySlipDrawerScreen>
             },
             borderRadius: BorderRadius.circular(14),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
                 color: const Color(0xFFF8F9FA),
                 borderRadius: BorderRadius.circular(14),

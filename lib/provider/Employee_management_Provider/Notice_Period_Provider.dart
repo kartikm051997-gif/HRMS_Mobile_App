@@ -10,6 +10,10 @@ class NoticePeriodProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Flag to control whether to show employee cards
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
+
   void toggleFilters() {
     _showFilters = !_showFilters;
     notifyListeners();
@@ -17,42 +21,40 @@ class NoticePeriodProvider extends ChangeNotifier {
 
   void setPageSize(int newSize) {
     pageSize = newSize;
-    currentPage = 0; // reset when changed
+    currentPage = 0;
     notifyListeners();
   }
 
+  /// Clear all filters and reset view
   void clearAllFilters() {
+    _selectedZone = null;
+    _selectedBranch = null;
+    _selectedDesignation = null;
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
-
-    // Refresh the employee list
-    searchEmployees();
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
   Future<bool> activateEmployee(String employeeId) async {
     try {
-      // Replace with your actual API call
-      // Example:
-      // final response = await http.post('/activate-employee', body: {'id': employeeId});
-      // return response.statusCode == 200;
-
-      return true; // Temporary - replace with actual API call
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      _allEmployees.removeWhere((emp) => emp.employeeId == employeeId);
+      _filteredEmployees.removeWhere((emp) => emp.employeeId == employeeId);
+      notifyListeners();
+      
+      return true;
     } catch (e) {
       return false;
     }
   }
 
   /// Dropdown data
-  final List<String> _company = ["Dr.Aravind's", "The MindMax"];
   final List<String> _zone = ["North", "South", "East", "West"];
-  final List<String> _branch = [
-    "Chennai",
-    "Bangalore",
-    "Hyderabad",
-    "Tiruppur",
-  ];
+  final List<String> _branch = ["Chennai", "Bangalore", "Hyderabad", "Tiruppur"];
   final List<String> _designation = [
     "Manager",
     "HR",
@@ -62,30 +64,30 @@ class NoticePeriodProvider extends ChangeNotifier {
     "Jr.Admin",
     "Lab Technician",
   ];
-  final List<String> _ctc = ["< 5 LPA", "5–10 LPA", "> 10 LPA"];
 
-  List<String> get company => _company;
   List<String> get zone => _zone;
   List<String> get branch => _branch;
   List<String> get designation => _designation;
-  List<String> get ctc => _ctc;
 
   /// Selected values
-  String? _selectedCompany;
   String? _selectedZone;
   String? _selectedBranch;
   String? _selectedDesignation;
-  String? _selectedCTC;
   DateTime? _dojFrom;
   DateTime? _dojTo;
 
-  String? get selectedCompany => _selectedCompany;
   String? get selectedZone => _selectedZone;
   String? get selectedBranch => _selectedBranch;
   String? get selectedDesignation => _selectedDesignation;
-  String? get selectedCTC => _selectedCTC;
   DateTime? get dojFrom => _dojFrom;
   DateTime? get dojTo => _dojTo;
+
+  /// Check if all required filters are selected
+  bool get areAllFiltersSelected {
+    return _selectedZone != null &&
+        _selectedBranch != null &&
+        _selectedDesignation != null;
+  }
 
   /// Employee data
   List<Employee> _allEmployees = [];
@@ -96,27 +98,43 @@ class NoticePeriodProvider extends ChangeNotifier {
   TextEditingController searchController = TextEditingController();
 
   void onSearchChanged(String query) {
-    // Implement your search logic here
-    // Filter employees based on the search query
+    if (!_hasAppliedFilters) return;
+
+    if (query.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+    } else {
+      _filteredEmployees = _allEmployees.where((employee) {
+        return employee.name.toLowerCase().contains(query.toLowerCase()) ||
+            employee.employeeId.toLowerCase().contains(query.toLowerCase()) ||
+            employee.designation.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
-    // Reset the employee list to show all employees
+    if (_hasAppliedFilters) {
+      _filteredEmployees = List.from(_allEmployees);
+      notifyListeners();
+    }
   }
 
   Future<bool> updateEmployeeStatus(String employeeId, String status, DateTime date) async {
     try {
-      // Your API call here
-      // Send employeeId, status, and date to backend
-      return true; // Replace with actual API result
+      await Future.delayed(const Duration(milliseconds: 500));
+      return true;
     } catch (e) {
       return false;
     }
   }
 
-  /// Initialize with sample data (replace with API call)
+  /// Initialize with sample data - preserves state when navigating
   void initializeEmployees() {
+    if (_allEmployees.isNotEmpty) {
+      return;
+    }
+
     _allEmployees = [
       Employee(
         employeeId: "12867",
@@ -127,7 +145,7 @@ class NoticePeriodProvider extends ChangeNotifier {
         designation: "Admin",
         monthlyCTC: "23000",
         payrollCategory: "employee",
-        status: "Active",
+        status: "Notice Period",
         photoUrl: "https://example.com/photo1.jpg",
         recruiterName: "John Recruiter",
         recruiterPhotoUrl: "https://example.com/recruiter1.jpg",
@@ -143,7 +161,7 @@ class NoticePeriodProvider extends ChangeNotifier {
         designation: "Receptionist",
         monthlyCTC: "23000",
         payrollCategory: "employee",
-        status: "Active",
+        status: "Notice Period",
         recruiterName: "Mike HR",
         recruiterPhotoUrl: "https://example.com/recruiter2.jpg",
         createdByName: "David Admin",
@@ -158,179 +176,46 @@ class NoticePeriodProvider extends ChangeNotifier {
         designation: "Jr.Admin",
         monthlyCTC: "19000",
         payrollCategory: "employee",
-        status: "Active",
+        status: "Notice Period",
         recruiterName: "Lisa Talent",
         recruiterPhotoUrl: "https://example.com/recruiter3.jpg",
         createdByName: "Emma Lead",
         createdByPhotoUrl: "https://example.com/creator3.jpg",
       ),
-      Employee(
-        employeeId: "12864",
-        name: "Sree Lakshmi K",
-        branch: "Tiruppur",
-        doj: "15/09/2025",
-        department: "LAB",
-        designation: "Lab Technician",
-        monthlyCTC: "14000",
-        payrollCategory: "employee",
-        status: "Active",
-        recruiterName: "Tom Specialist",
-        recruiterPhotoUrl: "https://example.com/recruiter4.jpg",
-        createdByName: "Anna Director",
-        createdByPhotoUrl: "https://example.com/creator4.jpg",
-      ),
-      Employee(
-        employeeId: "12863",
-        name: "Sabitha",
-        branch: "Tiruppur",
-        doj: "15/09/2025",
-        department: "LAB",
-        designation: "Lab Technician",
-        monthlyCTC: "10000",
-        payrollCategory: "student",
-        status: "Active",
-        recruiterName: "Chris Head",
-        recruiterPhotoUrl: "https://example.com/recruiter5.jpg",
-        createdByName: "Kelly VP",
-        createdByPhotoUrl: "https://example.com/creator5.jpg",
-      ),
     ];
-    _filteredEmployees = List.from(_allEmployees);
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
   /// Search functionality
   void searchEmployees() {
+    if (!areAllFiltersSelected) {
+      return;
+    }
+
     _isLoading = true;
+    _hasAppliedFilters = true;
     notifyListeners();
 
-    // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees =
-          _allEmployees.where((employee) {
-            bool matches = true;
+      _filteredEmployees = List.from(_allEmployees);
 
-            // Filter by company (if selected)
-            if (_selectedCompany != null && _selectedCompany!.isNotEmpty) {
-              // Add company filtering logic when you have company data in Employee model
-            }
-
-            // Filter by zone (if selected)
-            if (_selectedZone != null && _selectedZone!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-
-            // Filter by branch (if selected)
-            if (_selectedBranch != null && _selectedBranch!.isNotEmpty) {
-              matches =
-                  matches &&
-                  employee.branch.toLowerCase().contains(
-                    _selectedBranch!.toLowerCase(),
-                  );
-            }
-
-            // Filter by designation (if selected)
-            if (_selectedDesignation != null &&
-                _selectedDesignation!.isNotEmpty) {
-              matches =
-                  matches &&
-                  employee.designation.toLowerCase().contains(
-                    _selectedDesignation!.toLowerCase(),
-                  );
-            }
-
-            // Filter by CTC (if selected)
-            if (_selectedCTC != null && _selectedCTC!.isNotEmpty) {
-              matches =
-                  matches && _filterByCTC(employee.monthlyCTC, _selectedCTC!);
-            }
-
-            // Filter by date range
-            if (dojFromController.text.isNotEmpty ||
-                fojToController.text.isNotEmpty) {
-              matches = matches && _filterByDateRange(employee.doj);
-            }
-
-            return matches;
-          }).toList();
+      if (searchController.text.isNotEmpty) {
+        final query = searchController.text.toLowerCase();
+        _filteredEmployees = _filteredEmployees.where((employee) {
+          return employee.name.toLowerCase().contains(query) ||
+              employee.employeeId.toLowerCase().contains(query) ||
+              employee.designation.toLowerCase().contains(query);
+        }).toList();
+      }
 
       _isLoading = false;
       notifyListeners();
     });
   }
 
-  bool _filterByCTC(String employeeCTC, String selectedCTC) {
-    double ctc = double.tryParse(employeeCTC) ?? 0;
-    double monthlyToAnnual = ctc * 12; // Convert monthly to annual
-
-    switch (selectedCTC) {
-      case "< 5 LPA":
-        return monthlyToAnnual < 500000;
-      case "5–10 LPA":
-        return monthlyToAnnual >= 500000 && monthlyToAnnual <= 1000000;
-      case "> 10 LPA":
-        return monthlyToAnnual > 1000000;
-      default:
-        return true;
-    }
-  }
-
-  bool _filterByDateRange(String employeeDoj) {
-    try {
-      // Parse employee DOJ (assuming format: "dd/MM/yyyy")
-      List<String> parts = employeeDoj.split('/');
-      DateTime empDate = DateTime(
-        int.parse(parts[2]), // year
-        int.parse(parts[1]), // month
-        int.parse(parts[0]), // day
-      );
-
-      DateTime? fromDate;
-      DateTime? toDate;
-
-      if (dojFromController.text.isNotEmpty) {
-        fromDate = DateTime.tryParse(dojFromController.text);
-      }
-
-      if (fojToController.text.isNotEmpty) {
-        toDate = DateTime.tryParse(fojToController.text);
-      }
-
-      if (fromDate != null && empDate.isBefore(fromDate)) {
-        return false;
-      }
-
-      if (toDate != null && empDate.isAfter(toDate)) {
-        return false;
-      }
-
-      return true;
-    } catch (e) {
-      return true; // If parsing fails, include the employee
-    }
-  }
-
-  /// Clear all filters
-  void clearFilters() {
-    _selectedCompany = null;
-    _selectedZone = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    _selectedCTC = null;
-    _dojFrom = null;
-    _dojTo = null;
-    dojFromController.clear();
-    fojToController.clear();
-    _filteredEmployees = List.from(_allEmployees);
-    notifyListeners();
-  }
-
   /// Setters
-  void setSelectedCompany(String? v) {
-    _selectedCompany = v;
-    notifyListeners();
-  }
-
   void setSelectedZone(String? v) {
     _selectedZone = v;
     notifyListeners();
@@ -343,11 +228,6 @@ class NoticePeriodProvider extends ChangeNotifier {
 
   void setSelectedDesignation(String? v) {
     _selectedDesignation = v;
-    notifyListeners();
-  }
-
-  void setSelectedCTC(String? v) {
-    _selectedCTC = v;
     notifyListeners();
   }
 
@@ -371,14 +251,11 @@ class NoticePeriodProvider extends ChangeNotifier {
   final fojToController = TextEditingController();
   final dateController = TextEditingController();
 
-  /// Toggle employee status between active and inactive
-
   @override
   void dispose() {
     dojFromController.dispose();
     fojToController.dispose();
+    searchController.dispose();
     super.dispose();
   }
-
-
 }

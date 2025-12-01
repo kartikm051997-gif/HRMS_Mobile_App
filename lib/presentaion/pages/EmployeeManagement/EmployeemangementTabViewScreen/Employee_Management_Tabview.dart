@@ -65,7 +65,22 @@ class _EmployeeManagementTabviewScreenState
             iconTheme: IconThemeData(color: AppColor.whiteColor),
             centerTitle: true,
             elevation: 0,
-            backgroundColor: AppColor.primaryColor2,
+            // Remove backgroundColor
+            // backgroundColor: AppColor.primaryColor2,
+
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF8E0E6B),
+                    Color(0xFFD4145A),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+
             title: Text(
               "Employees Management",
               style: TextStyle(
@@ -75,6 +90,7 @@ class _EmployeeManagementTabviewScreenState
                 color: AppColor.whiteColor,
               ),
             ),
+
             bottom: TabBar(
               controller: _tabController,
               isScrollable: true,

@@ -28,25 +28,28 @@ class CustomDateField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Label + mandatory star
-        Row(
-          children: [
-            if (isMandatory)
-              const Text(
-                "*",
-                style: TextStyle(fontSize: 16, color: Colors.red),
-              ),
-            if (isMandatory) const SizedBox(width: 3),
-            Text(
-              labelText,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColor.blackColor,
-                fontFamily: AppFonts.poppins,
-              ),
+        if (labelText.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                if (isMandatory)
+                  const Text(
+                    "*",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+                if (isMandatory) const SizedBox(width: 3),
+                Text(
+                  labelText,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppColor.blackColor,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
+          ),
 
         FormField<String>(
           validator: (value) {

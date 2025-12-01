@@ -35,21 +35,24 @@ class CustomSearchDropdownWithSearch extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            if (isMandatory)
-              const Text(
-                "*",
-                style: TextStyle(fontSize: 16, color: Colors.red),
-              ),
-            if (isMandatory) const SizedBox(width: 3),
-            Text(
-              labelText,
-              style: TextStyle(fontSize: 14, fontFamily: AppFonts.poppins),
+        if (labelText.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                if (isMandatory)
+                  const Text(
+                    "*",
+                    style: TextStyle(fontSize: 14, color: Colors.red),
+                  ),
+                if (isMandatory) const SizedBox(width: 3),
+                Text(
+                  labelText,
+                  style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins),
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 6),
+          ),
 
         // Wrap inside FormField for validation
         FormField<String>(
