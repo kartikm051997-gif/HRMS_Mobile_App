@@ -9,6 +9,11 @@ class StudentProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Flag to control whether to show employee cards
+  /// Cards should only show after filters are applied
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
+
   void toggleFilters() {
     _showFilters = !_showFilters;
     notifyListeners();
@@ -20,14 +25,17 @@ class StudentProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Add this method to your ActiveProvider class
+  /// Clear all filters and reset view
   void clearAllFilters() {
+    _selectedZone = null;
+    _selectedBranch = null;
+    _selectedDesignation = null;
+    _selectedCTC = null;
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
-
-    // Refresh the employee list
-    searchEmployees();
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
@@ -74,6 +82,13 @@ class StudentProvider extends ChangeNotifier {
   DateTime? get dojFrom => _dojFrom;
   DateTime? get dojTo => _dojTo;
 
+  /// Check if all required filters are selected (Zone, Branch, Designation)
+  bool get areAllFiltersSelected {
+    return _selectedZone != null &&
+        _selectedBranch != null &&
+        _selectedDesignation != null;
+  }
+
   /// Employee basic data
   List<StudentModel> _studentDetails = [];
   List<StudentModel> _filteredEmployees = [];
@@ -83,17 +98,37 @@ class StudentProvider extends ChangeNotifier {
   TextEditingController searchController = TextEditingController();
 
   void onSearchChanged(String query) {
-    // Implement your search logic here
-    // Filter employees based on the search query
+    if (!_hasAppliedFilters) return;
+    
+    if (query.isEmpty) {
+      // Reset to all employees when search is cleared
+      _filteredEmployees = List.from(_studentDetails);
+    } else {
+      // Filter from all employees, not just filtered list
+      _filteredEmployees = _studentDetails.where((employee) {
+        return employee.name.toLowerCase().contains(query.toLowerCase()) ||
+            employee.employeeId.toLowerCase().contains(query.toLowerCase()) ||
+            employee.designation.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
-    // Reset the employee list to show all employees
+    if (_hasAppliedFilters) {
+      searchEmployees();
+    }
   }
 
   /// Initialize with sample data (replace with API call)
+  /// Only loads data if not already loaded - preserves state when navigating
   void initializeEmployees() {
+    // If data is already loaded, don't reset
+    if (_studentDetails.isNotEmpty) {
+      return;
+    }
+    
     _studentDetails = [
       StudentModel(
         employeeId: "12867",
@@ -247,64 +282,38 @@ class StudentProvider extends ChangeNotifier {
         monthlyStudentStipend: '2,000',
       ),
     ];
-    _filteredEmployees = List.from(_studentDetails);
+    // First time only - set filtered to empty
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
-  /// Search functionality
+  /// Search functionality - only works after filters are applied
   void searchEmployees() {
+    if (!areAllFiltersSelected) {
+      // Don't search if not all filters are selected
+      return;
+    }
+
     _isLoading = true;
+    _hasAppliedFilters = true;
     notifyListeners();
 
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees =
-          _studentDetails.where((employee) {
-            bool matches = true;
+      // Show all employees when filters are applied
+      // In a real app, this would be an API call with filter parameters
+      _filteredEmployees = List.from(_studentDetails);
 
-            // Filter by company (if selected)
-            if (_selectedCompany != null && _selectedCompany!.isNotEmpty) {
-              // Add company filtering logic when you have company data in Employee model
-            }
-
-            // Filter by zone (if selected)
-            if (_selectedZone != null && _selectedZone!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-
-            // Filter by branch (if selected)
-            if (_selectedBranch != null && _selectedBranch!.isNotEmpty) {
-              matches =
-                  matches &&
-                  employee.branch.toLowerCase().contains(
-                    _selectedBranch!.toLowerCase(),
-                  );
-            }
-
-            // Filter by designation (if selected)
-            if (_selectedDesignation != null &&
-                _selectedDesignation!.isNotEmpty) {
-              matches =
-                  matches &&
-                  employee.designation.toLowerCase().contains(
-                    _selectedDesignation!.toLowerCase(),
-                  );
-            }
-
-            // Filter by CTC (if selected)
-            if (_selectedCTC != null && _selectedCTC!.isNotEmpty) {
-              matches =
-                  matches && _filterByCTC(employee.monthlyCTC, _selectedCTC!);
-            }
-
-            // Filter by date range
-            if (dojFromController.text.isNotEmpty ||
-                fojToController.text.isNotEmpty) {
-              matches = matches && _filterByDateRange(employee.doj);
-            }
-
-            return matches;
-          }).toList();
+      // Apply search text filter if present
+      if (searchController.text.isNotEmpty) {
+        final query = searchController.text.toLowerCase();
+        _filteredEmployees = _filteredEmployees.where((employee) {
+          return employee.name.toLowerCase().contains(query) ||
+              employee.employeeId.toLowerCase().contains(query) ||
+              employee.designation.toLowerCase().contains(query);
+        }).toList();
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -362,20 +371,6 @@ class StudentProvider extends ChangeNotifier {
     }
   }
 
-  /// Clear all filters
-  void clearFilters() {
-    _selectedCompany = null;
-    _selectedZone = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    _selectedCTC = null;
-    _dojFrom = null;
-    _dojTo = null;
-    dojFromController.clear();
-    fojToController.clear();
-    _filteredEmployees = List.from(_studentDetails);
-    notifyListeners();
-  }
 
   /// Setters
   void setSelectedCompany(String? v) {

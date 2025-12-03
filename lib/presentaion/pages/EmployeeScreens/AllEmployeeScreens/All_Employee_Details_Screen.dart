@@ -86,6 +86,12 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
                 _buildSalaryDetails(),
                 const SizedBox(height: 20),
                 _buildDeductionsDetails(),
+                const SizedBox(height: 20),
+                _buildProfessionalFeeDetails(),
+                const SizedBox(height: 20),
+                _buildTravelAllowanceDetails(),
+                const SizedBox(height: 20),
+                _buildAdditionalInfo(),
                 const SizedBox(height: 100), // Space for FAB
               ],
             ),
@@ -96,15 +102,16 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
   }
 
   Widget _buildProfileHeader() {
+    const primaryColor = Color(0xFF8E0E6B);
+    const secondaryColor = Color(0xFFD4145A);
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withOpacity(0.04),
+            color: primaryColor.withOpacity(0.15),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -112,294 +119,154 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
       ),
       child: Column(
         children: [
-          // Profile Picture
-          Stack(
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE5E7EB), width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF000000).withOpacity(0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+          // Gradient Header Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Column(
+              children: [
+                // Profile Image
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.2),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.4),
+                      width: 3,
                     ),
-                  ],
-                ),
-                child: ClipOval(
-                  child:
-                      widget.employee.photoUrl != null &&
-                              widget.employee.photoUrl!.isNotEmpty
-                          ? Image.network(
+                  ),
+                  child: ClipOval(
+                    child: widget.employee.photoUrl != null &&
+                            widget.employee.photoUrl!.isNotEmpty
+                        ? Image.network(
                             widget.employee.photoUrl!,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return _buildDefaultAvatar(widget.employee.name);
                             },
                           )
-                          : _buildDefaultAvatar(widget.employee.name),
-                ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
+                        : _buildDefaultAvatar(widget.employee.name),
                   ),
-                  child: const Icon(Icons.check, color: Colors.white, size: 14),
                 ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Name and Title
-          Text(
-            widget.employee.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              fontFamily: AppFonts.poppins,
-              color: const Color(0xFF1A202C),
-              letterSpacing: -0.5,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            widget.employee.designation,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              fontFamily: AppFonts.poppins,
-              color: const Color(0xFF718096),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF3B82F6).withOpacity(0.1),
-                  const Color(0xFF1D4ED8).withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF3B82F6).withOpacity(0.3),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF3B82F6).withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.badge, size: 10, color: Colors.white),
-                ),
-                const SizedBox(width: 6),
+                const SizedBox(height: 16),
+                // Employee Name
                 Text(
-                  "ID: ${widget.employee.employeeId}",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  widget.employee.name,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
                     fontFamily: AppFonts.poppins,
-                    color: const Color(0xFF1D4ED8),
+                    color: Colors.white,
                   ),
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Employee ID Badge
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColor.whiteColor,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Existing designation and branch row
-                  Row(
-                    children: [
-                      // Designation Section
-                      Expanded(
-                        flex: 3,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.work_outline,
-                                size: 14,
-                                color: Colors.blue[600],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "DESIGNATION",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[500],
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.employee.designation,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: AppFonts.poppins,
-                                      color: const Color(0xFF374151),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(width: 16),
-
-                      // Branch Section
-                      Expanded(
-                        flex: 2,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: Colors.green[50],
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Colors.green[600],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "BRANCH",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[500],
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    widget.employee.branch,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      fontFamily: AppFonts.poppins,
-                                      color: const Color(0xFF374151),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                // Employee ID Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
                   ),
-
-                  const SizedBox(height: 20),
-
-                  // View Profile Details Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => EmployeeDetailsScreen(
-                                  empId: widget.employee.employeeId,
-                                  empPhoto: widget.employee.photoUrl ?? "",
-                                  empName: widget.employee.name,
-                                  empDesignation: widget.employee.designation,
-                                  empBranch: widget.employee.branch,
-                                ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        "View Profile Details",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "ID: ${widget.employee.employeeId}",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.poppins,
+                      color: Colors.white.withOpacity(0.95),
                     ),
                   ),
-                ],
+                ),
+                const SizedBox(height: 8),
+                // Designation
+                Text(
+                  widget.employee.designation,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: AppFonts.poppins,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Branch
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.employee.branch,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Bottom Section with Button
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EmployeeDetailsScreen(
+                        empId: widget.employee.employeeId,
+                        empPhoto: widget.employee.photoUrl ?? "",
+                        empName: widget.employee.name,
+                        empDesignation: widget.employee.designation,
+                        empBranch: widget.employee.branch,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  "View Profile Details",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
               ),
             ),
           ),
@@ -514,16 +381,20 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
       icon: Icons.account_balance_wallet_outlined,
       children: [
         _buildDetailItem(
-          "annual CTC",
-          "₹${widget.employee.annualCTC}",
+          "Gross Salary",
+          "₹${widget.employee.monthlyCTC}",
           Icons.currency_rupee,
+        ),
+        _buildDetailItem(
+          "Annual CTC",
+          "₹${widget.employee.annualCTC}",
+          Icons.account_balance,
         ),
         _buildDetailItem(
           "Monthly CTC",
           "₹${widget.employee.monthlyCTC}",
           Icons.currency_rupee,
         ),
-
         _buildDetailItem(
           "Basic Salary",
           "₹${widget.employee.basic}",
@@ -545,7 +416,7 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
       icon: Icons.receipt_long_outlined,
       children: [
         _buildDetailItem(
-          "Provident Fund",
+          "Provident Fund (PF)",
           "₹${widget.employee.pf}",
           Icons.savings_outlined,
         ),
@@ -565,52 +436,147 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
     );
   }
 
+  Widget _buildProfessionalFeeDetails() {
+    return _buildInfoSection(
+      title: "Professional Fee Details",
+      icon: Icons.business_center_outlined,
+      children: [
+        _buildDetailItem(
+          "Annual Professional Fee",
+          "₹${widget.employee.annualProfessionalFee}",
+          Icons.currency_rupee,
+        ),
+        _buildDetailItem(
+          "Monthly Professional Fee",
+          "₹${widget.employee.monthlyProfessionalFee}",
+          Icons.account_balance_outlined,
+        ),
+        _buildDetailItem(
+          "Monthly Professional TDS",
+          "₹${widget.employee.monthlyProfessionalTds}",
+          Icons.receipt_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTravelAllowanceDetails() {
+    return _buildInfoSection(
+      title: "Travel Allowance Details",
+      icon: Icons.flight_outlined,
+      children: [
+        _buildDetailItem(
+          "Annual Travel Allowance",
+          "₹${widget.employee.annualTravelAllowance}",
+          Icons.flight_outlined,
+        ),
+        _buildDetailItem(
+          "Monthly Travel Allowance",
+          "₹${widget.employee.monthlyTravelAllowance}",
+          Icons.directions_car_outlined,
+        ),
+        _buildDetailItem(
+          "Monthly Travel TDS",
+          "₹${widget.employee.monthlyTravelTds}",
+          Icons.receipt_long_outlined,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalInfo() {
+    return _buildInfoSection(
+      title: "Additional Information",
+      icon: Icons.info_outline,
+      children: [
+        _buildDetailItem(
+          "Department",
+          widget.employee.department,
+          Icons.business_outlined,
+        ),
+        _buildDetailItem(
+          "Payroll Category",
+          widget.employee.payrollCategory,
+          Icons.category_outlined,
+        ),
+        _buildDetailItem(
+          "Status",
+          widget.employee.status,
+          Icons.check_circle_outline,
+        ),
+      ],
+    );
+  }
+
   Widget _buildInfoSection({
     required String title,
     required IconData icon,
     required List<Widget> children,
   }) {
+    const primaryColor = Color(0xFF8E0E6B);
+    const secondaryColor = Color(0xFFD4145A);
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF000000).withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: primaryColor.withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 20, color: const Color(0xFF4A5568)),
+          // Section Header with Gradient
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  primaryColor.withOpacity(0.1),
+                  secondaryColor.withOpacity(0.05),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: const Color(0xFF2D3748),
-                ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [primaryColor, secondaryColor],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child:  Icon(icon, color: Colors.white, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          ...children,
+          // Section Content
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(children: children),
+          ),
         ],
       ),
     );
@@ -622,61 +588,64 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
     IconData icon, {
     bool isHighlight = false,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color:
-                  isHighlight
-                      ? const Color(0xFF10B981).withOpacity(0.1)
-                      : const Color(0xFFF7FAFC),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              icon,
-              size: 18,
-              color:
-                  isHighlight
-                      ? const Color(0xFF10B981)
-                      : const Color(0xFF718096),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: AppFonts.poppins,
-                    color: const Color(0xFF718096),
-                  ),
+    const primaryColor = Color(0xFF8E0E6B);
+    const borderColor = Color(0xFFE2E8F0);
+    const textSecondary = Color(0xFF64748B);
+    const textPrimary = Color(0xFF1E293B);
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isHighlight
+                      ? primaryColor.withOpacity(0.1)
+                      : primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: isHighlight ? FontWeight.w700 : FontWeight.w600,
-                    fontFamily: AppFonts.poppins,
-                    color:
-                        isHighlight
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFF2D3748),
-                  ),
+                child: Icon(
+                  icon,
+                  size: 18,
+                  color: isHighlight ? primaryColor : primaryColor,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: AppFonts.poppins,
+                        color: textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: isHighlight ? FontWeight.w700 : FontWeight.w600,
+                        fontFamily: AppFonts.poppins,
+                        color: isHighlight ? primaryColor : textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        if (!isHighlight) Divider(color: borderColor.withOpacity(0.5), height: 1),
+      ],
     );
   }
 
@@ -684,15 +653,13 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4A5568), Color(0xFF2D3748)],
+          colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
         ),
       ),
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : "E",
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.w700,
             color: Colors.white,

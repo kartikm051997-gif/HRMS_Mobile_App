@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
-import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/employeeProvider/All_Employee_Provider.dart';
 import '../../../../widgets/custom_textfield/Custom_date_field.dart';
@@ -16,10 +15,32 @@ class AllEmployeeScreen extends StatefulWidget {
   State<AllEmployeeScreen> createState() => _AllEmployeeScreenState();
 }
 
-class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
+class _AllEmployeeScreenState extends State<AllEmployeeScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
+  // Modern gradient colors
+  static const Color primaryColor = Color(0xFF8E0E6B);
+  static const Color secondaryColor = Color(0xFFD4145A);
+  static const Color backgroundColor = Color(0xFFF8FAFC);
+  static const Color cardColor = Colors.white;
+  static const Color textPrimary = Color(0xFF1E293B);
+  static const Color textSecondary = Color(0xFF64748B);
+  static const Color borderColor = Color(0xFFE2E8F0);
+
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+    _animationController.forward();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<AllEmployeeProvider>(
         context,
@@ -29,708 +50,935 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen> {
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final allEmployeeProvider = Provider.of<AllEmployeeProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: backgroundColor,
       drawer: const TabletMobileDrawer(),
-      appBar: const CustomAppBar(title: "All Employee Details"),
-      body: CustomScrollView(
-        slivers: [
-          // Header Section - Fixed header
+      appBar: const CustomAppBar(title: "All Employee Salary Details"),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+          // Header Section
           SliverToBoxAdapter(
-            child: Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x0F000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+            child: _buildHeaderSection(allEmployeeProvider),
+          ),
+
+          // Filter Section
+          if (allEmployeeProvider.showFilters)
+            SliverToBoxAdapter(
+              child: _buildFilterSection(allEmployeeProvider),
+            ),
+
+          // Results Section
+          _buildResultsSection(allEmployeeProvider),
+
+        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection(AllEmployeeProvider allEmployeeProvider) {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Filter Toggle and Page Size Row
+            Row(
+              children: [
+                // Filter Toggle Button
+                Expanded(
+                  child: _buildFilterToggleButton(allEmployeeProvider),
+                ),
+                const SizedBox(width: 12),
+                // Page Size Dropdown
+                _buildPageSizeDropdown(allEmployeeProvider),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Search Field
+            _buildSearchField(allEmployeeProvider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterToggleButton(AllEmployeeProvider allEmployeeProvider) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.95, end: 1.0),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: value,
+          child: child,
+        );
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: allEmployeeProvider.toggleFilters,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: allEmployeeProvider.showFilters
+                  ? const LinearGradient(colors: [primaryColor, secondaryColor])
+                  : null,
+              color: allEmployeeProvider.showFilters ? null : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: allEmployeeProvider.showFilters
+                    ? Colors.transparent
+                    : borderColor,
               ),
-              child: SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Filter Toggle and Page Size Row
-                      Row(
-                        children: [
-                          // Filter Toggle
-                          Expanded(
-                            child: InkWell(
-                              onTap: allEmployeeProvider.toggleFilters,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.tune,
-                                      size: 20,
-                                      color: const Color(0xFF475569),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "Filters",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: AppFonts.poppins,
-                                        color: const Color(0xFF475569),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Icon(
-                                      allEmployeeProvider.showFilters
-                                          ? Icons.expand_less
-                                          : Icons.expand_more,
-                                      color: const Color(0xFF475569),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-
-                          // Page Size Dropdown
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<int>(
-                                value: allEmployeeProvider.pageSize,
-                                items:
-                                    [5, 10, 15, 20].map((e) {
-                                      return DropdownMenuItem(
-                                        value: e,
-                                        child: Text(
-                                          "$e per page",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: AppFonts.poppins,
-                                            color: const Color(0xFF475569),
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    allEmployeeProvider.setPageSize(val);
-                                  }
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Search Field
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: TextField(
-                          controller: allEmployeeProvider.searchController,
-                          onChanged: (value) {
-                            allEmployeeProvider.onSearchChanged(value);
-                          },
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontFamily: AppFonts.poppins,
-                            color: const Color(0xFF1E293B),
-                          ),
-                          decoration: InputDecoration(
-                            hintText:
-                                "Search employees by name, ID, designation...",
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              fontFamily: AppFonts.poppins,
-                              color: const Color(0xFF94A3B8),
-                            ),
-                            prefixIcon: Container(
-                              padding: const EdgeInsets.all(12),
-                              child: const Icon(
-                                Icons.search_rounded,
-                                color: Color(0xFF64748B),
-                                size: 20,
-                              ),
-                            ),
-                            suffixIcon:
-                                allEmployeeProvider
-                                        .searchController
-                                        .text
-                                        .isNotEmpty
-                                    ? IconButton(
-                                      onPressed: () {
-                                        allEmployeeProvider.clearSearch();
-                                      },
-                                      icon: const Icon(
-                                        Icons.clear_rounded,
-                                        color: Color(0xFF94A3B8),
-                                        size: 20,
-                                      ),
-                                    )
-                                    : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: allEmployeeProvider.showFilters ? Colors.white : textSecondary,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  "Filters",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                    color: allEmployeeProvider.showFilters ? Colors.white : textSecondary,
                   ),
                 ),
+                const Spacer(),
+                AnimatedRotation(
+                  turns: allEmployeeProvider.showFilters ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: allEmployeeProvider.showFilters ? Colors.white : textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPageSizeDropdown(AllEmployeeProvider allEmployeeProvider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: allEmployeeProvider.pageSize,
+          items: [5, 10, 15, 20].map((e) {
+            return DropdownMenuItem(
+              value: e,
+              child: Text(
+                "$e per page",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: AppFonts.poppins,
+                  color: textSecondary,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              allEmployeeProvider.setPageSize(val);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchField(AllEmployeeProvider allEmployeeProvider) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          border: Border.all(color: borderColor),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: TextField(
+          controller: allEmployeeProvider.searchController,
+          onChanged: (value) {
+            allEmployeeProvider.onSearchChanged(value);
+          },
+          style: TextStyle(
+            fontSize: 16,
+            fontFamily: AppFonts.poppins,
+            color: textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: "Search employees by name, ID, designation...",
+            hintStyle: TextStyle(
+              fontSize: 14,
+              fontFamily: AppFonts.poppins,
+              color: textSecondary,
+            ),
+            prefixIcon: Container(
+              padding: const EdgeInsets.all(12),
+              child: const Icon(
+                Icons.search_rounded,
+                color: Color(0xFF64748B),
+                size: 20,
+              ),
+            ),
+            suffixIcon: allEmployeeProvider.searchController.text.isNotEmpty
+                ? IconButton(
+                    onPressed: () {
+                      allEmployeeProvider.clearSearch();
+                    },
+                    icon: const Icon(
+                      Icons.clear_rounded,
+                      color: Color(0xFF94A3B8),
+                      size: 20,
+                    ),
+                  )
+                : null,
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterSection(AllEmployeeProvider allEmployeeProvider) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      decoration: BoxDecoration(
+        color: cardColor,
+        border: Border(
+          bottom: BorderSide(color: borderColor.withOpacity(0.5)),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: Column(
+          children: [
+            Divider(color: borderColor.withOpacity(0.5), height: 1),
+            const SizedBox(height: 12),
+
+            // First Row - Zone
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomSearchDropdownWithSearch(
+                    labelText: "Zone *",
+                    items: allEmployeeProvider.zone,
+                    selectedValue: allEmployeeProvider.selectedZone,
+                    onChanged: allEmployeeProvider.setSelectedZone,
+                    hintText: "Select",
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Second Row - Branch and Designation
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomSearchDropdownWithSearch(
+                    labelText: "Branch *",
+                    items: allEmployeeProvider.branch,
+                    selectedValue: allEmployeeProvider.selectedBranch,
+                    onChanged: allEmployeeProvider.setSelectedBranch,
+                    hintText: "Select",
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: CustomSearchDropdownWithSearch(
+                    labelText: "Designation *",
+                    items: allEmployeeProvider.designation,
+                    selectedValue: allEmployeeProvider.selectedDesignation,
+                    onChanged: allEmployeeProvider.setSelectedDesignation,
+                    hintText: "Select",
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Third Row - Date Fields
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomDateField(
+                    controller: allEmployeeProvider.dojFromController,
+                    hintText: "From",
+                    labelText: "DOJ From",
+                    isMandatory: false,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: CustomDateField(
+                    controller: allEmployeeProvider.fojToController,
+                    hintText: "To",
+                    labelText: "DOJ To",
+                    isMandatory: false,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: _buildClearButton(allEmployeeProvider),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: _buildApplyButton(allEmployeeProvider),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClearButton(AllEmployeeProvider allEmployeeProvider) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => allEmployeeProvider.clearAllFilters(),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Center(
+            child: Text(
+              "Clear",
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+                color: textSecondary,
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
 
-          // Filter Section - Only shows when expanded
-          if (allEmployeeProvider.showFilters)
-            SliverToBoxAdapter(
-              child: Container(
-                width: double.infinity,
-                color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                child: Column(
+  Widget _buildApplyButton(AllEmployeeProvider allEmployeeProvider) {
+    final bool canApply = allEmployeeProvider.areAllFiltersSelected;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.95, end: 1.0),
+      duration: const Duration(milliseconds: 200),
+      builder: (context, value, child) {
+        return Transform.scale(scale: value, child: child);
+      },
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: canApply ? () => allEmployeeProvider.searchEmployees() : null,
+          borderRadius: BorderRadius.circular(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              gradient: canApply
+                  ? const LinearGradient(colors: [primaryColor, secondaryColor])
+                  : null,
+              color: canApply ? null : borderColor,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: canApply
+                  ? [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: canApply ? Colors.white : textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    canApply ? "Apply Filters" : "Select All Filters",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.poppins,
+                      color: canApply ? Colors.white : textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultsSection(AllEmployeeProvider allEmployeeProvider) {
+    if (!allEmployeeProvider.hasAppliedFilters) {
+      return SliverFillRemaining(
+        child: _buildSelectFiltersMessage(),
+      );
+    }
+
+    if (allEmployeeProvider.isLoading) {
+      return SliverFillRemaining(
+        child: _buildLoadingState(),
+      );
+    }
+
+    if (allEmployeeProvider.filteredEmployees.isEmpty) {
+      return SliverFillRemaining(
+        child: _buildEmptyState(),
+      );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            if (index == 0) {
+              return _buildResultsHeader(allEmployeeProvider);
+            }
+            final employee = allEmployeeProvider.filteredEmployees[index - 1];
+            return TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 300 + (index * 50)),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Opacity(opacity: value, child: child),
+                );
+              },
+              child: _buildEmployeeCard(employee),
+            );
+          },
+          childCount: allEmployeeProvider.filteredEmployees.length + 1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectFiltersMessage() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      primaryColor.withOpacity(0.1),
+                      secondaryColor.withOpacity(0.1),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.filter_list_rounded,
+                  size: 48,
+                  color: primaryColor,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                "Select Filters to View Employees",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppFonts.poppins,
+                  color: textPrimary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Please select Zone, Branch, and Designation\nto view the employee list",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: AppFonts.poppins,
+                  color: textSecondary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Divider(color: Color(0xFFE2E8F0)),
-                    const SizedBox(height: 16),
-
-                    // First Row - Company and Zone
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
-                            labelText: "Zone",
-                            items: allEmployeeProvider.zone,
-                            selectedValue: allEmployeeProvider.selectedZone,
-                            onChanged: allEmployeeProvider.setSelectedZone,
-                            hintText: "Select Zone",
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Second Row - Branch and Designation
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
-                            labelText: "Branch",
-                            items: allEmployeeProvider.branch,
-                            selectedValue: allEmployeeProvider.selectedBranch,
-                            onChanged: allEmployeeProvider.setSelectedBranch,
-                            hintText: "Select Branch",
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: CustomSearchDropdownWithSearch(
-                            labelText: "Designation",
-                            items: allEmployeeProvider.designation,
-                            selectedValue:
-                                allEmployeeProvider.selectedDesignation,
-                            onChanged:
-                                allEmployeeProvider.setSelectedDesignation,
-                            hintText: "Select Designation",
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Third Row - Date Fields
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomDateField(
-                            controller: allEmployeeProvider.dojFromController,
-                            hintText: "From Date",
-                            labelText: "DOJ From",
-                            isMandatory: false,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: CustomDateField(
-                            controller: allEmployeeProvider.fojToController,
-                            hintText: "To Date",
-                            labelText: "DOJ To",
-                            isMandatory: false,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Go and Clear Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              allEmployeeProvider.clearAllFilters();
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF6B7280),
-                              side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: Text(
-                              "Clear",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: AppFonts.poppins,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              allEmployeeProvider.searchEmployees();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              "Apply Filters",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: AppFonts.poppins,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Icon(Icons.touch_app_rounded, size: 18, color: primaryColor),
+                    SizedBox(width: 8),
+                    Text(
+                      "Tap 'Filters' above to start",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: AppFonts.poppins,
+                        color: primaryColor,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-          // Employee Count Header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "${allEmployeeProvider.filteredEmployees.length} Employees Found",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  if (allEmployeeProvider.showFilters)
-                    TextButton.icon(
-                      onPressed: () {
-                        allEmployeeProvider.toggleFilters();
-                      },
-                      icon: const Icon(Icons.keyboard_arrow_up, size: 18),
-                      label: Text(
-                        "Hide Filters",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF6B7280),
-                      ),
-                    ),
-                ],
-              ),
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 50,
+            height: 50,
+            child: CircularProgressIndicator(
+              valueColor: const AlwaysStoppedAnimation<Color>(primaryColor),
+              strokeWidth: 3,
             ),
           ),
-
-          // Employee List
-          allEmployeeProvider.isLoading
-              ? const SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
-                        strokeWidth: 3,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "Loading employees...",
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              : allEmployeeProvider.filteredEmployees.isEmpty
-              ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 64,
-                        color: Color(0xFFCBD5E1),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No employees found",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF475569),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Try adjusting your filters or search criteria",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-              : SliverPadding(
-                padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final employee =
-                        allEmployeeProvider.filteredEmployees[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.08),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => AllEmployeeDetailsScreen(
-                                      empId: employee.employeeId,
-                                      employee:
-                                          employee, // Keep as AllEmployeeModelEmployee
-                                    ),
-                              ),
-                            );
-                          },
-                          child: Column(
-                            children: [
-                              // Top Half - Purple Section
-                              Container(
-                                width: double.infinity,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffb85a89),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Row(
-                                    children: [
-                                      // Employee Avatar
-                                      CircleAvatar(
-                                        radius: 24,
-                                        backgroundColor: Colors.white
-                                            .withOpacity(0.2),
-                                        backgroundImage: NetworkImage(
-                                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-
-                                      // Employee Name and ID
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              employee.name,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                fontFamily: AppFonts.poppins,
-                                                color: Colors.white,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              "ID: ${employee.employeeId}",
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                                fontFamily: AppFonts.poppins,
-                                                color: Colors.white.withOpacity(
-                                                  0.8,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Arrow Icon
-                                      const Icon(
-                                        Icons.chevron_right,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // Bottom Half - White Section
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: AppColor.whiteColor,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(16),
-                                    bottomRight: Radius.circular(16),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    children: [
-                                      // Designation and Branch Row
-                                      Row(
-                                        children: [
-                                          // Designation Section
-                                          Expanded(
-                                            flex: 3,
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(
-                                                    4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blue[50],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.work_outline,
-                                                    size: 14,
-                                                    color: Colors.blue[600],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        "DESIGNATION",
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[500],
-                                                          letterSpacing: 0.5,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        employee.designation,
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          fontFamily:
-                                                              AppFonts.poppins,
-                                                          color: const Color(
-                                                            0xFF374151,
-                                                          ),
-                                                        ),
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          const SizedBox(width: 16),
-
-                                          // Branch Section
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(
-                                                    4,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.green[50],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          6,
-                                                        ),
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.location_on_outlined,
-                                                    size: 14,
-                                                    color: Colors.green[600],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        "BRANCH",
-                                                        style: TextStyle(
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              Colors.grey[500],
-                                                          letterSpacing: 0.5,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        employee.branch,
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          fontFamily:
-                                                              AppFonts.poppins,
-                                                          color: const Color(
-                                                            0xFF374151,
-                                                          ),
-                                                        ),
-                                                        overflow:
-                                                            TextOverflow
-                                                                .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-
-                                      const SizedBox(height: 12),
-
-                                      // View Profile Details Button
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }, childCount: allEmployeeProvider.filteredEmployees.length),
-                ),
-              ),
+          const SizedBox(height: 20),
+          const Text(
+            "Loading employees...",
+            style: TextStyle(
+              color: textSecondary,
+              fontSize: 15,
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
         ],
       ),
     );
   }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_search_rounded,
+                size: 48,
+                color: textSecondary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              "No employees found",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+                color: textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Try adjusting your filters",
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: AppFonts.poppins,
+                color: textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultsHeader(AllEmployeeProvider allEmployeeProvider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  "${allEmployeeProvider.filteredEmployees.length}",
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: AppFonts.poppins,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                "Employees Found",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppFonts.poppins,
+                  color: textPrimary,
+                ),
+              ),
+            ],
+          ),
+          if (allEmployeeProvider.showFilters)
+            TextButton.icon(
+              onPressed: () => allEmployeeProvider.toggleFilters(),
+              icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 18),
+              label: const Text(
+                "Hide",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: textSecondary,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmployeeCard(dynamic employee) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (_, __, ___) => AllEmployeeDetailsScreen(
+                  empId: employee.employeeId,
+                  employee: employee,
+                ),
+                transitionsBuilder: (_, animation, __, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(
+                      parent: animation,
+                      curve: Curves.easeOutCubic,
+                    )),
+                    child: child,
+                  );
+                },
+              ),
+            );
+          },
+          child: Column(
+            children: [
+              // Header with Gradient
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.2),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          employee.name.isNotEmpty
+                              ? employee.name[0].toUpperCase()
+                              : "E",
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Name and ID
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            employee.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              "ID: ${employee.employeeId}",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: AppFonts.poppins,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Arrow
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottom Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Designation
+                    Expanded(
+                      child: _buildInfoItem(
+                        icon: Icons.work_outline_rounded,
+                        label: "DESIGNATION",
+                        value: employee.designation,
+                        color: primaryColor,
+                      ),
+                    ),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: borderColor,
+                    ),
+                    const SizedBox(width: 16),
+                    // Branch
+                    Expanded(
+                      child: _buildInfoItem(
+                        icon: Icons.location_on_outlined,
+                        label: "BRANCH",
+                        value: employee.branch,
+                        color: secondaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: color),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
+                  letterSpacing: 0.5,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppFonts.poppins,
+            color: Color(0xFF1E293B),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
 }
+

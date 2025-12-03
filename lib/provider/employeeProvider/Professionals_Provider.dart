@@ -12,6 +12,11 @@ class ProfessionalsProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Flag to control whether to show employee cards
+  /// Cards should only show after filters are applied
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
+
   void toggleFilters() {
     _showFilters = !_showFilters;
     notifyListeners();
@@ -23,22 +28,42 @@ class ProfessionalsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clear all filters and reset view
   void clearAllFilters() {
+    _selectedZone = null;
+    _selectedBranch = null;
+    _selectedDesignation = null;
+    _selectedCTC = null;
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
-    searchEmployees();
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
   void onSearchChanged(String query) {
-    // Implement your search logic here
-    // Filter employees based on the search query
+    if (!_hasAppliedFilters) return;
+    
+    if (query.isEmpty) {
+      // Reset to all employees when search is cleared
+      _filteredEmployees = List.from(_allEmployees);
+    } else {
+      // Filter from all employees, not just filtered list
+      _filteredEmployees = _allEmployees.where((employee) {
+        return employee.name.toLowerCase().contains(query.toLowerCase()) ||
+            employee.employeeId.toLowerCase().contains(query.toLowerCase()) ||
+            employee.designation.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
-    // Reset the employee list to show all employees
+    if (_hasAppliedFilters) {
+      searchEmployees();
+    }
   }
 
   /// Dropdown data
@@ -75,6 +100,13 @@ class ProfessionalsProvider extends ChangeNotifier {
   String? get selectedDesignation => _selectedDesignation;
   String? get selectedCTC => _selectedCTC;
 
+  /// Check if all required filters are selected (Zone, Branch, Designation)
+  bool get areAllFiltersSelected {
+    return _selectedZone != null &&
+        _selectedBranch != null &&
+        _selectedDesignation != null;
+  }
+
   /// Employee data
   List<ProfessionalModel> _allEmployees = [];
   List<ProfessionalModel> _filteredEmployees = [];
@@ -84,7 +116,13 @@ class ProfessionalsProvider extends ChangeNotifier {
   TextEditingController searchController = TextEditingController();
 
   /// Initialize with sample data (replace with API later)
+  /// Only loads data if not already loaded - preserves state when navigating
   void initializeEmployees() {
+    // If data is already loaded, don't reset
+    if (_allEmployees.isNotEmpty) {
+      return;
+    }
+    
     _allEmployees = [
       ProfessionalModel(
         employeeId: "12867",
@@ -131,48 +169,40 @@ class ProfessionalsProvider extends ChangeNotifier {
         monthlyTravelAllowance: "0",
         monthlyTravelTds: "0",
         photoUrl: "https://example.com/photo1.jpg",
-
-
       ),
     ];
-
-    _filteredEmployees = List.from(_allEmployees);
+    // First time only - set filtered to empty
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
-  /// Search + filter functionality
+  /// Search + filter functionality - only works after filters are applied
   void searchEmployees() {
+    if (!areAllFiltersSelected) {
+      // Don't search if not all filters are selected
+      return;
+    }
+
     _isLoading = true;
+    _hasAppliedFilters = true;
     notifyListeners();
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _filteredEmployees = _allEmployees.where((employee) {
-        bool matches = true;
+    // Simulate API call delay
+    Future.delayed(const Duration(milliseconds: 500), () {
+      // Show all employees when filters are applied
+      // In a real app, this would be an API call with filter parameters
+      _filteredEmployees = List.from(_allEmployees);
 
-        // Branch
-        if (_selectedBranch != null && _selectedBranch!.isNotEmpty) {
-          matches = matches &&
-              employee.branch.toLowerCase().contains(_selectedBranch!.toLowerCase());
-        }
-
-        // Designation
-        if (_selectedDesignation != null && _selectedDesignation!.isNotEmpty) {
-          matches = matches &&
-              employee.designation.toLowerCase().contains(_selectedDesignation!.toLowerCase());
-        }
-
-        // CTC
-        if (_selectedCTC != null && _selectedCTC!.isNotEmpty) {
-          matches = matches && _filterByCTC(employee.monthlyCTC, _selectedCTC!);
-        }
-
-        // DOJ Range
-        if (dojFromController.text.isNotEmpty || fojToController.text.isNotEmpty) {
-          matches = matches && _filterByDateRange(employee.doj);
-        }
-
-        return matches;
-      }).toList();
+      // Apply search text filter if present
+      if (searchController.text.isNotEmpty) {
+        final query = searchController.text.toLowerCase();
+        _filteredEmployees = _filteredEmployees.where((employee) {
+          return employee.name.toLowerCase().contains(query) ||
+              employee.employeeId.toLowerCase().contains(query) ||
+              employee.designation.toLowerCase().contains(query);
+        }).toList();
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -236,18 +266,6 @@ class ProfessionalsProvider extends ChangeNotifier {
     }
   }
 
-  /// Clear filters
-  void clearFilters() {
-    _selectedCompany = null;
-    _selectedZone = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    _selectedCTC = null;
-    dojFromController.clear();
-    fojToController.clear();
-    _filteredEmployees = List.from(_allEmployees);
-    notifyListeners();
-  }
 
   /// Setters
   void setSelectedCompany(String? v) {
