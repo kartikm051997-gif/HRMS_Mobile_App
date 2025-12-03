@@ -752,7 +752,7 @@ class _EmployeeInsideDetailsScreenState
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : "E",
           style: const TextStyle(
-            fontSize: 35,
+            fontSize: 36,
             fontWeight: FontWeight.w700,
             color: Colors.white,
             fontFamily: AppFonts.poppins,
