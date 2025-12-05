@@ -10,6 +10,11 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  /// Flag to control whether to show employee cards
+  /// Cards should only show after filters are applied
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
+
   void toggleFilters() {
     _showFilters = !_showFilters;
     notifyListeners();
@@ -21,21 +26,36 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Check if all required filters are selected (Primary Branch, Job Title, Uploaded By)
+  bool get areAllFiltersSelected {
+    return _selectedPrimaryBranch != null &&
+        _selectedJobTitle != null &&
+        _selectedUploadedBy != null;
+  }
+
   void clearAllFilters() {
     searchController.clear();
-
-    // Refresh the employee list
-    searchEmployees();
+    _selectedPrimaryBranch = null;
+    _selectedJobTitle = null;
+    _selectedUploadedBy = null;
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
   /// Dropdown data
-  final List<String> _primaryBranch = ["Aathur", "Aasam"];
+  final List<String> _primaryBranch = [
+    "Aathur",
+    "Aasam",
+    "Nagapattinam",
+    "Bengaluru - Hebbal",
+  ];
   final List<String> _jobTitle = [
     "Softawre Developer",
     "Accountant",
     "Hr",
     "Tele Calling",
+    "Lab Technician",
   ];
   final List<String> _uploadedBy = [
     "Durga Prakash - 10876",
@@ -66,13 +86,30 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
   TextEditingController searchController = TextEditingController();
 
   void onSearchChanged(String query) {
-    // Implement your search logic here
-    // Filter employees based on the search query
+    if (!_hasAppliedFilters) return;
+    
+    if (query.isEmpty) {
+      // Reset to all employees when search is cleared
+      _filteredEmployees = List.from(_allSemiApplication);
+    } else {
+      // Filter from all employees, not just filtered list
+      final searchQuery = query.toLowerCase();
+      _filteredEmployees = _allSemiApplication.where((employee) {
+        return employee.name.toLowerCase().contains(searchQuery) ||
+            employee.email.toLowerCase().contains(searchQuery) ||
+            employee.jobTitle.toLowerCase().contains(searchQuery) ||
+            employee.primaryLocation.toLowerCase().contains(searchQuery) ||
+            employee.phone.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
-    // Reset the employee list to show all employees
+    if (_hasAppliedFilters) {
+      searchEmployees();
+    }
   }
 
   /// Initialize with sample data (replace with API call)
@@ -124,40 +161,40 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
         email: "karthickboy@gmail.com",
       ),
     ];
-    _filteredEmployees = List.from(_allSemiApplication);
+    // First time only - set filtered to empty
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
-  /// Search functionality
+  /// Search functionality - only works after all filters are applied
   void searchEmployees() {
+    if (!areAllFiltersSelected) {
+      // Don't search if not all filters are selected
+      return;
+    }
+
     _isLoading = true;
+    _hasAppliedFilters = true;
     notifyListeners();
 
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees =
-          _allSemiApplication.where((employee) {
-            bool matches = true;
+      // Show all employees when filters are applied
+      // In a real app, this would be an API call with filter parameters
+      _filteredEmployees = List.from(_allSemiApplication);
 
-            // Filter by company (if selected)
-            if (_selectedPrimaryBranch != null &&
-                _selectedPrimaryBranch!.isNotEmpty) {
-              // Add company filtering logic when you have company data in Employee model
-            }
-
-            // Filter by zone (if selected)
-            if (_selectedJobTitle != null && _selectedJobTitle!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-            if (_selectedUploadedBy != null &&
-                _selectedUploadedBy!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-
-            // Filter by branch (if selected)
-
-            return matches;
-          }).toList();
+      // Apply search text filter if present
+      if (searchController.text.isNotEmpty) {
+        final query = searchController.text.toLowerCase();
+        _filteredEmployees = _filteredEmployees.where((employee) {
+          return employee.name.toLowerCase().contains(query) ||
+              employee.email.toLowerCase().contains(query) ||
+              employee.jobTitle.toLowerCase().contains(query) ||
+              employee.primaryLocation.toLowerCase().contains(query) ||
+              employee.phone.toLowerCase().contains(query);
+        }).toList();
+      }
 
       _isLoading = false;
       notifyListeners();
@@ -171,8 +208,9 @@ class SemiFilledApplicationProvider extends ChangeNotifier {
     _selectedPrimaryBranch = null;
     _selectedJobTitle = null;
     _selectedUploadedBy = null;
-
-    _filteredEmployees = List.from(_allSemiApplication);
+    searchController.clear();
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 

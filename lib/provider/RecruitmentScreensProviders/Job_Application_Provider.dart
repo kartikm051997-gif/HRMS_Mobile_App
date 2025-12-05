@@ -30,6 +30,11 @@ class JobApplicationProvider extends ChangeNotifier {
   int currentPage = 0;
   final Dio _dio = Dio();
 
+  /// Flag to control whether to show employee cards
+  /// Cards should only show after filters are applied
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
+
   // PDF download state variables
   bool _isDownloading = false;
   String _downloadingJobId = '';
@@ -56,18 +61,29 @@ class JobApplicationProvider extends ChangeNotifier {
 
   void clearAllFilters() {
     searchController.clear();
-    // Refresh the employee list
-    searchEmployees();
+    _selectedPrimaryBranch = null;
+    _selectedJobTitle = null;
+    _selectedJobStatus = null;
+    _selectedAssignedStaff = null;
+    _selectedDateType = null;
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
   /// Dropdown data
-  final List<String> _primaryLocation = ["Aathur", "Aasam"];
+  final List<String> _primaryLocation = [
+    "Aathur",
+    "Aasam",
+    "Nagapattinam",
+    "Bengaluru - Hebbal",
+  ];
   final List<String> _jobTitle = [
     "Softawre Developer",
     "Accountant",
     "Hr",
     "Tele Calling",
+    "Lab Technician",
   ];
   final List<String> _jobStatus = ["Unread", "Call for Interview", "Selected"];
   final List<String> _assignedStaff = [
@@ -97,6 +113,13 @@ class JobApplicationProvider extends ChangeNotifier {
   String? get selectedAssignedStaff => _selectedAssignedStaff;
   String? get selectedDateType => _selectedDateType;
 
+  /// Check if all required filters are selected (Status, Primary Location, Job Title)
+  bool get areAllFiltersSelected {
+    return _selectedJobStatus != null &&
+        _selectedPrimaryBranch != null &&
+        _selectedJobTitle != null;
+  }
+
   /// Clear all filters
   void clearFilters() {
     _selectedPrimaryBranch = null;
@@ -104,8 +127,9 @@ class JobApplicationProvider extends ChangeNotifier {
     _selectedJobStatus = null;
     _selectedAssignedStaff = null;
     _selectedDateType = null;
-
-    _filteredEmployees = List.from(_allJobApplication);
+    searchController.clear();
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
@@ -144,13 +168,29 @@ class JobApplicationProvider extends ChangeNotifier {
   TextEditingController searchController = TextEditingController();
 
   void onSearchChanged(String query) {
-    // Implement your search logic here
-    // Filter employees based on the search query
+    if (!_hasAppliedFilters) return;
+    
+    if (query.isEmpty) {
+      // Reset to all employees when search is cleared
+      _filteredEmployees = List.from(_allJobApplication);
+    } else {
+      // Filter from all employees, not just filtered list
+      final searchQuery = query.toLowerCase();
+      _filteredEmployees = _allJobApplication.where((employee) {
+        return employee.name.toLowerCase().contains(searchQuery) ||
+            employee.jobId.toLowerCase().contains(searchQuery) ||
+            employee.jobTitle.toLowerCase().contains(searchQuery) ||
+            employee.primaryLocation.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+    notifyListeners();
   }
 
   void clearSearch() {
     searchController.clear();
-    // Reset the employee list to show all employees
+    if (_hasAppliedFilters) {
+      searchEmployees();
+    }
   }
 
   /// Initialize with sample data (replace with API call)
@@ -217,7 +257,9 @@ class JobApplicationProvider extends ChangeNotifier {
         joiningDate: "12/08/2025",
       ),
     ];
-    _filteredEmployees = List.from(_allJobApplication);
+    // First time only - set filtered to empty
+    _filteredEmployees = [];
+    _hasAppliedFilters = false;
     notifyListeners();
   }
 
@@ -338,40 +380,33 @@ class JobApplicationProvider extends ChangeNotifier {
     }
   }
 
-  /// Search functionality
+  /// Search functionality - only works after all filters are applied
   void searchEmployees() {
+    if (!areAllFiltersSelected) {
+      // Don't search if not all filters are selected
+      return;
+    }
+
     _isLoading = true;
+    _hasAppliedFilters = true;
     notifyListeners();
 
     // Simulate API call delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _filteredEmployees =
-          _allJobApplication.where((employee) {
-            bool matches = true;
+      // Show all employees when filters are applied
+      // In a real app, this would be an API call with filter parameters
+      _filteredEmployees = List.from(_allJobApplication);
 
-            // Filter by company (if selected)
-            if (_selectedPrimaryBranch != null &&
-                _selectedPrimaryBranch!.isNotEmpty) {
-              // Add company filtering logic when you have company data in Employee model
-            }
-
-            // Filter by zone (if selected)
-            if (_selectedJobTitle != null && _selectedJobTitle!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-            if (_selectedAssignedStaff != null &&
-                _selectedAssignedStaff!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-            if (_selectedDateType != null && _selectedDateType!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-            if (_selectedJobStatus != null && selectedJobStatus!.isNotEmpty) {
-              // Add zone filtering logic when you have zone data in Employee model
-            }
-
-            return matches;
-          }).toList();
+      // Apply search text filter if present
+      if (searchController.text.isNotEmpty) {
+        final query = searchController.text.toLowerCase();
+        _filteredEmployees = _filteredEmployees.where((employee) {
+          return employee.name.toLowerCase().contains(query) ||
+              employee.jobId.toLowerCase().contains(query) ||
+              employee.jobTitle.toLowerCase().contains(query) ||
+              employee.primaryLocation.toLowerCase().contains(query);
+        }).toList();
+      }
 
       _isLoading = false;
       notifyListeners();

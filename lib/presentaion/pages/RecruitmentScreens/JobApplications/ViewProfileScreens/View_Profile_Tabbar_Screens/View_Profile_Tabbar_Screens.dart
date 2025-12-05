@@ -56,28 +56,40 @@ class _ViewProfileTabViewScreensState extends State<ViewProfileTabViewScreens>
 
             appBar: AppBar(
               iconTheme: IconThemeData(color: AppColor.whiteColor),
-
               centerTitle: true,
-              backgroundColor: AppColor.primaryColor2,
-
-              elevation: 2,
-              title: const Text(
+              elevation: 0,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF8E0E6B),
+                      Color(0xFFD4145A),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+              ),
+              title:  Text(
                 "Employee Profile Details",
                 style: TextStyle(
-                  color: Colors.white,
                   fontFamily: AppFonts.poppins,
+                  color: Colors.white,
                 ),
               ),
               bottom: TabBar(
                 controller: _tabController,
                 isScrollable: true,
-                labelColor: AppColor.whiteColor,
-                unselectedLabelColor: AppColor.gryColor,
-                indicatorColor: AppColor.whiteColor,
-                labelStyle: TextStyle(fontFamily: AppFonts.poppins),
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.white,
+                labelStyle: const TextStyle(
+                  fontFamily: AppFonts.poppins,
+
+                  fontWeight: FontWeight.w600,
+                ),
                 tabs: const [
                   Tab(text: 'Job Application Edit'),
-
                   Tab(text: 'Personal Detail'),
                   Tab(text: 'Education & Experience Detail'),
                   Tab(text: 'Other Details'),

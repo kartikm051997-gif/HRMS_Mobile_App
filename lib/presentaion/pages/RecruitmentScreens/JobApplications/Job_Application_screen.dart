@@ -16,17 +16,31 @@ class JobApplicationScreen extends StatefulWidget {
   State<JobApplicationScreen> createState() => _JobApplicationScreenState();
 }
 
-class _JobApplicationScreenState extends State<JobApplicationScreen> {
+class _JobApplicationScreenState extends State<JobApplicationScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _listAnimationController;
+
   @override
   void initState() {
     super.initState();
+    _listAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
     // Initialize employee data when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<JobApplicationProvider>(
         context,
         listen: false,
       ).initializeEmployees();
+      _listAnimationController.forward();
     });
+  }
+
+  @override
+  void dispose() {
+    _listAnimationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -64,46 +78,67 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                         children: [
                           // Filter Toggle
                           Expanded(
-                            child: InkWell(
-                              onTap: jobApplicationProvider.toggleFilters,
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.tune,
-                                      size: 20,
-                                      color: const Color(0xFF475569),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      "Filters",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: AppFonts.poppins,
-                                        color: const Color(0xFF475569),
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    Icon(
-                                      jobApplicationProvider.showFilters
-                                          ? Icons.expand_less
-                                          : Icons.expand_more,
-                                      color: const Color(0xFF475569),
-                                    ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF8E0E6B),
+                                    Color(0xFFD4145A),
                                   ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF8E0E6B,
+                                    ).withOpacity(0.3),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap:
+                                  jobApplicationProvider
+                                      .toggleFilters,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.tune,
+                                          size: 20,
+                                          color: Colors.white,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          "Filters",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: AppFonts.poppins,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Icon(
+                                          jobApplicationProvider
+                                              .showFilters
+                                              ? Icons.expand_less
+                                              : Icons.expand_more,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -324,27 +359,68 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           flex: 2,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Apply filters but keep filters section open
-                              jobApplicationProvider.searchEmployees();
-                              // Don't close filters - keep them open for user convenience
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3B82F6),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient:
+                              jobApplicationProvider
+                                  .areAllFiltersSelected
+                                  ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF8E0E6B),
+                                  Color(0xFFD4145A),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                                  : null,
+                              color:
+                              jobApplicationProvider
+                                  .areAllFiltersSelected
+                                  ? null
+                                  : Colors.grey[400],
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow:
+                              jobApplicationProvider
+                                  .areAllFiltersSelected
+                                  ? [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF8E0E6B,
+                                  ).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                                  : null,
                             ),
-                            child: Text(
-                              "Apply Filters",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: AppFonts.poppins,
+                            child: ElevatedButton(
+                              onPressed:
+                              jobApplicationProvider
+                                  .areAllFiltersSelected
+                                  ? () {
+                                jobApplicationProvider
+                                    .searchEmployees();
+                              }
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                                disabledBackgroundColor: Colors.transparent,
+                              ),
+                              child: Text(
+                                "Apply Filters",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
                               ),
                             ),
                           ),
@@ -356,153 +432,184 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
               ),
             ),
 
-          // Employee Count Header
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "${jobApplicationProvider.filteredEmployees.length} Employees Found",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: const Color(0xFF1E293B),
+          // Employee Count Header - Only show if filters are applied
+          if (jobApplicationProvider.hasAppliedFilters)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "${jobApplicationProvider.filteredEmployees.length} Employees Found",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.poppins,
+                        color: const Color(0xFF1E293B),
+                      ),
                     ),
-                  ),
-                  // Optional: Add a collapse filters button here
-                  if (jobApplicationProvider.showFilters)
-                    TextButton.icon(
-                      onPressed: () {
-                        jobApplicationProvider.toggleFilters();
-                      },
-                      icon: const Icon(Icons.keyboard_arrow_up, size: 18),
-                      label: Text(
-                        "Hide Filters",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
+                    // Optional: Add a collapse filters button here
+                    if (jobApplicationProvider.showFilters)
+                      TextButton.icon(
+                        onPressed: () {
+                          jobApplicationProvider.toggleFilters();
+                        },
+                        icon: const Icon(Icons.keyboard_arrow_up, size: 18),
+                        label: Text(
+                          "Hide Filters",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFF6B7280),
                         ),
                       ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF6B7280),
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Employee List
-          jobApplicationProvider.isLoading
-              ? const SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Color(0xFF3B82F6),
-                        strokeWidth: 3,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        "Loading employees...",
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 16,
+          // Employee List - Only show if filters are applied
+          if (jobApplicationProvider.hasAppliedFilters)
+            jobApplicationProvider.isLoading
+                ? const SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: const Color(0xFF8E0E6B),
+                          strokeWidth: 3,
                         ),
-                      ),
-                    ],
+                        SizedBox(height: 16),
+                        Text(
+                          "Loading employees...",
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-              : jobApplicationProvider.filteredEmployees.isEmpty
-              ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 64,
-                        color: Color(0xFFCBD5E1),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        "No employees found",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF475569),
+                )
+                : jobApplicationProvider.filteredEmployees.isEmpty
+                ? SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: const Color(0xFF8E0E6B).withOpacity(0.3),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Try adjusting your filters or search criteria",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
-                          color: Color(0xFF64748B),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No employees found",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                            color: Color(0xFF475569),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          "Try adjusting your filters or search criteria",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: AppFonts.poppins,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
+                )
               : SliverPadding(
                 padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final employee =
                         jobApplicationProvider.filteredEmployees[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.08),
-                            spreadRadius: 0,
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                    return TweenAnimationBuilder<double>(
+                      duration: Duration(milliseconds: 400 + (index * 50)),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Transform.translate(
+                          offset: Offset(0, 20 * (1 - value)),
+                          child: Opacity(
+                            opacity: value,
+                            child: Transform.scale(
+                              scale: 0.95 + (0.05 * value),
+                              child: child,
+                            ),
                           ),
-                        ],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (_) => JobApplicationDetailsScreen(
-                                      jobId: employee.jobId,
-                                      employee: employee,
-                                    ),
-                              ),
-                            );
-                          },
-                          child: Column(
-                            children: [
-                              // Top Half - Purple Section
-                              Container(
-                                width: double.infinity,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: Color(0xffa14f79),
-
-                                  // color: Color(0xffb85a89),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(16),
-                                    topRight: Radius.circular(16),
-                                  ),
+                        );
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF8E0E6B).withOpacity(0.15),
+                              spreadRadius: 0,
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => JobApplicationDetailsScreen(
+                                        jobId: employee.jobId,
+                                        employee: employee,
+                                      ),
                                 ),
+                              );
+                            },
+                            child: Column(
+                              children: [
+                                // Top Half - Purple Gradient Section
+                                Container(
+                                  width: double.infinity,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFF8E0E6B),
+                                        Color(0xFFD4145A),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(20),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF8E0E6B)
+                                            .withOpacity(0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Row(
@@ -562,16 +669,16 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                                 ),
                               ),
 
-                              // Bottom Half - White Section
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: AppColor.whiteColor,
-                                  borderRadius: BorderRadius.only(
-                                    bottomLeft: Radius.circular(16),
-                                    bottomRight: Radius.circular(16),
+                                // Bottom Half - White Section
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.whiteColor,
+                                    borderRadius: BorderRadius.only(
+                                      bottomLeft: Radius.circular(20),
+                                      bottomRight: Radius.circular(20),
+                                    ),
                                   ),
-                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
@@ -720,41 +827,45 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                                           ),
                                         ],
                                       ),
-                                      SizedBox(height: 10),
+                                      const SizedBox(height: 10),
                                       Container(
                                         height: 40,
                                         width: double.infinity,
                                         decoration: BoxDecoration(
-                                          color: Color(
-                                            0xffa14f79,
-                                          ).withOpacity(0.1),
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              const Color(0xFF8E0E6B)
+                                                  .withOpacity(0.1),
+                                              const Color(0xFFD4145A)
+                                                  .withOpacity(0.1),
+                                            ],
+                                          ),
                                           borderRadius: BorderRadius.circular(
-                                            10,
+                                            12,
                                           ),
                                           border: Border.all(
-                                            color: Color(
-                                              0xffa14f79,
-                                            ).withOpacity(0.3),
-                                            width: 1,
+                                            color: const Color(0xFF8E0E6B)
+                                                .withOpacity(0.3),
+                                            width: 1.5,
                                           ),
                                         ),
                                         child: Row(
                                           mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                              MainAxisAlignment.center,
                                           children: [
                                             Icon(
                                               Icons.phone_outlined,
-                                              color: Color(0xffa14f79),
-                                              size: 16,
+                                              color: const Color(0xFF8E0E6B),
+                                              size: 18,
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
                                               employee.phone,
                                               style: TextStyle(
-                                                color: Color(0xffa14f79),
+                                                color: const Color(0xFF8E0E6B),
                                                 fontFamily: AppFonts.poppins,
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.w500,
+                                                fontWeight: FontWeight.w600,
                                               ),
                                             ),
                                           ],
@@ -764,14 +875,53 @@ class _JobApplicationScreenState extends State<JobApplicationScreen> {
                                   ),
                                 ),
                               ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     );
                   }, childCount: jobApplicationProvider.filteredEmployees.length),
                 ),
+              )
+          // Show message when no filters are applied
+          else
+            SliverFillRemaining(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.filter_list_outlined,
+                        size: 80,
+                        color: const Color(0xFF8E0E6B).withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Select all filters to view applications",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                          color: const Color(0xFF8E0E6B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Please select Status, Primary Location, and\nJob Title, then click 'Apply Filters'",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: AppFonts.poppins,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ),
         ],
       ),
     );

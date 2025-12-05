@@ -13,36 +13,72 @@ class StatusTrackingScreen extends StatefulWidget {
 class _StatusTrackingScreenState extends State<StatusTrackingScreen> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _showStatusTrackingDialog(context);
-                },
-                icon: const Icon(Icons.info_outline, size: 18),
-                label: const Text(
-                  "Status Tracking",
-                  style: TextStyle(fontFamily: AppFonts.poppins),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:  Colors.blue,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFF59E0B),
+            Color(0xFFD97706),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF59E0B).withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            _showStatusTrackingDialog(context);
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.timeline_outlined,
+                    color: Colors.white,
+                    size: 22,
                   ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Text(
+                  "Status Timeline",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-          ],
+          ),
         ),
-        const SizedBox(height: 20),
-        // You can add more content below if needed
-      ],
+      ),
     );
   }
 
@@ -107,7 +143,16 @@ class _StatusTrackingScreenState extends State<StatusTrackingScreen> {
 
                     // Table Header
                     Container(
-                      color: const Color(0xFF9333EA),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF8E0E6B),
+                            Color(0xFFD4145A),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
                       child: Row(
                         children: const [
                           Expanded(
@@ -215,13 +260,38 @@ class _StatusTrackingScreenState extends State<StatusTrackingScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6B7280),
-                          foregroundColor: Colors.white,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.grey[600]!,
+                              Colors.grey[700]!,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        child: const Text('Close'),
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text('Close'),
+                        ),
                       ),
                     ),
                   ],

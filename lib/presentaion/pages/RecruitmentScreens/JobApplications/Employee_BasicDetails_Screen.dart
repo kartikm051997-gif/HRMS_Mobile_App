@@ -15,44 +15,111 @@ class EmployeeBasicDetailsScreen extends StatefulWidget {
 }
 
 class _EmployeeBasicDetailsScreenState
-    extends State<EmployeeBasicDetailsScreen> {
+    extends State<EmployeeBasicDetailsScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use ListView for scrollable content
-    return ListView(
-      shrinkWrap: true, // Important if used inside another scrollable
-      physics:
-          const NeverScrollableScrollPhysics(), // Let parent handle scrolling
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.08),
-                spreadRadius: 0,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Top Section
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color:
-                      widget.employee == null
-                          ? const Color(0xFFE5E7EB)
-                          : const Color(0xffa14f79),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: ListView(
+          shrinkWrap: true, // Important if used inside another scrollable
+          physics:
+              const NeverScrollableScrollPhysics(), // Let parent handle scrolling
+          children: [
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.white, Color(0xFFF8F9FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8E0E6B).withOpacity(0.15),
+                    spreadRadius: 0,
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Top Section
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: widget.employee == null
+                          ? LinearGradient(
+                              colors: [
+                                Colors.grey[400]!,
+                                Colors.grey[500]!,
+                              ],
+                            )
+                          : const LinearGradient(
+                              colors: [
+                                Color(0xFF8E0E6B),
+                                Color(0xFFD4145A),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.employee == null
+                              ? Colors.grey.withOpacity(0.2)
+                              : const Color(0xFF8E0E6B).withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -111,17 +178,21 @@ class _EmployeeBasicDetailsScreenState
                 ),
               ),
 
-              // Bottom Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                ),
+                  // Bottom Section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, Color(0xFFF8F9FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24),
+                      ),
+                    ),
                 child: Column(
                   children: [
                     widget.employee != null
@@ -196,30 +267,52 @@ class _EmployeeBasicDetailsScreenState
                         ),
                         SizedBox(width: 15),
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ViewProfileTabViewScreens(
-                                        jobId: widget.employee?.jobId,
-                                        employee: widget.employee,
-                                      ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF10B981),
+                                  Color(0xFF059669),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF10B981).withOpacity(0.3),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
                                 ),
-                              );
-                            },
-                            icon: const Icon(Icons.person_outline, size: 18),
-                            label: const Text(
-                              "View Profile",
-                              style: TextStyle(fontFamily: AppFonts.poppins),
+                              ],
                             ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF10B981),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => ViewProfileTabViewScreens(
+                                          jobId: widget.employee?.jobId,
+                                          employee: widget.employee,
+                                        ),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.person_outline, size: 18),
+                              label: const Text(
+                                "View Profile",
+                                style: TextStyle(fontFamily: AppFonts.poppins),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
                               ),
                             ),
                           ),
@@ -233,7 +326,7 @@ class _EmployeeBasicDetailsScreenState
           ),
         ),
       ],
-    );
+        )));
   }
 
   Widget _buildDetailRow(

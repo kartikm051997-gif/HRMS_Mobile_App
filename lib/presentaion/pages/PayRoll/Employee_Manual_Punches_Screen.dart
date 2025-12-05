@@ -603,7 +603,7 @@ class _EmployeeManualPunchesScreenState
             child: Column(
               children: [
                 Text(
-                  stats['display'] ?? '-',
+                    stats['display'] ?? '-',
                   style: const TextStyle(
                     fontFamily: AppFonts.poppins,
                     fontSize: 16,
