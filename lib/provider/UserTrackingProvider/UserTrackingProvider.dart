@@ -43,6 +43,7 @@ class UserTrackingProvider extends ChangeNotifier {
       _currentAddressCheckpoints;
   LatLng? get currentLocation => _locationService.currentLocation;
   bool get isInitialized => _isInitialized;
+  String? get currentUserId => _currentUserId;
 
   // Constants
   static const double minDistanceMeters = 100.0;
@@ -57,10 +58,30 @@ class UserTrackingProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final empId =
           prefs.getString('logged_in_emp_id') ?? prefs.getString('employeeId');
-      
-      // ✅ Set user ID first
+
+      // ✅ CRITICAL: Check if user has changed and clear old data
+      final previousUserId = _currentUserId;
+      if (previousUserId != null && previousUserId != empId && empId != null) {
+        if (kDebugMode) {
+          print('🔄 USER CHANGE DETECTED: $previousUserId → $empId');
+          print('🧹 Clearing all data for previous user: $previousUserId');
+        }
+        // Clear ALL data for the old user
+        await _clearUserData();
+        _trackingRecords.clear();
+        _currentUserId = null; // Reset to force reload
+      }
+
+      // ✅ Set user ID
       _currentUserId = empId;
-      
+
+      if (kDebugMode) {
+        print('🔄 UserTrackingProvider.initialize() called');
+        print('   Previous user ID: $previousUserId');
+        print('   Current user ID from prefs: $empId');
+        print('   Final user ID: $_currentUserId');
+      }
+
       // ✅ Force load all persisted data from SharedPreferences
       await _forceLoadFromStorage();
 
@@ -99,6 +120,20 @@ class UserTrackingProvider extends ChangeNotifier {
       if (_currentUserId == null) {
         if (kDebugMode) print('⚠️ No user ID found, cannot load data');
         return;
+      }
+
+      // ✅ DEBUG: Check what data exists in SharedPreferences
+      if (kDebugMode) {
+        print('🔍 Checking stored data for user: $_currentUserId');
+        final allKeys = prefs.getKeys();
+        final userKeys = allKeys.where((key) => key.contains(_currentUserId!)).toList();
+        print('   Found ${userKeys.length} user-specific keys: $userKeys');
+
+        // Check specific keys
+        final routeKey = 'route_points_$_currentUserId';
+        final hasRouteData = prefs.containsKey(routeKey);
+        final routeDataLength = prefs.getString(routeKey)?.length ?? 0;
+        print('   Background route data exists: $hasRouteData (length: $routeDataLength)');
       }
 
       // ✅ Load check-in state - check both provider key and background service key
@@ -167,12 +202,12 @@ class UserTrackingProvider extends ChangeNotifier {
     }
   }
 
-  // ✅ NEW: Load route points from both provider and background service keys
+  // ✅ FIXED: Load route points from both provider and background service keys
   Future<void> _loadRoutePointsFromStorage(SharedPreferences prefs) async {
     List<LatLng> providerPoints = [];
     List<LatLng> bgPoints = [];
 
-    // Try provider key
+    // Try provider key (main app saves without timestamp)
     String? providerRouteJson = prefs.getString(_getKey('route_points'));
     if (providerRouteJson != null && providerRouteJson.isNotEmpty) {
       try {
@@ -183,33 +218,61 @@ class UserTrackingProvider extends ChangeNotifier {
             (point['lng'] as num).toDouble(),
           );
         }).toList();
+        if (kDebugMode) print('✅ Loaded ${providerPoints.length} provider route points');
       } catch (e) {
         if (kDebugMode) print('⚠️ Error decoding provider route points: $e');
       }
     }
 
-    // Try background service key
+    // Try background service key (background service saves WITH timestamp)
     String? bgRouteJson = prefs.getString('route_points_$_currentUserId');
     if (bgRouteJson != null && bgRouteJson.isNotEmpty) {
       try {
         final List<dynamic> decoded = json.decode(bgRouteJson);
         bgPoints = decoded.map((point) {
+          // ✅ CRITICAL FIX: Handle both formats (with/without timestamp)
+          // Background service adds timestamp, but we only need lat/lng
           return LatLng(
             (point['lat'] as num).toDouble(),
             (point['lng'] as num).toDouble(),
           );
         }).toList();
+        if (kDebugMode) print('✅ Loaded ${bgPoints.length} background route points');
       } catch (e) {
         if (kDebugMode) print('⚠️ Error decoding BG route points: $e');
+        // Try alternative format if standard parsing fails
+        try {
+          final List<dynamic> decoded = json.decode(bgRouteJson);
+          if (decoded.isNotEmpty && decoded.first is Map) {
+            bgPoints = decoded.map((point) => LatLng(
+              (point['latitude'] ?? point['lat'] as num).toDouble(),
+              (point['longitude'] ?? point['lng'] as num).toDouble(),
+            )).toList();
+            if (kDebugMode) print('✅ Loaded ${bgPoints.length} BG points (alt format)');
+          }
+        } catch (e2) {
+          if (kDebugMode) print('⚠️ Error decoding BG route points (alt): $e2');
+        }
       }
     }
 
-    // ✅ Use whichever has more points (more complete data)
-    _currentRoutePoints = bgPoints.length >= providerPoints.length ? bgPoints : providerPoints;
-    
+    // ✅ CRITICAL FIX: Always prefer background service data if it exists and has points
+    // Background service data is more complete as it collects while app is closed
+    if (bgPoints.isNotEmpty) {
+      _currentRoutePoints = bgPoints;
+      if (kDebugMode) print('📍 Using ${bgPoints.length} background service points (most complete)');
+    } else if (providerPoints.isNotEmpty) {
+      _currentRoutePoints = providerPoints;
+      if (kDebugMode) print('📍 Using ${providerPoints.length} provider points (fallback)');
+    } else {
+      _currentRoutePoints = [];
+      if (kDebugMode) print('📍 No route points found in storage');
+    }
+
     if (kDebugMode) {
-      print('📍 Loaded route points: provider=${providerPoints.length}, bg=${bgPoints.length}');
-      print('📍 Using ${_currentRoutePoints.length} points');
+      print('📊 Route points summary:');
+      print('   Provider: ${providerPoints.length}, Background: ${bgPoints.length}');
+      print('   Final: ${_currentRoutePoints.length} points');
     }
   }
 
@@ -628,7 +691,9 @@ class UserTrackingProvider extends ChangeNotifier {
   }
 
   Future<void> syncWithBackground() async {
-    if (_isCheckedIn || !_isInitialized) {
+    // ✅ FIXED: Only sync if checked in AND initialized
+    // This prevents unnecessary syncing when not checked in
+    if (_isCheckedIn && _isInitialized) {
       await _syncWithBackgroundServiceData();
       notifyListeners();
     }
@@ -637,6 +702,48 @@ class UserTrackingProvider extends ChangeNotifier {
   // Storage Methods
   String _getKey(String key) =>
       _currentUserId != null ? '${key}_$_currentUserId' : key;
+
+  // ✅ Clear all user-specific data (both in-memory and SharedPreferences)
+  Future<void> _clearUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Clear in-memory data
+      _trackingRecords.clear();
+      _isCheckedIn = false;
+      _currentCheckInTime = null;
+      _currentCheckInLocation = null;
+      _currentCheckInAddress = null;
+      _currentRoutePoints.clear();
+      _currentAddressCheckpoints.clear();
+      _isInitialized = false;
+
+      // Clear SharedPreferences data for current user (if user ID exists)
+      if (_currentUserId != null) {
+        await prefs.remove(_getKey('tracking_records'));
+        await prefs.remove(_getKey('is_checked_in'));
+        await prefs.remove(_getKey('check_in_time'));
+        await prefs.remove(_getKey('check_in_address'));
+        await prefs.remove(_getKey('check_in_lat'));
+        await prefs.remove(_getKey('check_in_lng'));
+        await prefs.remove(_getKey('route_points'));
+        await prefs.remove(_getKey('address_checkpoints'));
+
+        // Also clear background service keys
+        await prefs.remove('is_checked_in_$_currentUserId');
+        await prefs.remove('route_points_$_currentUserId');
+        await prefs.remove('address_checkpoints_$_currentUserId');
+        await prefs.remove('service_should_run_$_currentUserId');
+        await prefs.remove('last_tracking_update_$_currentUserId');
+      }
+
+      if (kDebugMode) {
+        print('🧹 Cleared all data for user: $_currentUserId');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ Error clearing user data: $e');
+    }
+  }
 
   Future<void> _loadData() async {
     // ✅ Use the improved force load method

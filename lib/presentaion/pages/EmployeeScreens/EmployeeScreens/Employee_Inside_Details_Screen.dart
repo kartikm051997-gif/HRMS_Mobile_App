@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/components/appbar/appbar.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/AllEmployeeDetailsModel/Employee_Basic_Details.dart';

@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../presentaion/pages/UserTrackingScreens/Tracking_History_TabView_Screen.dart';
+import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../presentaion/pages/Deliverables Overview/Deliverables_Overview_screen.dart';
@@ -17,6 +20,41 @@ class BottomNavScreen extends StatefulWidget {
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int _selectedIndex = 0;
   late LoginProvider loginProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    // ✅ CRITICAL: Initialize tracking provider when BottomNavScreen is created
+    // This ensures user-specific data is loaded for the current logged-in user
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _initializeTrackingForCurrentUser();
+    });
+  }
+
+  // ✅ Initialize tracking provider for current logged-in user
+  Future<void> _initializeTrackingForCurrentUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId =
+          prefs.getString('logged_in_emp_id') ?? prefs.getString('employeeId');
+
+      if (kDebugMode) {
+        print('🏠 BottomNavScreen initializing for user: $currentUserId');
+      }
+
+      // Force re-initialize the tracking provider to load current user's data
+      final trackingProvider = context.read<UserTrackingProvider>();
+      await trackingProvider.initialize();
+
+      if (kDebugMode) {
+        print('✅ BottomNavScreen: Tracking provider initialized');
+        print('   User ID: $currentUserId');
+        print('   Tracking records: ${trackingProvider.trackingRecords.length}');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ BottomNavScreen initialization error: $e');
+    }
+  }
 
   @override
   void didChangeDependencies() {

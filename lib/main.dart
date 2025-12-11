@@ -14,6 +14,7 @@ import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Employee_Manual_Punches_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Payroll_Review_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Remote_Attendance_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PaySlipsScreens/PaySlipDrawerScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/RecruitmentScreens/JobApplications/Job_Application_screen.dart';
@@ -78,6 +79,7 @@ import 'package:hrms_mobile_app/presentaion/pages/splash_screen/splash_screen.da
 import 'package:hrms_mobile_app/provider/payroll_provider/Attendance_Log_provider.dart';
 import 'package:hrms_mobile_app/provider/payroll_provider/Employee_Manual_Punches_Provider.dart';
 import 'package:hrms_mobile_app/provider/payroll_provider/Mispunch_Reports_Provider.dart';
+import 'package:hrms_mobile_app/provider/payroll_provider/Payroll_Review_Provider.dart';
 import 'package:hrms_mobile_app/provider/payroll_provider/Remote_Attendance_Provider.dart';
 import 'package:provider/provider.dart';
 import 'Service/BackgroundTrackingScreen.dart';
@@ -148,6 +150,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RemoteAttendanceProvider()),
         ChangeNotifierProvider(create: (_) => MisPunchReportsProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeManualPunchesProvider()),
+        ChangeNotifierProvider(create: (_) => PayrollReviewProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeTabviewProvider()),
         ChangeNotifierProvider(create: (_) => ActiveProvider()),
         ChangeNotifierProvider(create: (_) => ManagementApprovalProvider()),
@@ -242,6 +245,8 @@ class MyApp extends StatelessWidget {
         return MisPunchReportsScreen();
       case AppRoutes.employeeManualPunches:
         return EmployeeManualPunchesScreen();
+      case AppRoutes.payrollReview:
+        return const PayrollReviewScreen();
       case AppRoutes.employeeManagement:
         return EmployeeManagementTabviewScreen();
       case AppRoutes.paySlips:
