@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/fonts/fonts.dart';
-import '../../../provider/payroll_provider/Payroll_Review_Provider.dart';
 import 'package:intl/intl.dart';
+
+import '../../../provider/payroll_provider/PayrollReviewProvider.dart';
 
 class PayrollReviewScreen extends StatefulWidget {
   const PayrollReviewScreen({super.key});
@@ -426,17 +427,17 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
     // Validate all required fields
     bool hasError = false;
     List<String> missingFields = [];
-    
+
     if (provider.selectedLocation == null) {
       missingFields.add('Location');
       hasError = true;
     }
-    
+
     if (provider.selectedDesignation == null) {
       missingFields.add('Designation');
       hasError = true;
     }
-    
+
     if (provider.monthController.text.isEmpty) {
       missingFields.add('Month');
       hasError = true;
@@ -445,11 +446,12 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
     if (hasError) {
       // Keep filters open so user can see what's missing
       setState(() => _showFilters = true);
-      
+
       // Show snackbar after a small delay to ensure context is ready
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
-          final errorMessage = 'Please select all filter options:\n${missingFields.map((f) => '• $f').join('\n')}';
+          final errorMessage =
+              'Please select all filter options:\n${missingFields.map((f) => '• $f').join('\n')}';
           _showSnackBar(errorMessage, isError: true);
         }
       });
@@ -618,10 +620,7 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _primaryColor.withOpacity(0.2),
-            width: 1.5,
-          ),
+          border: Border.all(color: _primaryColor.withOpacity(0.2), width: 1.5),
           boxShadow: [
             BoxShadow(
               color: _primaryColor.withOpacity(0.1),
@@ -766,13 +765,41 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildCompactStat('Worked', employee.daysWorked.toString(), _successColor),
-                        Container(width: 1, height: 20, color: Colors.grey.shade300),
-                        _buildCompactStat('Leave', employee.leaveDays.toString(), _warningColor),
-                        Container(width: 1, height: 20, color: Colors.grey.shade300),
-                        _buildCompactStat('LOP', employee.lopDays.toString(), _errorColor),
-                        Container(width: 1, height: 20, color: Colors.grey.shade300),
-                        _buildCompactStat('Avg Hrs', employee.avgHours, _infoColor),
+                        _buildCompactStat(
+                          'Worked',
+                          employee.daysWorked.toString(),
+                          _successColor,
+                        ),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.grey.shade300,
+                        ),
+                        _buildCompactStat(
+                          'Leave',
+                          employee.leaveDays.toString(),
+                          _warningColor,
+                        ),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.grey.shade300,
+                        ),
+                        _buildCompactStat(
+                          'LOP',
+                          employee.lopDays.toString(),
+                          _errorColor,
+                        ),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: Colors.grey.shade300,
+                        ),
+                        _buildCompactStat(
+                          'Avg Hrs',
+                          employee.avgHours,
+                          _infoColor,
+                        ),
                       ],
                     ),
                   ),
@@ -1644,10 +1671,10 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
 
   void _showSnackBar(String message, {bool isError = false}) {
     if (!mounted) return;
-    
+
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     scaffoldMessenger.hideCurrentSnackBar();
-    
+
     scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Container(
@@ -1705,15 +1732,16 @@ class _PayrollReviewScreenState extends State<PayrollReviewScreen>
         margin: const EdgeInsets.all(16),
         duration: Duration(seconds: isError ? 4 : 3),
         elevation: 6,
-        action: isError
-            ? SnackBarAction(
-                label: 'OK',
-                textColor: Colors.white,
-                onPressed: () {
-                  scaffoldMessenger.hideCurrentSnackBar();
-                },
-              )
-            : null,
+        action:
+            isError
+                ? SnackBarAction(
+                  label: 'OK',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    scaffoldMessenger.hideCurrentSnackBar();
+                  },
+                )
+                : null,
       ),
     );
   }

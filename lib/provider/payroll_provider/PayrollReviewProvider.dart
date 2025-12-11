@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class PayrollReviewProvider extends ChangeNotifier {
   // Filter Controllers
   final TextEditingController monthController = TextEditingController();
-  
+
   // Filter Options
   final List<String> _locations = [
     'Corporate Office - Guindy',
@@ -43,17 +43,17 @@ class PayrollReviewProvider extends ChangeNotifier {
   // Selected Filters
   String? _selectedLocation;
   String? _selectedDesignation;
-  
+
   // View Mode
   bool _isCardView = true; // true for card view, false for list view
-  
+
   // Loading States
   bool _isLoading = false;
-  
+
   // Employee Payroll Data
   List<PayrollEmployeeModel> _payrollEmployees = [];
   PayrollEmployeeModel? _selectedEmployee;
-  
+
   // Getters
   List<String> get locations => _locations;
   List<String> get designations => _designations;
@@ -63,46 +63,46 @@ class PayrollReviewProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   List<PayrollEmployeeModel> get payrollEmployees => _payrollEmployees;
   PayrollEmployeeModel? get selectedEmployee => _selectedEmployee;
-  
+
   // Setters
   void setSelectedLocation(String? location) {
     _selectedLocation = location;
     notifyListeners();
   }
-  
+
   void setSelectedDesignation(String? designation) {
     _selectedDesignation = designation;
     notifyListeners();
   }
-  
+
   void toggleViewMode() {
     _isCardView = !_isCardView;
     notifyListeners();
   }
-  
+
   void setSelectedEmployee(PayrollEmployeeModel? employee) {
     _selectedEmployee = employee;
     notifyListeners();
   }
-  
+
   // Fetch Payroll Data
   Future<void> fetchPayrollData() async {
-    if (_selectedLocation == null || 
-        _selectedDesignation == null || 
+    if (_selectedLocation == null ||
+        _selectedDesignation == null ||
         monthController.text.isEmpty) {
       return;
     }
-    
+
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 1));
-      
+
       // Generate dummy data based on filters
       _payrollEmployees = _generateDummyPayrollData();
-      
+
       if (kDebugMode) {
         print('Fetched ${_payrollEmployees.length} payroll records');
       }
@@ -116,7 +116,7 @@ class PayrollReviewProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   List<PayrollEmployeeModel> _generateDummyPayrollData() {
     // Generate sample data based on selected filters
     return [
@@ -170,7 +170,7 @@ class PayrollReviewProvider extends ChangeNotifier {
       ),
     ];
   }
-  
+
   // Helper method to create employee model with PF/ESI calculation
   PayrollEmployeeModel _createEmployeeModel({
     required String empId,
@@ -193,20 +193,20 @@ class PayrollReviewProvider extends ChangeNotifier {
     final bool hasESI = pfEsiData['hasESI'] as bool;
     final double pfAmount = pfEsiData['pfAmount'] as double;
     final double esiAmount = pfEsiData['esiAmount'] as double;
-    
+
     // Calculate LOP amount (assuming LOP is calculated as (CTC / 30) * LOP days)
     final double dailySalary = actualCTC / 30;
     final double lopAmount = dailySalary * lopDays;
-    
+
     // Calculate current month salary (CTC + allowance - training fees)
     final double currentMonthSalary = actualCTC + allowance - trainingFees;
-    
+
     // Calculate deductions (PF + ESI + LOP)
     final double deductions = pfAmount + esiAmount + lopAmount;
-    
+
     // Calculate take home salary
     final double takeHomeSalary = currentMonthSalary - deductions;
-    
+
     return PayrollEmployeeModel(
       empId: empId,
       name: name,
@@ -232,31 +232,31 @@ class PayrollReviewProvider extends ChangeNotifier {
       attendanceLogs: _generateAttendanceLogs(),
     );
   }
-  
+
   // Helper method to calculate PF and ESI based on salary
   Map<String, dynamic> _calculatePFAndESI(double salary) {
     const double pfRate = 0.12; // 12% PF on basic salary
     const double esiRate = 0.0075; // 0.75% ESI (employee contribution)
     const double salaryThreshold = 30000.0;
     const double esiSalaryLimit = 21000.0; // ESI applies only up to 21000
-    
+
     bool hasPF = salary < salaryThreshold;
     bool hasESI = salary < salaryThreshold && salary <= esiSalaryLimit;
-    
+
     double pfAmount = 0.0;
     double esiAmount = 0.0;
-    
+
     if (hasPF) {
       // PF is calculated on basic salary (assuming 50% of CTC is basic)
       double basicSalary = salary * 0.5;
       pfAmount = basicSalary * pfRate;
     }
-    
+
     if (hasESI) {
       // ESI is calculated on gross salary (full salary)
       esiAmount = salary * esiRate;
     }
-    
+
     return {
       'hasPF': hasPF,
       'hasESI': hasESI,
@@ -264,31 +264,31 @@ class PayrollReviewProvider extends ChangeNotifier {
       'esiAmount': esiAmount,
     };
   }
-  
+
   List<AttendanceLogModel> _generateAttendanceLogs() {
     // Generate attendance logs for the month
     final logs = <AttendanceLogModel>[];
     final now = DateTime.now();
     final month = now.month;
     final year = now.year;
-    
+
     // Generate logs for last 25 days (Oct 16 - Nov 9)
     final startDate = DateTime(year, month == 1 ? 12 : month - 1, 16);
-    
+
     for (int i = 0; i < 25; i++) {
       final date = startDate.add(Duration(days: i));
       final dayOfWeek = date.weekday;
-      
+
       // Skip weekends (optional - you can remove this)
       if (dayOfWeek == 6 || dayOfWeek == 7) {
         continue;
       }
-      
+
       String? checkIn;
       String? checkOut;
       String? workingHours;
       String status = 'present';
-      
+
       // Randomly assign some as absent or present
       if (i % 7 == 0) {
         // Absent
@@ -300,30 +300,34 @@ class PayrollReviewProvider extends ChangeNotifier {
         // Present - generate random times
         final checkInHour = 9 + (i % 2); // 9 or 10
         final checkInMin = 0 + (i % 60);
-        checkIn = '${checkInHour.toString().padLeft(2, '0')}:${checkInMin.toString().padLeft(2, '0')}';
-        
+        checkIn =
+            '${checkInHour.toString().padLeft(2, '0')}:${checkInMin.toString().padLeft(2, '0')}';
+
         final checkOutHour = 18 + (i % 3); // 18, 19, or 20
         final checkOutMin = 0 + (i % 60);
-        checkOut = '${checkOutHour.toString().padLeft(2, '0')}:${checkOutMin.toString().padLeft(2, '0')}';
-        
+        checkOut =
+            '${checkOutHour.toString().padLeft(2, '0')}:${checkOutMin.toString().padLeft(2, '0')}';
+
         // Calculate working hours (simplified)
         final hours = checkOutHour - checkInHour;
         final mins = checkOutMin - checkInMin;
         workingHours = '${hours}H:${mins.toString().padLeft(2, '0')}S';
       }
-      
-      logs.add(AttendanceLogModel(
-        date: date,
-        checkIn: checkIn,
-        checkOut: checkOut,
-        workingHours: workingHours,
-        status: status,
-      ));
+
+      logs.add(
+        AttendanceLogModel(
+          date: date,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          workingHours: workingHours,
+          status: status,
+        ),
+      );
     }
-    
+
     return logs;
   }
-  
+
   // Reset filters
   void resetFilters() {
     _selectedLocation = null;
@@ -333,7 +337,7 @@ class PayrollReviewProvider extends ChangeNotifier {
     _selectedEmployee = null;
     notifyListeners();
   }
-  
+
   @override
   void dispose() {
     monthController.dispose();
@@ -365,7 +369,7 @@ class PayrollEmployeeModel {
   final bool hasPF; // Whether employee has PF
   final bool hasESI; // Whether employee has ESI
   final List<AttendanceLogModel> attendanceLogs;
-  
+
   PayrollEmployeeModel({
     required this.empId,
     required this.name,
@@ -399,7 +403,7 @@ class AttendanceLogModel {
   final String? checkOut;
   final String? workingHours;
   final String status; // 'present', 'absent', 'holiday'
-  
+
   AttendanceLogModel({
     required this.date,
     this.checkIn,
@@ -407,9 +411,8 @@ class AttendanceLogModel {
     this.workingHours,
     required this.status,
   });
-  
+
   String get formattedDate {
     return '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}';
   }
 }
-
