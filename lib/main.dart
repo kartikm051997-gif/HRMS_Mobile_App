@@ -183,7 +183,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FaceVerificationProvider()),
         ChangeNotifierProvider(create: (_) => FaceVerificationProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeAssetProvider()),
-        ChangeNotifierProvider(create: (_) => PayrollReviewProvider()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
