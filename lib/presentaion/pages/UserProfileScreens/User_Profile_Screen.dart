@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../core/constants/appcolor_dart.dart';
+import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
+import '../authenticationScreens/loginScreens/login_screen.dart';
 import 'FullImageViewScreen.dart';
 
 class UserProfileScreen extends StatelessWidget {
@@ -247,44 +250,66 @@ class UserProfileScreen extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    // Get provider reference BEFORE showing dialog
-    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
-    
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(
-          "Logout",
-          style: TextStyle(fontFamily: AppFonts.poppins),
-        ),
-        content: const Text(
-          "Are you sure you want to logout?",
-          style: TextStyle(fontFamily: AppFonts.poppins),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(
-              "Cancel",
+      builder:
+          (context) => AlertDialog(
+            title: const Text(
+              "Logout",
               style: TextStyle(fontFamily: AppFonts.poppins),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              // Use the pre-fetched provider reference
-              loginProvider.logout();
-            },
-            child: const Text(
-              "Logout",
-              style: TextStyle(
-                color: Colors.red,
-                fontFamily: AppFonts.poppins,
-              ),
+            content: const Text(
+              "Are you sure you want to logout?",
+              style: TextStyle(fontFamily: AppFonts.poppins),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  "Cancel",
+                  style: TextStyle(fontFamily: AppFonts.poppins),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _logout(context);
+                },
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
-}
+
+  void _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // ✅ Get tracking provider from context
+    final trackingProvider = context.read<UserTrackingProvider>();
+
+    // ✅ Clear session only (keep history)
+    await trackingProvider.clearCurrentUserData(clearHistory: false);
+
+    // ✅ Clear login data
+    await prefs.remove('userData');
+    await prefs.remove('isLoggedIn');
+    await prefs.remove('loginTime');
+    await prefs.remove('employeeId');
+    await prefs.remove('logged_in_emp_id'); // Also remove this
+
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+            (route) => false,
+      );
+    }
+    debugPrint("👋 Logged out — session cleared, history kept");
+  }}
+

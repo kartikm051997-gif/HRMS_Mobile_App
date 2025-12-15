@@ -1,12 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../provider/UserTrackingProvider/User_TabView_Tracking_Provider.dart';
-import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import 'TackingHistoryScreen.dart';
 import 'UserTrackingScreen.dart';
@@ -35,23 +32,6 @@ class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
         context.read<UserTabViewTrackingProvider>().setCurrentTab(
           _tabController.index,
         );
-
-        // ✅ CRITICAL: When switching tabs, ensure UserTrackingProvider is properly initialized
-        // This ensures we show the correct user's data
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          final trackingProvider = context.read<UserTrackingProvider>();
-          if (!trackingProvider.isInitialized) {
-            await trackingProvider.initialize();
-          } else {
-            // Even if initialized, double-check we're showing current user's data
-            final prefs = await SharedPreferences.getInstance();
-            final currentUserId = prefs.getString('logged_in_emp_id') ?? prefs.getString('employeeId');
-            if (trackingProvider.currentUserId != currentUserId) {
-              if (kDebugMode) print('🔄 Tab switch: User ID mismatch, re-initializing...');
-              await trackingProvider.initialize();
-            }
-          }
-        });
       }
     });
   }

@@ -74,7 +74,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -195,16 +198,17 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   height: 24,
                   width: 24,
                   color: Colors.white,
-                  errorBuilder: (context, error, stackTrace) => const Icon(
-                    Icons.business_rounded,
-                    color: Colors.white,
-                    size: 24,
-                  ),
+                  errorBuilder:
+                      (context, error, stackTrace) => const Icon(
+                        Icons.business_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
                 ),
               ),
               // Close Button
               GestureDetector(
-                onTap: () => Get.back(),
+                onTap: () => Navigator.of(context).pop(),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
@@ -230,7 +234,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 2,
+                  ),
                 ),
                 child: CircleAvatar(
                   radius: 32,
@@ -238,22 +245,23 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   backgroundImage:
                       (user?.avatar != null && user!.avatar!.isNotEmpty)
                           ? NetworkImage(
-                              "https://app.draravindsivf.com/hrms/${user.avatar}",
-                            )
+                            "https://app.draravindsivf.com/hrms/${user.avatar}",
+                          )
                           : null,
-                  child: (user?.avatar == null || user!.avatar!.isEmpty)
-                      ? Text(
-                          user?.fullname != null && user!.fullname!.isNotEmpty
-                              ? user.fullname![0].toUpperCase()
-                              : "U",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            fontFamily: AppFonts.poppins,
-                          ),
-                        )
-                      : null,
+                  child:
+                      (user?.avatar == null || user!.avatar!.isEmpty)
+                          ? Text(
+                            user?.fullname != null && user!.fullname!.isNotEmpty
+                                ? user.fullname![0].toUpperCase()
+                                : "U",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          )
+                          : null,
                 ),
               ),
               const SizedBox(width: 16),
@@ -361,31 +369,36 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                // Use Get.back() instead of Navigator.pop() for consistency
-                Get.back();
+                Navigator.of(context).pop();
                 Get.offNamed(route);
               },
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? primaryColor.withOpacity(0.1)
-                      : Colors.transparent,
+                  color:
+                      isSelected
+                          ? primaryColor.withOpacity(0.1)
+                          : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
-                  border: isSelected
-                      ? Border.all(color: primaryColor.withOpacity(0.3))
-                      : null,
+                  border:
+                      isSelected
+                          ? Border.all(color: primaryColor.withOpacity(0.3))
+                          : null,
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? primaryColor.withOpacity(0.15)
-                            : subtextColor.withOpacity(0.08),
+                        color:
+                            isSelected
+                                ? primaryColor.withOpacity(0.15)
+                                : subtextColor.withOpacity(0.08),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -401,7 +414,8 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                         style: TextStyle(
                           color: isSelected ? primaryColor : textColor,
                           fontSize: 14,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
                           fontFamily: AppFonts.poppins,
                         ),
                       ),
@@ -444,9 +458,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: isExpanded || isAnyChildActive
-                    ? primaryColor.withOpacity(0.08)
-                    : Colors.transparent,
+                color:
+                    isExpanded || isAnyChildActive
+                        ? primaryColor.withOpacity(0.08)
+                        : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -454,21 +469,24 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: isExpanded || isAnyChildActive
-                          ? const LinearGradient(
-                              colors: [primaryColor, secondaryColor],
-                            )
-                          : null,
-                      color: isExpanded || isAnyChildActive
-                          ? null
-                          : subtextColor.withOpacity(0.08),
+                      gradient:
+                          isExpanded || isAnyChildActive
+                              ? const LinearGradient(
+                                colors: [primaryColor, secondaryColor],
+                              )
+                              : null,
+                      color:
+                          isExpanded || isAnyChildActive
+                              ? null
+                              : subtextColor.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       icon,
-                      color: isExpanded || isAnyChildActive
-                          ? Colors.white
-                          : subtextColor,
+                      color:
+                          isExpanded || isAnyChildActive
+                              ? Colors.white
+                              : subtextColor,
                       size: 20,
                     ),
                   ),
@@ -477,13 +495,15 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                     child: Text(
                       title,
                       style: TextStyle(
-                        color: isExpanded || isAnyChildActive
-                            ? primaryColor
-                            : textColor,
+                        color:
+                            isExpanded || isAnyChildActive
+                                ? primaryColor
+                                : textColor,
                         fontSize: 14,
-                        fontWeight: isExpanded || isAnyChildActive
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+                        fontWeight:
+                            isExpanded || isAnyChildActive
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                         fontFamily: AppFonts.poppins,
                       ),
                     ),
@@ -493,9 +513,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                     duration: const Duration(milliseconds: 200),
                     child: Icon(
                       Icons.keyboard_arrow_down_rounded,
-                      color: isExpanded || isAnyChildActive
-                          ? primaryColor
-                          : subtextColor,
+                      color:
+                          isExpanded || isAnyChildActive
+                              ? primaryColor
+                              : subtextColor,
                       size: 22,
                     ),
                   ),
@@ -543,8 +564,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Use Get.back() instead of Navigator.pop() for consistency
-            Get.back();
+            Navigator.of(context).pop();
             Get.offNamed(route);
           },
           borderRadius: BorderRadius.circular(8),
@@ -553,9 +573,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
             margin: const EdgeInsets.symmetric(vertical: 2),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? primaryColor.withOpacity(0.1)
-                  : Colors.transparent,
+              color:
+                  isSelected
+                      ? primaryColor.withOpacity(0.1)
+                      : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -570,9 +591,13 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   child: Text(
                     title,
                     style: TextStyle(
-                      color: isSelected ? primaryColor : textColor.withOpacity(0.8),
+                      color:
+                          isSelected
+                              ? primaryColor
+                              : textColor.withOpacity(0.8),
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.w400,
                       fontFamily: AppFonts.poppins,
                     ),
                   ),
@@ -683,7 +708,8 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
         title: 'Employees',
         isExpanded: _isEmployeesExpanded,
         isAnyChildActive: isAnyEmployeeActive,
-        onTap: () => setState(() => _isEmployeesExpanded = !_isEmployeesExpanded),
+        onTap:
+            () => setState(() => _isEmployeesExpanded = !_isEmployeesExpanded),
         children: [
           _buildSubmenuItem(
             icon: Icons.group_rounded,
@@ -731,8 +757,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
         title: 'Recruitment',
         isExpanded: _isRecruitmentExpanded,
         isAnyChildActive: isAnyRecruitmentActive,
-        onTap: () =>
-            setState(() => _isRecruitmentExpanded = !_isRecruitmentExpanded),
+        onTap:
+            () => setState(
+              () => _isRecruitmentExpanded = !_isRecruitmentExpanded,
+            ),
         children: [
           _buildSubmenuItem(
             icon: Icons.description_rounded,
@@ -843,11 +871,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.logout_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
+                      Icon(Icons.logout_rounded, color: Colors.white, size: 18),
                       SizedBox(width: 8),
                       Text(
                         "Logout",
@@ -870,78 +894,82 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
   }
 
   void _showLogoutDialog() {
-    // Get provider reference BEFORE showing dialog
-    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
-    
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.logout_rounded,
-                color: Colors.red,
-                size: 24,
-              ),
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(width: 14),
-            const Text(
-              "Logout",
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Are you sure you want to logout?",
               style: TextStyle(
                 fontFamily: AppFonts.poppins,
-                fontWeight: FontWeight.w600,
+                color: Color(0xFF64748B),
               ),
             ),
-          ],
-        ),
-        content: const Text(
-          "Are you sure you want to logout?",
-          style: TextStyle(
-            fontFamily: AppFonts.poppins,
-            color: Color(0xFF64748B),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    color: subtextColor,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  final loginProvider = Provider.of<LoginProvider>(
+                    context,
+                    listen: false,
+                  );
+                  loginProvider.logout();
+                  Get.offAllNamed(AppRoutes.loginScreen);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              "Cancel",
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                color: subtextColor,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              // Use pre-fetched provider - logout() handles navigation
-              loginProvider.logout();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              "Logout",
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

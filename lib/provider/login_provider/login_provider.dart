@@ -88,10 +88,8 @@ class LoginProvider extends ChangeNotifier {
             _loginData?.status == '1' ||
             _loginData?.status?.toLowerCase() == 'ok' ||
             _loginData?.status?.toLowerCase() == 'true') {
-          // ✅ CRITICAL FIX: Use the Employee ID that user actually entered
-          // This is the most reliable source - what they typed in the login form
-          final enteredEmployeeId = emailController.text.trim();
-          await _saveLoginSession(jsonResponse, enteredEmployeeId);
+          // Save session data
+          await _saveLoginSession(jsonResponse);
           await _verifyDataSaved();
 
           _clearFields();
@@ -156,7 +154,7 @@ class LoginProvider extends ChangeNotifier {
   // ---------------------------------------------------------------------------
   // SAVE SESSION + EMPLOYEE ID
   // ---------------------------------------------------------------------------
-  Future<void> _saveLoginSession(Map<String, dynamic> userData, String enteredEmployeeId) async {
+  Future<void> _saveLoginSession(Map<String, dynamic> userData) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
@@ -166,36 +164,14 @@ class LoginProvider extends ChangeNotifier {
       await prefs.setBool('isLoggedIn', true);
       await prefs.setInt('loginTime', DateTime.now().millisecondsSinceEpoch);
 
-      // ✅ CRITICAL FIX: Use the Employee ID that user actually entered!
-      // This is the most reliable - what they typed in the login form
-      // Don't trust API response, use what user entered
-      final userId = enteredEmployeeId.trim();
-
-      if (userId.isEmpty) {
-        // Fallback to API response if somehow empty
-        final apiUserId = userData['user_id']?.toString() ??
-                         userData['userId']?.toString() ??
-                         userData['id']?.toString() ?? '';
-        if (apiUserId.isNotEmpty) {
-          await prefs.setString('employeeId', apiUserId);
-          await prefs.setString('logged_in_emp_id', apiUserId);
-        } else {
-          if (kDebugMode) print("❌ No valid user ID found!");
-          return;
-        }
-      } else {
-        await prefs.setString('employeeId', userId);
-        await prefs.setString('logged_in_emp_id', userId);
-      }
+      // Extract and save employee ID
+      final userId = userData['userId']?.toString() ?? '';
+      await prefs.setString('employeeId', userId);
+      await prefs.setString('logged_in_emp_id', userId);
 
       if (kDebugMode) {
-        print("✅ LOGIN SESSION SAVED:");
+        print("✅ Saved to SharedPreferences:");
         print("🆔 employeeId: $userId");
-        print("📝 Entered by user: $enteredEmployeeId");
-        print("📦 API response keys: ${userData.keys.toList()}");
-        print("📦 API user_id: ${userData['user_id']}");
-        print("📦 API userId: ${userData['userId']}");
-        print("📦 API id: ${userData['id']}");
       }
     } catch (e) {
       if (kDebugMode) print("❌ Error saving session: $e");
@@ -238,15 +214,6 @@ class LoginProvider extends ChangeNotifier {
       if (userData != null && userData.isNotEmpty) {
         final decoded = jsonDecode(userData);
         _loginData = LoginApiModel.fromJson(decoded);
-
-        // ✅ CRITICAL: Restore employee ID from saved session
-        final savedEmployeeId = prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
-        if (savedEmployeeId != null) {
-          await prefs.setString('employeeId', savedEmployeeId);
-          await prefs.setString('logged_in_emp_id', savedEmployeeId);
-          if (kDebugMode) print("✅ Restored employee ID: $savedEmployeeId");
-        }
-
         notifyListeners();
         if (kDebugMode) print("✅ Session restored");
         return true;
