@@ -72,7 +72,7 @@ class RecruitmentEduExpProvider extends ChangeNotifier {
         "year": "2018-08",
         "name of institution / university": "Anna university",
         "percentage obtained": "78",
-        "organization": "zealous services",
+        "organization": "zealous servicesAPI",
         "designation": "software Developer",
         "previous Experience Year": "4",
         "salary Drawn per Month (INR)": "40000",

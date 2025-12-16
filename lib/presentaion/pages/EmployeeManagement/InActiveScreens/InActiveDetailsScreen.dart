@@ -210,9 +210,24 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                     child: widget.employee.photoUrl != null && widget.employee.photoUrl!.isNotEmpty
                         ? Image.network(
                             widget.employee.photoUrl!,
+                            width: 90,
+                            height: 90,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
                               return _buildDefaultAvatar(widget.employee.name);
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 3,
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              );
                             },
                           )
                         : _buildDefaultAvatar(widget.employee.name),
@@ -682,9 +697,24 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
               child: photoUrl != null && photoUrl.isNotEmpty
                   ? Image.network(
                       photoUrl,
+                      width: 48,
+                      height: 48,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return _buildSmallDefaultAvatar(name);
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(primaryColor.withOpacity(0.6)),
+                          ),
+                        );
                       },
                     )
                   : _buildSmallDefaultAvatar(name),

@@ -281,7 +281,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     if (!serviceEnabled) {
       _showLocationRequiredDialog(
         title: 'Location Service Disabled',
-        message: 'Please enable location services to check in',
+        message: 'Please enable location servicesAPI to check in',
         isServiceIssue: true,
       );
       return;

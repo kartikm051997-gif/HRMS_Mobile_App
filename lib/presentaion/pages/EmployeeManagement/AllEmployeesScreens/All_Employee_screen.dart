@@ -717,16 +717,31 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                         color: Colors.white.withOpacity(0.2),
                         border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
                       ),
-                      child: Center(
-                        child: Text(
-                          employee.name.isNotEmpty ? employee.name[0].toUpperCase() : "E",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            fontFamily: AppFonts.poppins,
-                          ),
-                        ),
+                      child: ClipOval(
+                        child: employee.photoUrl != null && employee.photoUrl!.isNotEmpty
+                            ? Image.network(
+                                employee.photoUrl!,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildDefaultAvatar(employee.name);
+                                },
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Center(
+                                    child: CircularProgressIndicator(
+                                      value: loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress.cumulativeBytesLoaded /
+                                              loadingProgress.expectedTotalBytes!
+                                          : null,
+                                      strokeWidth: 2,
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  );
+                                },
+                              )
+                            : _buildDefaultAvatar(employee.name),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -872,6 +887,30 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDefaultAvatar(String name) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [primaryColor, secondaryColor],
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : "E",
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            fontFamily: AppFonts.poppins,
+          ),
+        ),
+      ),
     );
   }
 }

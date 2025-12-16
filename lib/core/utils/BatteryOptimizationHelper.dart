@@ -3,7 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/foundation.dart';
 
 /// Helper class to request battery optimization exemption
-/// This is critical for background services to work properly
+/// This is critical for background servicesAPI to work properly
 class BatteryOptimizationHelper {
   /// Request battery optimization exemption
   /// Returns true if already exempted or user granted exemption

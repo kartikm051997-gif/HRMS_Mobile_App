@@ -1,137 +1,97 @@
+// File: lib/provider/login_provider/login_provider.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
-import '../../apibaseScreen/Api_Base_Screens.dart';
 import '../../core/routes/routes.dart';
 import '../../model/login_model/login_model.dart';
+import '../../servicesAPI/LogIn_Service.dart';
 
-/// Allow self-signed certs (dev only)
-class MyHttpOverrides extends HttpOverrides {
-  @override
-  HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
-  }
-}
-
+/// Login Provider - Manages login state and UI logic
 class LoginProvider extends ChangeNotifier {
+  final AuthService _authService = AuthService();
+
+  // Text controllers
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  // State variables
   bool _isLoading = false;
   LoginApiModel? _loginData;
   String? _errorMessage;
+  bool _rememberMe = false;
 
+  // Getters
   bool get isLoading => _isLoading;
   LoginApiModel? get loginData => _loginData;
   String? get errorMessage => _errorMessage;
+  bool get rememberMe => _rememberMe;
 
-  bool rememberMe = false;
+  // ═══════════════════════════════════════════════════════════════════════
+  // UI ACTIONS
+  // ═══════════════════════════════════════════════════════════════════════
 
-  void toggleRemember() {
-    rememberMe = !rememberMe;
+  /// Toggle remember me checkbox
+  void toggleRememberMe() {
+    _rememberMe = !_rememberMe;
     notifyListeners();
   }
 
-  LoginProvider() {
-    HttpOverrides.global = MyHttpOverrides();
-  }
-
-  // ---------------------------------------------------------------------------
-  // LOGIN API - Uses GetX for navigation to avoid context issues
-  // ---------------------------------------------------------------------------
-  Future<void> login(BuildContext context) async {
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      _showGetXSnackBar("Please fill all fields", isError: true);
-      return;
-    }
-
-    _isLoading = true;
+  /// Clear error message
+  void clearError() {
     _errorMessage = null;
     notifyListeners();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // LOGIN
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Perform login
+  Future<void> login(BuildContext context) async {
+    // Validate input
+    if (!_validateInput()) return;
+
+    _setLoading(true);
+    _errorMessage = null;
 
     try {
-      if (kDebugMode) print("🔄 Attempting login...");
+      // Call auth service
+      final loginModel = await _authService.login(
+        username: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
-      final response = await http
-          .post(
-            Uri.parse(ApiBase.loginEndpoint),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode({
-              'id': emailController.text.trim(),
-              'pass': passwordController.text.trim(),
-            }),
-          )
-          .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () => throw TimeoutException('Connection timeout'),
-          );
+      // Update state
+      _loginData = loginModel;
+      _clearFields();
 
-      if (kDebugMode) {
-        print("✅ Response Status: ${response.statusCode}");
-        print("📦 Response Body: ${response.body}");
-      }
+      // Show success message
+      _showSnackBar("Login Successful!", isError: false);
 
-      if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
-        _loginData = LoginApiModel.fromJson(jsonResponse);
-
-        if (_loginData?.status?.toLowerCase() == 'success' ||
-            _loginData?.status == '1' ||
-            _loginData?.status?.toLowerCase() == 'ok' ||
-            _loginData?.status?.toLowerCase() == 'true') {
-          // Save session data
-          await _saveLoginSession(jsonResponse);
-          await _verifyDataSaved();
-
-          _clearFields();
-
-          _showGetXSnackBar("Login Successful!", isError: false);
-
-          // ✅ Use GetX navigation - doesn't need context
-          await Future.delayed(const Duration(milliseconds: 300));
-          Get.offAllNamed(AppRoutes.bottomNav);
-        } else {
-          _errorMessage = _loginData?.message ?? "Invalid ID or Password";
-          _showGetXSnackBar(_errorMessage!, isError: true);
-        }
-      } else {
-        _errorMessage = "Login failed (HTTP ${response.statusCode})";
-        _showGetXSnackBar(_errorMessage!, isError: true);
-      }
-    } on TimeoutException catch (e) {
-      _showGetXSnackBar("Timeout: $e", isError: true);
-    } on SocketException {
-      _showGetXSnackBar("Network error. Check connection.", isError: true);
+      // Navigate to home
+      await Future.delayed(const Duration(milliseconds: 300));
+      Get.offAllNamed(AppRoutes.bottomNav);
     } catch (e) {
-      _showGetXSnackBar("Error: $e", isError: true);
+      // Handle error
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      _showSnackBar(_errorMessage!, isError: true);
+
+      if (kDebugMode) print("❌ LoginProvider: Login failed - $_errorMessage");
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      _setLoading(false);
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // LOGOUT - Clears session and navigates to login
-  // ---------------------------------------------------------------------------
+  // ═══════════════════════════════════════════════════════════════════════
+  // LOGOUT
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Perform logout
   Future<void> logout() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Clear all login session data
-      await prefs.remove('isLoggedIn');
-      await prefs.remove('loginTime');
-      await prefs.remove('userData');
-      await prefs.remove('employeeId');
-      await prefs.remove('logged_in_emp_id');
+      // Clear session via service
+      await _authService.clearSession();
 
       // Clear local state
       _loginData = null;
@@ -140,108 +100,96 @@ class LoginProvider extends ChangeNotifier {
 
       notifyListeners();
 
-      if (kDebugMode) print("✅ Logout successful - session cleared");
+      if (kDebugMode) print("✅ LoginProvider: Logout successful");
 
-      // ✅ Use GetX navigation - doesn't need context
+      // Navigate to login screen
       Get.offAllNamed(AppRoutes.loginScreen);
     } catch (e) {
-      if (kDebugMode) print("❌ Error during logout: $e");
-      // Still try to navigate to login
+      if (kDebugMode) print("❌ LoginProvider: Logout error - $e");
+
+      // Still navigate to login even if error
       Get.offAllNamed(AppRoutes.loginScreen);
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // SAVE SESSION + EMPLOYEE ID
-  // ---------------------------------------------------------------------------
-  Future<void> _saveLoginSession(Map<String, dynamic> userData) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
+  // ═══════════════════════════════════════════════════════════════════════
+  // SESSION INITIALIZATION
+  // ═══════════════════════════════════════════════════════════════════════
 
-      // Save entire login response
-      final userDataString = jsonEncode(userData);
-      await prefs.setString('userData', userDataString);
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setInt('loginTime', DateTime.now().millisecondsSinceEpoch);
-
-      // Extract and save employee ID
-      final userId = userData['userId']?.toString() ?? '';
-      await prefs.setString('employeeId', userId);
-      await prefs.setString('logged_in_emp_id', userId);
-
-      if (kDebugMode) {
-        print("✅ Saved to SharedPreferences:");
-        print("🆔 employeeId: $userId");
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error saving session: $e");
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // INITIALIZE SESSION (check expiry)
-  // ---------------------------------------------------------------------------
+  /// Initialize session on app start
+  /// Returns true if valid session exists, false otherwise
   Future<bool> initializeSession() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-      final loginTime = prefs.getInt('loginTime');
+      // Check if session is valid
+      final isValid = await _authService.isSessionValid();
 
-      if (!isLoggedIn || loginTime == null) {
+      if (!isValid) {
         _loginData = null;
         notifyListeners();
-        if (kDebugMode) print("❌ No login session found");
         return false;
       }
 
-      final loginDate = DateTime.fromMillisecondsSinceEpoch(loginTime);
-      final now = DateTime.now();
+      // Load session data
+      final loginModel = await _authService.loadLoginSession();
 
-      // 2 days (2880 minutes)
-      if (now.difference(loginDate).inMinutes >= 2880) {
-        await prefs.remove('isLoggedIn');
-        await prefs.remove('loginTime');
-        await prefs.remove('userData');
-
-        _loginData = null;
+      if (loginModel != null) {
+        _loginData = loginModel;
         notifyListeners();
-        if (kDebugMode) print("❌ Session expired after 2 days");
-        return false;
-      }
 
-      // Load user data
-      final userData = prefs.getString('userData');
-      if (userData != null && userData.isNotEmpty) {
-        final decoded = jsonDecode(userData);
-        _loginData = LoginApiModel.fromJson(decoded);
-        notifyListeners();
-        if (kDebugMode) print("✅ Session restored");
+        if (kDebugMode) print("✅ LoginProvider: Session restored");
         return true;
       }
+
       return false;
     } catch (e) {
-      if (kDebugMode) print("❌ initializeSession error: $e");
+      if (kDebugMode) print("❌ LoginProvider: Session init error - $e");
       return false;
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // VERIFY SAVED DATA (debug)
-  // ---------------------------------------------------------------------------
-  Future<void> _verifyDataSaved() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (kDebugMode) {
-      print("📝 userData: ${prefs.getString('userData')}");
-      print("✅ isLoggedIn: ${prefs.getBool('isLoggedIn')}");
-      print("⏰ loginTime: ${prefs.getInt('loginTime')}");
-      print("🆔 employeeId: ${prefs.getString('employeeId')}");
-    }
+  // ═══════════════════════════════════════════════════════════════════════
+  // HELPER METHODS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Get auth token for API calls
+  Future<String?> getAuthToken() async {
+    return await _authService.getAuthToken();
   }
 
-  // ---------------------------------------------------------------------------
-  // GETX SNACKBAR - Doesn't need BuildContext (safe after async)
-  // ---------------------------------------------------------------------------
-  void _showGetXSnackBar(String message, {required bool isError}) {
+  /// Get employee ID
+  Future<String?> getEmployeeId() async {
+    return await _authService.getEmployeeId();
+  }
+
+  /// Validate input fields
+  bool _validateInput() {
+    if (emailController.text.trim().isEmpty) {
+      _showSnackBar("Please enter username", isError: true);
+      return false;
+    }
+
+    if (passwordController.text.trim().isEmpty) {
+      _showSnackBar("Please enter password", isError: true);
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Set loading state
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
+  /// Clear input fields
+  void _clearFields() {
+    emailController.clear();
+    passwordController.clear();
+  }
+
+  /// Show snackbar using GetX
+  void _showSnackBar(String message, {required bool isError}) {
     Get.snackbar(
       isError ? 'Error' : 'Success',
       message,
@@ -251,13 +199,22 @@ class LoginProvider extends ChangeNotifier {
       duration: const Duration(seconds: 2),
       margin: const EdgeInsets.all(10),
       borderRadius: 10,
+      isDismissible: true,
     );
   }
 
-  void _clearFields() {
-    emailController.clear();
-    passwordController.clear();
+  // ═══════════════════════════════════════════════════════════════════════
+  // DEBUG
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Debug: Print session data
+  Future<void> debugPrintSession() async {
+    await _authService.debugPrintSessionData();
   }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // DISPOSE
+  // ═══════════════════════════════════════════════════════════════════════
 
   @override
   void dispose() {
@@ -265,12 +222,4 @@ class LoginProvider extends ChangeNotifier {
     passwordController.dispose();
     super.dispose();
   }
-}
-
-/// TimeoutException class
-class TimeoutException implements Exception {
-  final String message;
-  TimeoutException(this.message);
-  @override
-  String toString() => message;
 }
