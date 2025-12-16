@@ -153,7 +153,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
 
     if (state == AppLifecycleState.resumed) {
       final provider = context.read<UserTrackingProvider>();
-      
+
       // ✅ Always call onAppResumed to sync data from background service
       provider.onAppResumed().then((_) {
         if (mounted) {
@@ -167,11 +167,11 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
   Future<void> _initializeApp() async {
     final provider = context.read<UserTrackingProvider>();
     await provider.initialize();
-    
+
     // ✅ Update map after initialization
     if (mounted) {
       _updateMapMarkersWithRoute();
-      
+
       // ✅ If checked in, animate to the last known location
       if (provider.isCheckedIn && provider.currentRoutePoints.isNotEmpty) {
         final lastPoint = provider.currentRoutePoints.last;
@@ -179,7 +179,9 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
           CameraUpdate.newLatLngZoom(lastPoint, 15),
         );
         if (kDebugMode) {
-          print('📍 Restored ${provider.currentRoutePoints.length} route points');
+          print(
+            '📍 Restored ${provider.currentRoutePoints.length} route points',
+          );
         }
       }
     }
@@ -313,10 +315,28 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     final hasVerified = await _hasFaceVerifiedToday();
 
     if (hasVerified) {
-      if (kDebugMode) print('⏭️ Skipping face verification');
-      await _performActualCheckIn();
+      if (kDebugMode)
+        print('👤 Showing face identification (already verified today)');
+
+      // Show face identification in display mode (no capture required)
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder:
+              (context) => FaceIdentificationScreen(
+                employeeId: 'EMP001',
+                employeeName: 'John Doe',
+                isCheckIn: true,
+                displayOnly: true, // Display mode - no capture required
+              ),
+        ),
+      );
+
+      if (result == true && mounted) {
+        await _performActualCheckIn();
+      }
     } else {
-      if (kDebugMode) print('📸 Showing face verification');
+      if (kDebugMode) print('📸 Showing face verification (first time today)');
 
       final result = await Navigator.push<bool>(
         context,
@@ -326,6 +346,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                 employeeId: 'EMP001',
                 employeeName: 'John Doe',
                 isCheckIn: true,
+                displayOnly: false, // Capture mode - requires face capture
               ),
         ),
       );

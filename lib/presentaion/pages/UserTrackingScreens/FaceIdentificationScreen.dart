@@ -1,20 +1,21 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import '../../../core/fonts/fonts.dart';
-import '../../../provider/FaceIdentificationProvider/Face_Identification_Provider_Screen.dart';
 
 class FaceIdentificationScreen extends StatefulWidget {
   final String? employeeId;
   final String? employeeName;
   final bool isCheckIn;
+  final bool
+  displayOnly; // If true, only display face for identification, no capture required
 
   const FaceIdentificationScreen({
     super.key,
     this.employeeId,
     this.employeeName,
     this.isCheckIn = true,
+    this.displayOnly = false,
   });
 
   @override
@@ -22,95 +23,110 @@ class FaceIdentificationScreen extends StatefulWidget {
       _FaceIdentificationScreenState();
 }
 
-class _FaceIdentificationScreenState extends State<FaceIdentificationScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _scanController;
-  late AnimationController _pulseController;
-  late AnimationController _scanLineController;
+class _FaceIdentificationScreenState extends State<FaceIdentificationScreen> {
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+  bool _isCapturing = false;
+  String? _errorMessage;
+
+  // Colors
+  static const Color primaryColor = Color(0xFF8E0E6B);
+  static const Color secondaryColor = Color(0xFFD4145A);
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-    _initializeProvider();
+    _initializeCamera();
   }
 
-  void _initializeAnimations() {
-    _scanController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..addListener(() {
-      context.read<FaceVerificationProvider>().updateScanProgress(
-        _scanController.value,
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
       );
-    });
 
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
 
-    _scanLineController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat();
-  }
-
-  void _initializeProvider() {
-    final provider = context.read<FaceVerificationProvider>();
-    provider.initializeFaceDetector();
-    provider.initializeCamera();
-  }
-
-  Future<void> _handleStartScanning() async {
-    final provider = context.read<FaceVerificationProvider>();
-
-    if (!provider.isCameraInitialized) {
-      _showErrorSnackBar('Camera not ready. Please wait...');
-      return;
-    }
-
-    if (!provider.isFaceDetected) {
-      _showErrorSnackBar('Please position your face properly in the frame');
-      return;
-    }
-
-    // Start scan animation
-    _scanController.reset();
-    _scanController.forward();
-
-    final success = await provider.startScanning(
-      widget.employeeId ?? 'EMP001',
-      widget.isCheckIn,
-    );
-
-    if (success && mounted) {
-      // Wait for animation
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await _cameraController!.initialize();
 
       if (mounted) {
-        Navigator.pop(context, true);
+        setState(() {
+          _isCameraInitialized = true;
+          _errorMessage = null;
+        });
       }
-    } else if (mounted) {
-      _showErrorSnackBar('Face not properly detected. Please try again');
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Camera error: ${e.toString()}';
+      });
     }
   }
 
-  void _showErrorSnackBar(String message) {
+  Future<void> _capturePhoto() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      _showMessage('Camera not ready');
+      return;
+    }
+
+    if (_isCapturing) return;
+
+    setState(() {
+      _isCapturing = true;
+    });
+
+    try {
+      if (widget.displayOnly) {
+        // In display-only mode, just verify face without capturing
+        _showMessage('Face identified successfully');
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      } else {
+        // In capture mode, take a photo
+        final image = await _cameraController!.takePicture();
+
+        // Here you can send the image to your backend
+        // For now, just show success and go back
+        _showMessage('Photo captured successfully');
+
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        if (mounted) {
+          Navigator.pop(context, true);
+        }
+      }
+    } catch (e) {
+      _showMessage(
+        'Failed to ${widget.displayOnly ? "identify" : "capture"}: ${e.toString()}',
+      );
+      setState(() {
+        _isCapturing = false;
+      });
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
   @override
   void dispose() {
-    _scanController.dispose();
-    _pulseController.dispose();
-    _scanLineController.dispose();
+    _cameraController?.dispose();
     super.dispose();
   }
 
@@ -120,171 +136,167 @@ class _FaceIdentificationScreenState extends State<FaceIdentificationScreen>
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          _buildAnimatedBackground(),
-          _buildBackButton(),
-          _buildMainContent(),
-          _buildTimestamp(),
+          // Background Gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [primaryColor, secondaryColor],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+
+          // Main Content
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Back Button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(context, false),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // Title
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.isCheckIn ? 'Check In' : 'Check Out',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                            Text(
+                              widget.displayOnly
+                                  ? 'Face Identification'
+                                  : 'Capture your face',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 14,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // Camera Preview
+                Expanded(
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Camera Frame
+                        Container(
+                          width: 320,
+                          height: 400,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.3),
+                                blurRadius: 20,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(27),
+                            child: _buildCameraPreview(),
+                          ),
+                        ),
+
+                        // Face Oval Overlay
+                        CustomPaint(
+                          size: const Size(320, 400),
+                          painter: FaceOvalPainter(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Instructions
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  child: Text(
+                    widget.displayOnly
+                        ? 'Position your face for identification'
+                        : 'Position your face within the oval frame',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 15,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                ),
+
+                // Capture/Verify Button
+                Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: _buildCaptureButton(),
+                ),
+
+                // Timestamp
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    DateFormat('hh:mm a • dd MMM yyyy').format(DateTime.now()),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      fontFamily: AppFonts.poppins,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAnimatedBackground() {
-    final pulseValue = 1 + (_pulseController.value * 0.08);
-
-    return AnimatedScale(
-      scale: pulseValue,
-      duration: const Duration(milliseconds: 300),
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFF8E0E6B),
-              const Color(0xFFD4145A),
-              Colors.purple.shade900,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBackButton() {
-    return Positioned(
-      top: MediaQuery.of(context).padding.top + 10,
-      left: 16,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.3),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMainContent() {
-    return SafeArea(
-      child: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  widget.isCheckIn ? 'Check In' : 'Check Out',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: AppFonts.poppins,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Face Verification',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
-                    fontSize: 16,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-                const SizedBox(height: 50),
-                _buildCameraFrame(),
-                const SizedBox(height: 40),
-                Consumer<FaceVerificationProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.isScanning) {
-                      return _buildScanningAnimation(provider.scanProgress);
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                _buildStatusText(),
-                const SizedBox(height: 50),
-                _buildActionButton(),
-                Consumer<FaceVerificationProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.errorMessage != null &&
-                        !provider.isCameraInitialized) {
-                      return _buildRetryButton();
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCameraFrame() {
-    return Consumer<FaceVerificationProvider>(
-      builder: (context, provider, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: (provider.isVerified
-                            ? Colors.green
-                            : provider.isFaceDetected
-                            ? Colors.blue
-                            : Colors.pink)
-                        .withOpacity(0.5),
-                    blurRadius: 40,
-                    spreadRadius: 10,
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color:
-                      provider.isVerified
-                          ? Colors.greenAccent
-                          : provider.isFaceDetected
-                          ? Colors.blueAccent
-                          : Colors.white,
-                  width: 4,
-                ),
-              ),
-              child: ClipOval(child: _buildCameraPreviewContent(provider)),
-            ),
-            if (!provider.isVerified && !provider.isScanning)
-              _buildCornerIndicators(provider.isFaceDetected),
-            if (provider.isScanning) _buildScanningLine(),
-            if (provider.isVerified) _buildSuccessOverlay(),
-            if (provider.isFaceDetected &&
-                !provider.isScanning &&
-                !provider.isVerified)
-              _buildFaceDetectedBadge(),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildCameraPreviewContent(FaceVerificationProvider provider) {
-    if (provider.errorMessage != null) {
+  Widget _buildCameraPreview() {
+    if (_errorMessage != null) {
       return Container(
         color: Colors.black87,
         child: Center(
@@ -300,13 +312,22 @@ class _FaceIdentificationScreenState extends State<FaceIdentificationScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  provider.errorMessage!,
+                  _errorMessage!,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                     fontFamily: AppFonts.poppins,
                   ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _initializeCamera,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
@@ -315,348 +336,114 @@ class _FaceIdentificationScreenState extends State<FaceIdentificationScreen>
       );
     }
 
-    if (provider.isCameraInitialized && provider.cameraController != null) {
-      return CameraPreview(provider.cameraController!);
-    }
-
-    return Container(
-      color: Colors.black87,
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-            SizedBox(height: 16),
-            Text(
-              'Initializing camera...',
-              style: TextStyle(
-                color: Colors.white70,
-                fontSize: 14,
-                fontFamily: AppFonts.poppins,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCornerIndicators(bool isFaceDetected) {
-    return SizedBox(
-      width: 280,
-      height: 280,
-      child: Stack(
-        children: [
-          Positioned(
-            top: 20,
-            left: 20,
-            child: _buildCornerBracket(isFaceDetected, topLeft: true),
-          ),
-          Positioned(
-            top: 20,
-            right: 20,
-            child: _buildCornerBracket(isFaceDetected, topRight: true),
-          ),
-          Positioned(
-            bottom: 20,
-            left: 20,
-            child: _buildCornerBracket(isFaceDetected, bottomLeft: true),
-          ),
-          Positioned(
-            bottom: 20,
-            right: 20,
-            child: _buildCornerBracket(isFaceDetected, bottomRight: true),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCornerBracket(
-    bool isFaceDetected, {
-    bool topLeft = false,
-    bool topRight = false,
-    bool bottomLeft = false,
-    bool bottomRight = false,
-  }) {
-    final color = isFaceDetected ? Colors.blueAccent : Colors.white;
-
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        border: Border(
-          top:
-              (topLeft || topRight)
-                  ? BorderSide(color: color, width: 3)
-                  : BorderSide.none,
-          left:
-              (topLeft || bottomLeft)
-                  ? BorderSide(color: color, width: 3)
-                  : BorderSide.none,
-          right:
-              (topRight || bottomRight)
-                  ? BorderSide(color: color, width: 3)
-                  : BorderSide.none,
-          bottom:
-              (bottomLeft || bottomRight)
-                  ? BorderSide(color: color, width: 3)
-                  : BorderSide.none,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScanningLine() {
-    return AnimatedBuilder(
-      animation: _scanLineController,
-      builder: (context, child) {
-        return Positioned(
-          top: 280 * _scanLineController.value,
-          child: Container(
-            width: 280,
-            height: 3,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.transparent,
-                  Colors.blue.withOpacity(0.8),
-                  Colors.transparent,
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withOpacity(0.6),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSuccessOverlay() {
-    return Container(
-      width: 280,
-      height: 280,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.green.withOpacity(0.3),
-      ),
-      child: const Center(
-        child: Icon(Icons.check_circle, color: Colors.greenAccent, size: 80),
-      ),
-    );
-  }
-
-  Widget _buildFaceDetectedBadge() {
-    return Positioned(
-      top: 10,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.9),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 16),
-            SizedBox(width: 6),
-            Text(
-              'Face Detected',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                fontFamily: AppFonts.poppins,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScanningAnimation(double progress) {
-    return SizedBox(
-      width: 220,
-      height: 8,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: LinearProgressIndicator(
-          value: progress,
-          color: Colors.blue,
-          backgroundColor: Colors.white.withOpacity(0.2),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusText() {
-    return Consumer<FaceVerificationProvider>(
-      builder: (context, provider, child) {
-        return Container(
-          height: 90,
-          alignment: Alignment.center,
+    if (!_isCameraInitialized || _cameraController == null) {
+      return Container(
+        color: Colors.black87,
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+              SizedBox(height: 16),
               Text(
-                provider.faceStatus,
+                'Starting camera...',
                 style: TextStyle(
-                  color:
-                      provider.isVerified
-                          ? Colors.greenAccent
-                          : provider.isFaceDetected
-                          ? Colors.blueAccent
-                          : Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
+                  fontSize: 14,
                   fontFamily: AppFonts.poppins,
                 ),
-                textAlign: TextAlign.center,
               ),
-              if (!provider.isScanning && !provider.isVerified) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Make sure your face is clearly visible',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 13,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
             ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    }
+
+    return CameraPreview(_cameraController!);
   }
 
-  Widget _buildActionButton() {
-    return Consumer<FaceVerificationProvider>(
-      builder: (context, provider, child) {
-        final bool isButtonDisabled =
-            provider.isScanning ||
-            provider.isVerified ||
-            !provider.isCameraInitialized ||
-            provider.isProcessing ||
-            !provider.isFaceDetected;
-
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 200,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            gradient:
-                isButtonDisabled
-                    ? const LinearGradient(colors: [Colors.grey, Colors.grey])
-                    : const LinearGradient(
-                      colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                    ),
-            boxShadow:
-                isButtonDisabled
-                    ? []
-                    : [
-                      BoxShadow(
-                        color: const Color(0xFF8E0E6B).withOpacity(0.5),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-          ),
-          child: ElevatedButton(
-            onPressed: isButtonDisabled ? null : _handleStartScanning,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
+  Widget _buildCaptureButton() {
+    return GestureDetector(
+      onTap: _isCapturing ? null : _capturePhoto,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          border: Border.all(color: Colors.white, width: 4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.white.withOpacity(0.5),
+              blurRadius: 20,
+              spreadRadius: 2,
             ),
-            child:
-                provider.isProcessing
-                    ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.5,
-                      ),
-                    )
-                    : Text(
-                      provider.isScanning
-                          ? 'Scanning...'
-                          : (provider.isVerified ? 'Verified ✓' : 'Start Scan'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRetryButton() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: TextButton.icon(
-        onPressed: () {
-          context.read<FaceVerificationProvider>().initializeCamera();
-        },
-        icon: const Icon(Icons.refresh, color: Colors.white70, size: 20),
-        label: const Text(
-          'Retry Camera',
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 15,
-            fontFamily: AppFonts.poppins,
-          ),
+          ],
         ),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          backgroundColor: Colors.white.withOpacity(0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
+        child:
+            _isCapturing
+                ? const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    color: primaryColor,
+                  ),
+                )
+                : Icon(
+                  widget.displayOnly ? Icons.face : Icons.camera_alt,
+                  color: primaryColor,
+                  size: 40,
+                ),
       ),
     );
   }
+}
 
-  Widget _buildTimestamp() {
-    return Positioned(
-      bottom: 30,
-      left: 0,
-      right: 0,
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(20),
+// Custom painter for face oval overlay
+class FaceOvalPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = Colors.black.withOpacity(0.5)
+          ..style = PaintingStyle.fill;
+
+    final path = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final ovalPath =
+        Path()..addOval(
+          Rect.fromCenter(
+            center: Offset(size.width / 2, size.height / 2),
+            width: size.width * 0.7,
+            height: size.height * 0.55,
           ),
-          child: Text(
-            DateFormat('hh:mm a • EEE, dd MMM yyyy').format(DateTime.now()),
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontFamily: AppFonts.poppins,
-            ),
-          ),
-        ),
+        );
+
+    final transparentPath = Path.combine(
+      PathOperation.difference,
+      path,
+      ovalPath,
+    );
+
+    canvas.drawPath(transparentPath, paint);
+
+    // Draw oval border
+    final borderPaint =
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3;
+
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(size.width / 2, size.height / 2),
+        width: size.width * 0.7,
+        height: size.height * 0.55,
       ),
+      borderPaint,
     );
   }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
