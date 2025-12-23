@@ -6,8 +6,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../apibaseScreen/Api_Base_Screens.dart';
-import '../model/login_model/login_model.dart';
+import '../../apibaseScreen/Api_Base_Screens.dart';
+import '../../model/login_model/login_model.dart';
 
 /// Custom HTTP overrides for development (allows self-signed certificates)
 class MyHttpOverrides extends HttpOverrides {

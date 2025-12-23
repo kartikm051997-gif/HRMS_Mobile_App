@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/routes/routes.dart';
 import '../../model/login_model/login_model.dart';
-import '../../servicesAPI/LogIn_Service.dart';
+import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 /// Login Provider - Manages login state and UI logic
 class LoginProvider extends ChangeNotifier {

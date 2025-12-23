@@ -1,179 +1,272 @@
+// File: lib/provider/Employee_management_Provider/Active_Provider.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
 import '../../model/Employee_management/ActiveUserListModel.dart' as models;
-
-import '../../servicesAPI/ActiveUserService.dart';
-import '../../servicesAPI/LogIn_Service.dart';
+import '../../model/Employee_management/getAllFiltersModel.dart';
+import '../../servicesAPI/ActiveUserService/ActiveUserFilterService.dart';
+import '../../servicesAPI/ActiveUserService/ActiveUserService.dart';
+import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 class ActiveProvider extends ChangeNotifier {
   // Services
   final ActiveUserService _activeUserService = ActiveUserService();
   final AuthService _authService = AuthService();
+  final FilterService _filterService = FilterService();
 
-  /// Toggle filter section
+  // ═══════════════════════════════════════════════════════════════════════
+  // STATE VARIABLES
+  // ═══════════════════════════════════════════════════════════════════════
+
   bool _showFilters = false;
   bool get showFilters => _showFilters;
+
   int pageSize = 10;
   int currentPage = 0;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  bool _isLoadingFilters = false;
+  bool get isLoadingFilters => _isLoadingFilters;
+
+  bool _initialLoadDone = false;
+  bool get initialLoadDone => _initialLoadDone;
+
+  bool _hasAppliedFilters = false;
+  bool get hasAppliedFilters => _hasAppliedFilters;
 
   // API response data
   models.ActiveUserList? _activeUserListResponse;
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  /// Get summary data from API response
-  models.Summary? get summary => _activeUserListResponse?.data?.summary;
+  // Filter raw data from API
 
-  /// Flag to control whether to show employee cards
-  /// Now shows default data on load
-  bool _hasAppliedFilters = false;
-  bool get hasAppliedFilters => _hasAppliedFilters;
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER DATA STRUCTURES
+  // ═══════════════════════════════════════════════════════════════════════
 
-  /// Flag to track if initial load is done
-  bool _initialLoadDone = false;
-  bool get initialLoadDone => _initialLoadDone;
+  // Store filter data as List<Map<String, String>> with 'id' and 'name'
+  List<Map<String, String>> _companyList = [];
+  List<Map<String, String>> _zoneList = [];
+  List<Map<String, String>> _branchList = [];
+  List<Map<String, String>> _designationList = [];
+  List<Map<String, String>> _ctcList = [];
 
-  void toggleFilters() {
-    _showFilters = !_showFilters;
-    notifyListeners();
+  // Getters that return display names for dropdown
+  List<String> get company => _companyList.map((e) => e['name']!).toList();
+  List<String> get zone => _zoneList.map((e) => e['name']!).toList();
+  List<String> get branch {
+    // Filter branches based on selected zone
+    if (_selectedZoneId == null) {
+      return _branchList.map((e) => e['name']!).toList();
+    }
+    return _branchList
+        .where((b) => b['zone_id'] == _selectedZoneId)
+        .map((e) => e['name']!)
+        .toList();
   }
 
-  void setPageSize(int newSize) {
-    pageSize = newSize;
-    currentPage = 0; // reset when changed
-    notifyListeners();
-  }
+  List<String> get designation =>
+      _designationList.map((e) => e['name']!).toList();
+  List<String> get ctc => _ctcList.map((e) => e['name']!).toList();
 
-  /// Clear all filters and reload default data
-  void clearAllFilters() {
-    _selectedCompany = null;
-    _selectedZone = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    _selectedCTC = null;
-    dojFromController.clear();
-    fojToController.clear();
-    searchController.clear();
-    _errorMessage = null;
-    notifyListeners();
+  // ═══════════════════════════════════════════════════════════════════════
+  // SELECTED VALUES (Store both display name and ID)
+  // ═══════════════════════════════════════════════════════════════════════
 
-    // Reload default data
-    fetchActiveUsers();
-  }
-
-  /// Dropdown data
-  final List<String> _company = ["Dr.Aravind's", "The MindMax"];
-  final List<String> _zone = ["North", "South", "East", "West"];
-  final List<String> _branch = [
-    "Chennai",
-    "Bangalore",
-    "Hyderabad",
-    "Tiruppur",
-  ];
-  final List<String> _designation = [
-    "Manager",
-    "HR",
-    "Developer",
-    "Admin",
-    "Receptionist",
-    "Jr.Admin",
-    "Lab Technician",
-  ];
-  final List<String> _ctc = ["< 5 LPA", "5–10 LPA", "> 10 LPA"];
-
-  List<String> get company => _company;
-  List<String> get zone => _zone;
-  List<String> get branch => _branch;
-  List<String> get designation => _designation;
-  List<String> get ctc => _ctc;
-
-  /// Selected values
   String? _selectedCompany;
-  String? _selectedZone;
-  String? _selectedBranch;
-  String? _selectedDesignation;
-  String? _selectedCTC;
-  DateTime? _dojFrom;
-  DateTime? _dojTo;
+  String? _selectedCompanyId;
 
+  String? _selectedZone;
+  String? _selectedZoneId;
+
+  String? _selectedBranch;
+  String? _selectedBranchId;
+
+  String? _selectedDesignation;
+  String? _selectedDesignationId;
+
+  String? _selectedCTC;
+  String? _selectedCTCId;
+
+  // Getters
   String? get selectedCompany => _selectedCompany;
   String? get selectedZone => _selectedZone;
   String? get selectedBranch => _selectedBranch;
   String? get selectedDesignation => _selectedDesignation;
   String? get selectedCTC => _selectedCTC;
-  DateTime? get dojFrom => _dojFrom;
-  DateTime? get dojTo => _dojTo;
 
   /// Check if all required filters are selected
   bool get areAllFiltersSelected {
-    return _selectedCompany != null &&
-        _selectedZone != null &&
-        _selectedBranch != null &&
-        _selectedDesignation != null;
+    return _selectedCompanyId != null &&
+        _selectedZoneId != null &&
+        _selectedBranchId != null &&
+        _selectedDesignationId != null;
   }
 
-  /// Employee data - Use Users model directly from API
+  // ═══════════════════════════════════════════════════════════════════════
+  // EMPLOYEE DATA
+  // ═══════════════════════════════════════════════════════════════════════
+
   List<models.Users> _allEmployees = [];
   List<models.Users> _filteredEmployees = [];
-
   List<models.Users> get filteredEmployees => _filteredEmployees;
 
   TextEditingController searchController = TextEditingController();
+  final TextEditingController dojFromController = TextEditingController();
+  final TextEditingController fojToController = TextEditingController();
 
-  // =======================
-  // CTC SUMMARY VALUES
-  // =======================
+  // ═══════════════════════════════════════════════════════════════════════
+  // SUMMARY DATA
+  // ═══════════════════════════════════════════════════════════════════════
+
+  models.Summary? get summary => _activeUserListResponse?.data?.summary;
+
   int grandTotalCTC = 0;
   int totalEmployeeCTC = 0;
   int totalF11CTC = 0;
   int totalProfessionalFee = 0;
   int totalStudentCTC = 0;
 
-  void onSearchChanged(String query) {
-    // Perform client-side filtering for instant feedback
-    if (!_initialLoadDone) return;
+  // ═══════════════════════════════════════════════════════════════════════
+  // INITIALIZATION
+  // ═══════════════════════════════════════════════════════════════════════
 
-    if (query.isEmpty) {
-      // Reset to all employees when search is cleared
-      _filteredEmployees = List.from(_allEmployees);
-    } else {
-      // Filter from all employees, not just filtered list
-      _filteredEmployees =
-          _allEmployees.where((user) {
-            return (user.fullname ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                ) ||
-                (user.employmentId ?? user.userId ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                ) ||
-                (user.designation ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                );
-          }).toList();
-    }
-    notifyListeners();
-  }
-
-  void clearSearch() {
-    searchController.clear();
-    // Reset to full list
-    _filteredEmployees = List.from(_allEmployees);
-    notifyListeners();
-  }
-
-  /// Initialize with API data - loads default data on first load
+  /// Initialize - Load filters first, then default employee data
   void initializeEmployees() {
-    // If data is already loaded, don't reset
-    if (_initialLoadDone) {
-      return;
+    if (_initialLoadDone) return;
+
+    if (kDebugMode) print("🚀 ActiveProvider: Initializing...");
+
+    // Load filters first
+    loadAllFilters();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // LOAD FILTERS FROM API
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Load all filters from API
+  Future<void> loadAllFilters() async {
+    try {
+      _isLoadingFilters = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      if (kDebugMode) print("🔄 ActiveProvider: Loading filters...");
+
+      // Get auth token
+      final token = await _authService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Authentication token not found. Please login again.');
+      }
+
+      // Fetch filters from API
+      final filtersData = await _filterService.getAllFilters(token: token);
+
+      if (filtersData == null || filtersData.data == null) {
+        throw Exception('Failed to load filter options');
+      }
+
+      _processFilterData(filtersData);
+
+      if (kDebugMode) {
+        print("✅ ActiveProvider: Filters loaded successfully");
+        print("📊 Companies: ${_companyList.length}");
+        print("📊 Zones: ${_zoneList.length}");
+        print("📊 Branches: ${_branchList.length}");
+        print("📊 Designations: ${_designationList.length}");
+        print("📊 CTC Ranges: ${_ctcList.length}");
+      }
+
+      // After filters loaded, fetch default employee data
+      await fetchActiveUsers();
+
+      _initialLoadDone = true;
+    } catch (e) {
+      _errorMessage = "Error loading filters: ${e.toString()}";
+      if (kDebugMode) print("❌ ActiveProvider: $_errorMessage");
+      _initialLoadDone = true;
+    } finally {
+      _isLoadingFilters = false;
+      notifyListeners();
+    }
+  }
+
+  /// Process filter data from API response
+  void _processFilterData(GetAllFilters filters) {
+    final data = filters.data!;
+
+    // Process Companies
+    _companyList =
+        data.companies
+            ?.map((c) => {'id': c.cmpid ?? '', 'name': c.cmpname ?? ''})
+            .where((c) => c['id']!.isNotEmpty && c['name']!.isNotEmpty)
+            .toList() ??
+        [];
+
+    // Process Zones
+    _zoneList =
+        data.zones
+            ?.map((z) => {'id': z.id ?? '', 'name': z.name ?? ''})
+            .where((z) => z['id']!.isNotEmpty && z['name']!.isNotEmpty)
+            .toList() ??
+        [];
+
+    // Process Branches (with zone_id for filtering)
+    _branchList =
+        data.branches
+            ?.map(
+              (b) => {
+                'id': b.id ?? '',
+                'name': b.name ?? '',
+                'zone_id': b.zoneId ?? '',
+              },
+            )
+            .where((b) => b['id']!.isNotEmpty && b['name']!.isNotEmpty)
+            .toList() ??
+        [];
+
+    // Process Designations (flatten from departments)
+    _designationList = [];
+    if (data.departments != null) {
+      for (var dept in data.departments!) {
+        if (dept.designations != null) {
+          for (var desig in dept.designations!) {
+            if (desig.designationsId != null && desig.designations != null) {
+              _designationList.add({
+                'id': desig.designationsId!,
+                'name': desig.designations!,
+                'department_id': dept.departmentId ?? '',
+              });
+            }
+          }
+        }
+      }
     }
 
-    // Load default data from API
-    fetchActiveUsers();
+    // Process CTC Ranges
+    _ctcList =
+        data.ctcRanges
+            ?.map((c) => {'id': c.value ?? '', 'name': c.label ?? ''})
+            .where((c) => c['id']!.isNotEmpty && c['name']!.isNotEmpty)
+            .toList() ??
+        [];
+
+    if (kDebugMode) {
+      print("📊 Processed ${_companyList.length} companies");
+      print("📊 Processed ${_zoneList.length} zones");
+      print("📊 Processed ${_branchList.length} branches");
+      print("📊 Processed ${_designationList.length} designations");
+      print("📊 Processed ${_ctcList.length} CTC ranges");
+    }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FETCH ACTIVE USERS
+  // ═══════════════════════════════════════════════════════════════════════
 
   /// Fetch active users from API
   Future<void> fetchActiveUsers({
@@ -230,11 +323,11 @@ class ActiveProvider extends ChangeNotifier {
       if (response != null && response.status == 'success') {
         _activeUserListResponse = response;
 
-        // Use Users directly from API response - no conversion needed
+        // Update employee list
         _allEmployees = response.data?.users ?? [];
         _filteredEmployees = List.from(_allEmployees);
 
-        // Extract and assign summary data from API response
+        // Update summary data
         if (response.data?.summary != null) {
           final summary = response.data!.summary!;
           grandTotalCTC = _parseIntFromString(summary.grandTotal) ?? 0;
@@ -245,39 +338,21 @@ class ActiveProvider extends ChangeNotifier {
           totalStudentCTC = _parseIntFromString(summary.studentCtc) ?? 0;
 
           if (kDebugMode) {
-            print(
-              "✅ ActiveProvider: Summary loaded - Grand Total: $grandTotalCTC, Employee CTC: $totalEmployeeCTC",
-            );
+            print("✅ Summary - Grand Total: $grandTotalCTC");
           }
         } else {
-          // Reset summary values if no summary data available
+          // Reset if no summary
           grandTotalCTC = 0;
           totalEmployeeCTC = 0;
           totalF11CTC = 0;
           totalProfessionalFee = 0;
           totalStudentCTC = 0;
-          if (kDebugMode) {
-            print("⚠️ ActiveProvider: No summary data in API response");
-          }
         }
 
         _hasAppliedFilters = true;
-        _initialLoadDone = true;
 
         if (kDebugMode) {
           print("✅ ActiveProvider: Loaded ${_allEmployees.length} employees");
-          print("📊 Summary exists: ${response.data?.summary != null}");
-          if (response.data?.summary != null) {
-            final s = response.data!.summary!;
-            print("📊 Grand Total: ${s.grandTotal}");
-            print("📊 Total Monthly CTC: ${s.totalMonthlyCtc}");
-            print("📊 F11 Employees: ${s.f11Employees}");
-            print("📊 Professional Fee: ${s.professionalFee}");
-            print("📊 Student CTC: ${s.studentCtc}");
-            print("📊 Full Summary Object: ${s.toJson()}");
-          } else {
-            print("❌ Summary is NULL in API response");
-          }
         }
       } else {
         _errorMessage = response?.message ?? "Failed to load employees";
@@ -292,35 +367,123 @@ class ActiveProvider extends ChangeNotifier {
     }
   }
 
-  /// Helper method to parse integer from string (handles null/empty strings)
+  /// Helper to parse integers from strings
   int? _parseIntFromString(String? value) {
     if (value == null || value.isEmpty) return null;
     try {
-      // Remove any formatting (commas, currency symbols, etc.)
       final cleanedValue = value.replaceAll(RegExp(r'[^\d.]'), '');
       return double.tryParse(cleanedValue)?.toInt();
     } catch (e) {
-      if (kDebugMode) {
-        print("⚠️ ActiveProvider: Error parsing summary value '$value': $e");
-      }
       return null;
     }
   }
 
-  /// Search functionality - calls API with filters
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER SETTERS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  void setSelectedCompany(String? displayName) {
+    _selectedCompany = displayName;
+    if (displayName != null) {
+      final item = _companyList.firstWhere(
+        (c) => c['name'] == displayName,
+        orElse: () => {},
+      );
+      _selectedCompanyId = item['id'];
+    } else {
+      _selectedCompanyId = null;
+    }
+    notifyListeners();
+  }
+
+  void setSelectedZone(String? displayName) {
+    _selectedZone = displayName;
+    if (displayName != null) {
+      final item = _zoneList.firstWhere(
+        (z) => z['name'] == displayName,
+        orElse: () => {},
+      );
+      _selectedZoneId = item['id'];
+    } else {
+      _selectedZoneId = null;
+    }
+
+    // Clear branch when zone changes
+    _selectedBranch = null;
+    _selectedBranchId = null;
+
+    notifyListeners();
+  }
+
+  void setSelectedBranch(String? displayName) {
+    _selectedBranch = displayName;
+    if (displayName != null) {
+      final item = _branchList.firstWhere(
+        (b) => b['name'] == displayName,
+        orElse: () => {},
+      );
+      _selectedBranchId = item['id'];
+    } else {
+      _selectedBranchId = null;
+    }
+    notifyListeners();
+  }
+
+  void setSelectedDesignation(String? displayName) {
+    _selectedDesignation = displayName;
+    if (displayName != null) {
+      final item = _designationList.firstWhere(
+        (d) => d['name'] == displayName,
+        orElse: () => {},
+      );
+      _selectedDesignationId = item['id'];
+    } else {
+      _selectedDesignationId = null;
+    }
+    notifyListeners();
+  }
+
+  void setSelectedCTC(String? displayName) {
+    _selectedCTC = displayName;
+    if (displayName != null) {
+      final item = _ctcList.firstWhere(
+        (c) => c['name'] == displayName,
+        orElse: () => {},
+      );
+      _selectedCTCId = item['id'];
+    } else {
+      _selectedCTCId = null;
+    }
+    notifyListeners();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // SEARCH & ACTIONS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Search employees with filters
   void searchEmployees() {
     if (!areAllFiltersSelected) {
-      // Don't search if not all filters are selected
+      if (kDebugMode) print("⚠️ Not all required filters selected");
       return;
     }
 
-    // Call API with filter parameters
+    if (kDebugMode) {
+      print("🔍 Searching with filters:");
+      print("   Company ID: $_selectedCompanyId");
+      print("   Zone ID: $_selectedZoneId");
+      print("   Branch ID: $_selectedBranchId");
+      print("   Designation ID: $_selectedDesignationId");
+      print("   CTC ID: $_selectedCTCId");
+    }
+
+    // Call API with filter IDs
     fetchActiveUsers(
-      cmpid: _selectedCompany,
-      zoneId: _selectedZone,
-      locationsId: _selectedBranch,
-      designationsId: _selectedDesignation,
-      ctcRange: _selectedCTC,
+      cmpid: _selectedCompanyId,
+      zoneId: _selectedZoneId,
+      locationsId: _selectedBranchId,
+      designationsId: _selectedDesignationId,
+      ctcRange: _selectedCTCId,
       fromdate:
           dojFromController.text.isNotEmpty ? dojFromController.text : null,
       todate: fojToController.text.isNotEmpty ? fojToController.text : null,
@@ -328,66 +491,84 @@ class ActiveProvider extends ChangeNotifier {
     );
   }
 
-  /// Setters
-  void setSelectedCompany(String? v) {
-    _selectedCompany = v;
-    notifyListeners();
-  }
+  /// Client-side search filtering
+  void onSearchChanged(String query) {
+    if (!_initialLoadDone) return;
 
-  void setSelectedZone(String? v) {
-    _selectedZone = v;
-    notifyListeners();
-  }
-
-  void setSelectedBranch(String? v) {
-    _selectedBranch = v;
-    notifyListeners();
-  }
-
-  void setSelectedDesignation(String? v) {
-    _selectedDesignation = v;
-    notifyListeners();
-  }
-
-  void setSelectedCTC(String? v) {
-    _selectedCTC = v;
-    notifyListeners();
-  }
-
-  void setDojFrom(DateTime? date) {
-    _dojFrom = date;
-    if (date != null) {
-      dojFromController.text = "${date.day}/${date.month}/${date.year}";
+    if (query.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+    } else {
+      _filteredEmployees =
+          _allEmployees.where((user) {
+            return (user.fullname ?? "").toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ||
+                (user.employmentId ?? user.userId ?? "").toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ||
+                (user.designation ?? "").toLowerCase().contains(
+                  query.toLowerCase(),
+                );
+          }).toList();
     }
     notifyListeners();
   }
 
-  void setDojTo(DateTime? date) {
-    _dojTo = date;
-    if (date != null) {
-      fojToController.text = "${date.day}/${date.month}/${date.year}";
-    }
+  void clearSearch() {
+    searchController.clear();
+    _filteredEmployees = List.from(_allEmployees);
     notifyListeners();
   }
 
-  final dojFromController = TextEditingController();
-  final fojToController = TextEditingController();
+  /// Clear all filters
+  void clearAllFilters() {
+    _selectedCompany = null;
+    _selectedCompanyId = null;
+    _selectedZone = null;
+    _selectedZoneId = null;
+    _selectedBranch = null;
+    _selectedBranchId = null;
+    _selectedDesignation = null;
+    _selectedDesignationId = null;
+    _selectedCTC = null;
+    _selectedCTCId = null;
+    dojFromController.clear();
+    fojToController.clear();
+    searchController.clear();
+    _errorMessage = null;
+    notifyListeners();
 
-  /// Toggle employee status between active and inactive
+    // Reload default data
+    fetchActiveUsers();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // UI HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  void toggleFilters() {
+    _showFilters = !_showFilters;
+    notifyListeners();
+  }
+
+  void setPageSize(int newSize) {
+    pageSize = newSize;
+    currentPage = 0;
+    notifyListeners();
+  }
+
+  /// Toggle employee status
   Future<void> toggleEmployeeStatus(String employeeId) async {
     try {
-      // Find the user in the list
       final userIndex = _allEmployees.indexWhere(
         (user) => (user.employmentId ?? user.userId ?? "") == employeeId,
       );
 
       if (userIndex != -1) {
-        // Update the status locally first for immediate UI feedback
         final currentUser = _allEmployees[userIndex];
         final currentStatus = (currentUser.status ?? "").toLowerCase();
         final newStatus = currentStatus == 'active' ? 'Inactive' : 'Active';
 
-        // Create updated user object
         final updatedUser = models.Users(
           userId: currentUser.userId,
           employmentId: currentUser.employmentId,
@@ -408,10 +589,8 @@ class ActiveProvider extends ChangeNotifier {
           status: newStatus,
         );
 
-        // Update the user in the list
         _allEmployees[userIndex] = updatedUser;
 
-        // Update filtered users as well
         final filteredIndex = _filteredEmployees.indexWhere(
           (user) => (user.employmentId ?? user.userId ?? "") == employeeId,
         );
@@ -419,17 +598,12 @@ class ActiveProvider extends ChangeNotifier {
           _filteredEmployees[filteredIndex] = updatedUser;
         }
 
-        // Notify listeners to update UI
         notifyListeners();
 
-        if (kDebugMode) {
-          print('User $employeeId status changed to: $newStatus');
-        }
+        if (kDebugMode) print('✅ User $employeeId status: $newStatus');
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error toggling user status: $e');
-      }
+      if (kDebugMode) print('❌ Error toggling status: $e');
     }
   }
 

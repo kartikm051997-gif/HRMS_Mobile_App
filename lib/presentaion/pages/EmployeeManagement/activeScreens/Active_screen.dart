@@ -67,631 +67,581 @@ class _ActiveScreenState extends State<ActiveScreen>
             // HEADER SECTION
             // ═══════════════════════════════════════════════════════════
             SliverToBoxAdapter(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Filter Toggle and Page Size Row
-                      Row(
-                        children: [
-                          // Filter Toggle Button
-                          Expanded(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: activeProvider.toggleFilters,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient:
-                                        activeProvider.showFilters
-                                            ? const LinearGradient(
-                                              colors: [
-                                                primaryColor,
-                                                secondaryColor,
-                                              ],
-                                            )
-                                            : null,
-                                    color:
-                                        activeProvider.showFilters
-                                            ? null
-                                            : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color:
-                                          activeProvider.showFilters
-                                              ? Colors.transparent
-                                              : borderColor,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        // Grand Total - Featured Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFB91C7F), Color(0xFF9B1568)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFB91C7F).withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.25),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    "G",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                      fontFamily: AppFonts.poppins,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.tune_rounded,
-                                        size: 20,
-                                        color:
-                                            activeProvider.showFilters
-                                                ? Colors.white
-                                                : textSecondary,
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Text(
-                                        "Filters",
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: AppFonts.poppins,
-                                          color:
-                                              activeProvider.showFilters
-                                                  ? Colors.white
-                                                  : textSecondary,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Icon(
-                                        Icons.keyboard_arrow_down_rounded,
-                                        color:
-                                            activeProvider.showFilters
-                                                ? Colors.white
-                                                : textSecondary,
-                                      ),
-                                    ],
                                   ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Grand Total",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "₹${activeProvider.grandTotalCTC.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
+                        ),
+                        const SizedBox(height: 20),
 
-                          // Page Size Dropdown
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
+                        // Grid of smaller cards
+                        GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          childAspectRatio: 0.85,
+                          children: [
+                            // Employee Monthly CTC
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF4A90E2),
+                                          Color(0xFF357ABD),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(
+                                            0xFF4A90E2,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.people,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "Employee Monthly",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                      height: 1.3,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ShaderMask(
+                                    shaderCallback:
+                                        (bounds) => const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4A90E2),
+                                            Color(0xFF357ABD),
+                                          ],
+                                        ).createShader(bounds),
+                                    child: Text(
+                                      "₹${activeProvider.totalEmployeeCTC.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+
+                            // F11 Monthly CTC
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFFFF9800),
+                                          Color(0xFFF57C00),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(
+                                            0xFFFF9800,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.business_center,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "F11 Monthly",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                      height: 1.3,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ShaderMask(
+                                    shaderCallback:
+                                        (bounds) => const LinearGradient(
+                                          colors: [
+                                            Color(0xFFFF9800),
+                                            Color(0xFFF57C00),
+                                          ],
+                                        ).createShader(bounds),
+                                    child: Text(
+                                      "₹${activeProvider.totalF11CTC.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Professional Fee
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF66BB6A),
+                                          Color(0xFF43A047),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(
+                                            0xFF66BB6A,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.card_giftcard,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "Professional Fee",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                      height: 1.3,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ShaderMask(
+                                    shaderCallback:
+                                        (bounds) => const LinearGradient(
+                                          colors: [
+                                            Color(0xFF66BB6A),
+                                            Color(0xFF43A047),
+                                          ],
+                                        ).createShader(bounds),
+                                    child: Text(
+                                      "₹${activeProvider.totalProfessionalFee.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            // Student Monthly CTC
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF9C27B0),
+                                          Color(0xFF7B1FA2),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(
+                                            0xFF9C27B0,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.school,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    "Student Monthly",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                      height: 1.3,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ShaderMask(
+                                    shaderCallback:
+                                        (bounds) => const LinearGradient(
+                                          colors: [
+                                            Color(0xFF9C27B0),
+                                            Color(0xFF7B1FA2),
+                                          ],
+                                        ).createShader(bounds),
+                                    child: Text(
+                                      "₹${activeProvider.totalStudentCTC.toString()}",
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                        letterSpacing: -0.5,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Filter Toggle and Page Size Row
+                          Row(
+                            children: [
+                              // Filter Toggle Button
+                              Expanded(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: activeProvider.toggleFilters,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 14,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient:
+                                            activeProvider.showFilters
+                                                ? const LinearGradient(
+                                                  colors: [
+                                                    primaryColor,
+                                                    secondaryColor,
+                                                  ],
+                                                )
+                                                : null,
+                                        color:
+                                            activeProvider.showFilters
+                                                ? null
+                                                : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color:
+                                              activeProvider.showFilters
+                                                  ? Colors.transparent
+                                                  : borderColor,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.tune_rounded,
+                                            size: 20,
+                                            color:
+                                                activeProvider.showFilters
+                                                    ? Colors.white
+                                                    : textSecondary,
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            "Filters",
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: AppFonts.poppins,
+                                              color:
+                                                  activeProvider.showFilters
+                                                      ? Colors.white
+                                                      : textSecondary,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            color:
+                                                activeProvider.showFilters
+                                                    ? Colors.white
+                                                    : textSecondary,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Page Size Dropdown
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Summary Section
+
+                          // Search Field
+                          Container(
                             decoration: BoxDecoration(
-                              color: cardColor,
+                              color: const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: borderColor),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<int>(
-                                value: activeProvider.pageSize,
-                                icon: const Icon(
-                                  Icons.keyboard_arrow_down_rounded,
-                                  color: textSecondary,
+                            child: TextField(
+                              controller: activeProvider.searchController,
+                              onChanged:
+                                  (value) =>
+                                      activeProvider.onSearchChanged(value),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontFamily: AppFonts.poppins,
+                                color: textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.transparent,
+                                hintText: "Search employees by name, ID...",
+                                hintStyle: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: AppFonts.poppins,
+                                  color: textSecondary.withOpacity(0.7),
                                 ),
-                                items:
-                                    [5, 10, 15, 20].map((e) {
-                                      return DropdownMenuItem(
-                                        value: e,
-                                        child: Text(
-                                          "$e",
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontFamily: AppFonts.poppins,
-                                            color: textPrimary,
-                                            fontWeight: FontWeight.w500,
+                                prefixIcon: const Icon(
+                                  Icons.search_rounded,
+                                  color: textSecondary,
+                                  size: 22,
+                                ),
+                                suffixIcon:
+                                    activeProvider
+                                            .searchController
+                                            .text
+                                            .isNotEmpty
+                                        ? IconButton(
+                                          onPressed:
+                                              () =>
+                                                  activeProvider.clearSearch(),
+                                          icon: const Icon(
+                                            Icons.close_rounded,
+                                            color: textSecondary,
+                                            size: 18,
                                           ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    activeProvider.setPageSize(val);
-                                  }
-                                },
+                                        )
+                                        : null,
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Summary Section
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            // Grand Total - Featured Card
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    Color(0xFFB91C7F),
-                                    Color(0xFF9B1568),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFFB91C7F,
-                                    ).withOpacity(0.3),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.25),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        "G",
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.white,
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Grand Total",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "₹${activeProvider.grandTotalCTC.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                            color: Colors.white,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: const Icon(
-                                      Icons.arrow_forward_ios,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Grid of smaller cards
-                            GridView.count(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              childAspectRatio: 0.85,
-                              children: [
-                                // Employee Monthly CTC
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF4A90E2),
-                                              Color(0xFF357ABD),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(
-                                                0xFF4A90E2,
-                                              ).withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.people,
-                                          color: Colors.white,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        "Employee Monthly",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey[600],
-                                          height: 1.3,
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ShaderMask(
-                                        shaderCallback:
-                                            (bounds) => const LinearGradient(
-                                              colors: [
-                                                Color(0xFF4A90E2),
-                                                Color(0xFF357ABD),
-                                              ],
-                                            ).createShader(bounds),
-                                        child: Text(
-                                          "₹${activeProvider.totalEmployeeCTC.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: -0.5,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // F11 Monthly CTC
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFFFF9800),
-                                              Color(0xFFF57C00),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(
-                                                0xFFFF9800,
-                                              ).withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.business_center,
-                                          color: Colors.white,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        "F11 Monthly",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey[600],
-                                          height: 1.3,
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ShaderMask(
-                                        shaderCallback:
-                                            (bounds) => const LinearGradient(
-                                              colors: [
-                                                Color(0xFFFF9800),
-                                                Color(0xFFF57C00),
-                                              ],
-                                            ).createShader(bounds),
-                                        child: Text(
-                                          "₹${activeProvider.totalF11CTC.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: -0.5,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Professional Fee
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF66BB6A),
-                                              Color(0xFF43A047),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(
-                                                0xFF66BB6A,
-                                              ).withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.card_giftcard,
-                                          color: Colors.white,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        "Professional Fee",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey[600],
-                                          height: 1.3,
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ShaderMask(
-                                        shaderCallback:
-                                            (bounds) => const LinearGradient(
-                                              colors: [
-                                                Color(0xFF66BB6A),
-                                                Color(0xFF43A047),
-                                              ],
-                                            ).createShader(bounds),
-                                        child: Text(
-                                          "₹${activeProvider.totalProfessionalFee.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: -0.5,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                                // Student Monthly CTC
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.04),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: const LinearGradient(
-                                            colors: [
-                                              Color(0xFF9C27B0),
-                                              Color(0xFF7B1FA2),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            14,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Color(
-                                                0xFF9C27B0,
-                                              ).withOpacity(0.3),
-                                              blurRadius: 12,
-                                              offset: const Offset(0, 4),
-                                            ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.school,
-                                          color: Colors.white,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        "Student Monthly",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: Colors.grey[600],
-                                          height: 1.3,
-                                          fontFamily: AppFonts.poppins,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      ShaderMask(
-                                        shaderCallback:
-                                            (bounds) => const LinearGradient(
-                                              colors: [
-                                                Color(0xFF9C27B0),
-                                                Color(0xFF7B1FA2),
-                                              ],
-                                            ).createShader(bounds),
-                                        child: Text(
-                                          "₹${activeProvider.totalStudentCTC.toString()}",
-                                          style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w800,
-                                            color: Colors.white,
-                                            letterSpacing: -0.5,
-                                            fontFamily: AppFonts.poppins,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Search Field
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
-                        ),
-                        child: TextField(
-                          controller: activeProvider.searchController,
-                          onChanged:
-                              (value) => activeProvider.onSearchChanged(value),
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontFamily: AppFonts.poppins,
-                            color: textPrimary,
-                          ),
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.transparent,
-                            hintText: "Search employees by name, ID...",
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              fontFamily: AppFonts.poppins,
-                              color: textSecondary.withOpacity(0.7),
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.search_rounded,
-                              color: textSecondary,
-                              size: 22,
-                            ),
-                            suffixIcon:
-                                activeProvider.searchController.text.isNotEmpty
-                                    ? IconButton(
-                                      onPressed:
-                                          () => activeProvider.clearSearch(),
-                                      icon: const Icon(
-                                        Icons.close_rounded,
-                                        color: textSecondary,
-                                        size: 18,
-                                      ),
-                                    )
-                                    : null,
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
 
@@ -701,119 +651,106 @@ class _ActiveScreenState extends State<ActiveScreen>
             if (activeProvider.showFilters)
               SliverToBoxAdapter(
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: cardColor,
-                    border: Border(
-                      bottom: BorderSide(color: borderColor.withOpacity(0.5)),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      children: [
-                        Divider(color: borderColor.withOpacity(0.5), height: 1),
-                        const SizedBox(height: 12),
-
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      // ══════════════════════════════════════════════
+                      // LOADING FILTERS STATE
+                      // ══════════════════════════════════════════════
+                      if (activeProvider.isLoadingFilters)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text("Loading filter options..."),
+                            ],
+                          ),
+                        )
+                      // ══════════════════════════════════════════════
+                      // FILTERS LOADED - SHOW DROPDOWNS
+                      // ══════════════════════════════════════════════
+                      else ...[
                         // Company and Zone Row
-                        Row(
+                        Column(
                           children: [
-                            Expanded(
-                              child: CustomSearchDropdownWithSearch(
-                                labelText: "Company *",
-                                items: activeProvider.company,
-                                selectedValue: activeProvider.selectedCompany,
-                                onChanged: activeProvider.setSelectedCompany,
-                                hintText: "Select",
-                              ),
+                            // ================= COMPANY =================
+                            CustomSearchDropdownWithSearch(
+                              labelText: "Company",
+                              isMandatory: true,
+                              items: activeProvider.company,
+                              selectedValue: activeProvider.selectedCompany,
+                              onChanged: activeProvider.setSelectedCompany,
+                              hintText: "Select Company",
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: CustomSearchDropdownWithSearch(
-                                labelText: "Zone *",
-                                items: activeProvider.zone,
-                                selectedValue: activeProvider.selectedZone,
-                                onChanged: activeProvider.setSelectedZone,
-                                hintText: "Select",
-                              ),
+
+                            const SizedBox(height: 12),
+
+                            // ================= ZONE =================
+                            CustomSearchDropdownWithSearch(
+                              labelText: "Zone",
+                              isMandatory: true,
+                              items: activeProvider.zone,
+                              selectedValue: activeProvider.selectedZone,
+                              onChanged: activeProvider.setSelectedZone,
+                              hintText: "Select Zone",
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ================= BRANCH =================
+                            CustomSearchDropdownWithSearch(
+                              labelText: "Branch",
+                              isMandatory: true,
+                              items: activeProvider.branch,
+                              selectedValue: activeProvider.selectedBranch,
+                              onChanged: activeProvider.setSelectedBranch,
+                              hintText:
+                                  activeProvider.selectedZone == null
+                                      ? "Select zone first"
+                                      : "Select Branch",
+                              readOnly: activeProvider.selectedZone == null,
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ================= DESIGNATION =================
+                            CustomSearchDropdownWithSearch(
+                              labelText: "Designation",
+                              isMandatory: true,
+                              items: activeProvider.designation,
+                              selectedValue: activeProvider.selectedDesignation,
+                              onChanged: activeProvider.setSelectedDesignation,
+                              hintText: "Select Designation",
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            // ================= CTC RANGE (OPTIONAL) =================
+                            CustomSearchDropdownWithSearch(
+                              labelText: "CTC Range",
+                              isMandatory: false,
+                              items: activeProvider.ctc,
+                              selectedValue: activeProvider.selectedCTC,
+                              onChanged: activeProvider.setSelectedCTC,
+                              hintText: "Select CTC Range",
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
 
-                        // Branch and Designation Row
+                        SizedBox(height: 15),
+                        // Action Buttons
                         Row(
                           children: [
-                            Expanded(
-                              child: CustomSearchDropdownWithSearch(
-                                labelText: "Branch *",
-                                items: activeProvider.branch,
-                                selectedValue: activeProvider.selectedBranch,
-                                onChanged: activeProvider.setSelectedBranch,
-                                hintText: "Select",
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: CustomSearchDropdownWithSearch(
-                                labelText: "Designation *",
-                                items: activeProvider.designation,
-                                selectedValue:
-                                    activeProvider.selectedDesignation,
-                                onChanged:
-                                    activeProvider.setSelectedDesignation,
-                                hintText: "Select",
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        // Date Fields Row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CustomDateField(
-                                controller: activeProvider.dojFromController,
-                                hintText: "From",
-                                labelText: "DOJ From",
-                                isMandatory: false,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: CustomDateField(
-                                controller: activeProvider.fojToController,
-                                hintText: "To",
-                                labelText: "DOJ To",
-                                isMandatory: false,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        // CTC Range Row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: CustomSearchDropdownWithSearch(
-                                labelText: "CTC Range",
-                                items: activeProvider.ctc,
-                                selectedValue: activeProvider.selectedCTC,
-                                onChanged: activeProvider.setSelectedCTC,
-                                hintText: "Select",
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            const Expanded(child: SizedBox()),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Action Buttons Row
-                        Row(
-                          children: [
-                            // Clear Button
+                            // ================= CLEAR BUTTON =================
                             Expanded(
                               child: InkWell(
                                 onTap: () => activeProvider.clearAllFilters(),
@@ -840,50 +777,52 @@ class _ActiveScreenState extends State<ActiveScreen>
                                 ),
                               ),
                             ),
+
                             const SizedBox(width: 10),
 
-                            // Apply Button
+                            // ================= APPLY FILTER BUTTON =================
                             Expanded(
                               flex: 2,
                               child: InkWell(
-                                onTap:
-                                    activeProvider.areAllFiltersSelected
-                                        ? () => activeProvider.searchEmployees()
-                                        : null,
+                                onTap: activeProvider.areAllFiltersSelected && !activeProvider.isLoading
+                                    ? () => activeProvider.searchEmployees()
+                                    : null,
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
                                   decoration: BoxDecoration(
-                                    gradient:
-                                        activeProvider.areAllFiltersSelected
-                                            ? const LinearGradient(
-                                              colors: [
-                                                primaryColor,
-                                                secondaryColor,
-                                              ],
-                                            )
-                                            : null,
-                                    color:
-                                        activeProvider.areAllFiltersSelected
-                                            ? null
-                                            : borderColor,
+                                    gradient: activeProvider.areAllFiltersSelected &&
+                                        !activeProvider.isLoading
+                                        ? const LinearGradient(
+                                      colors: [primaryColor, secondaryColor],
+                                    )
+                                        : null,
+                                    color: activeProvider.areAllFiltersSelected
+                                        ? (activeProvider.isLoading ? borderColor : null)
+                                        : borderColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                    child: activeProvider.isLoading
+                                    // ================= LOADER =================
+                                        ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.5,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                    // ================= NORMAL CONTENT =================
+                                        : Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           Icons.search_rounded,
                                           size: 18,
-                                          color:
-                                              activeProvider
-                                                      .areAllFiltersSelected
-                                                  ? Colors.white
-                                                  : textSecondary,
+                                          color: activeProvider.areAllFiltersSelected
+                                              ? Colors.white
+                                              : textSecondary,
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
@@ -894,11 +833,9 @@ class _ActiveScreenState extends State<ActiveScreen>
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                             fontFamily: AppFonts.poppins,
-                                            color:
-                                                activeProvider
-                                                        .areAllFiltersSelected
-                                                    ? Colors.white
-                                                    : textSecondary,
+                                            color: activeProvider.areAllFiltersSelected
+                                                ? Colors.white
+                                                : textSecondary,
                                           ),
                                         ),
                                       ],
@@ -906,11 +843,11 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                 ),
                               ),
-                            ),
+                            )
                           ],
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ),
