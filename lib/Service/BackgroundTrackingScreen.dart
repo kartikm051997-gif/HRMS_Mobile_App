@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class BackgroundTrackingService {
   static final BackgroundTrackingService _instance =
@@ -18,18 +19,21 @@ class BackgroundTrackingService {
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  // ✅ API Configuration
+  static const String apiBaseUrl = "http://192.168.0.100/hrms/tracking/";
+  static const String saveLocationEndpoint = "${apiBaseUrl}save_location";
+
+  // ================= INITIALIZE =================
   Future<void> initializeService() async {
     final service = FlutterBackgroundService();
 
-    // ✅ Create notification channel FIRST
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'tracking_channel',
       'Location Tracking',
       description: 'Tracking your location in background',
-      importance: Importance.max, // ← Changed to MAX
+      importance: Importance.max,
       playSound: false,
       enableVibration: false,
-      showBadge: true,
     );
 
     await notificationsPlugin
@@ -38,110 +42,43 @@ class BackgroundTrackingService {
         >()
         ?.createNotificationChannel(channel);
 
-    // ✅ Initialize notifications
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    await notificationsPlugin.initialize(
+      const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
+    );
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-
-    await notificationsPlugin.initialize(initializationSettings);
-
-    // ✅ Configure service with proper settings
     await service.configure(
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
+        isForegroundMode: true,
         autoStart: false,
-        isForegroundMode: true, // ← CRITICAL: Must be true
         notificationChannelId: 'tracking_channel',
-        initialNotificationTitle: '🎯 Location Tracking Active',
-        initialNotificationContent: 'Recording your route...',
+        initialNotificationTitle: 'Tracking Active',
+        initialNotificationContent: 'Location tracking running',
         foregroundServiceNotificationId: 888,
-        autoStartOnBoot: true,
       ),
       iosConfiguration: IosConfiguration(
-        autoStart: false,
         onForeground: onStart,
         onBackground: onIosBackground,
       ),
     );
-
-    if (kDebugMode) print('✅ Background service initialized');
   }
 
+  // ================= START =================
   Future<void> startTracking() async {
     final service = FlutterBackgroundService();
-
-    // ✅ Check if service is already running
-    bool isRunning = await service.isRunning();
-
-    if (!isRunning) {
-      // ✅ Save tracking state BEFORE starting service
-      final prefs = await SharedPreferences.getInstance();
-      final userId =
-          prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
-
-      if (userId != null) {
-        await prefs.setBool('is_checked_in_$userId', true);
-        await prefs.setString(
-          'tracking_start_time',
-          DateTime.now().toIso8601String(),
-        );
-        await prefs.setBool(
-          'service_should_run_$userId',
-          true,
-        ); // ✅ Mark service should run
-        if (kDebugMode) print('✅ Saved tracking state for user: $userId');
-      }
-
+    if (!await service.isRunning()) {
       await service.startService();
-      if (kDebugMode) print('🚀 Background tracking service started');
-
-      // ✅ Verify service started
-      await Future.delayed(
-        const Duration(seconds: 2),
-      ); // ✅ Increased delay for better verification
-      bool verified = await service.isRunning();
-      if (kDebugMode) print('✅ Service running: $verified');
-
-      // ✅ If service failed to start, try again after delay
-      if (!verified) {
-        if (kDebugMode) print('⚠️ Service not running, retrying...');
-        await Future.delayed(const Duration(seconds: 2));
-        await service.startService();
-      }
-    } else {
-      if (kDebugMode) print('⚠️ Service already running');
+      if (kDebugMode) print('✅ Background tracking started');
     }
   }
 
+  // ================= STOP =================
   Future<void> stopTracking() async {
     final service = FlutterBackgroundService();
-
-    // ✅ Clear tracking
-
-    final prefs = await SharedPreferences.getInstance();
-    final userId =
-        prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
-
-    if (userId != null) {
-      await prefs.setBool('is_checked_in_$userId', false);
-      await prefs.setBool(
-        'service_should_run_$userId',
-        false,
-      ); // ✅ Mark service should stop
-      if (kDebugMode) print('✅ Cleared tracking state');
-    }
-
-    service.invoke('stopService');
-    if (kDebugMode) print('🛑 Background tracking service stopped');
-
-    // ✅ Wait a bit and verify service stopped
-    await Future.delayed(const Duration(seconds: 1));
-    bool stillRunning = await service.isRunning();
-    if (stillRunning && kDebugMode) {
-      print('⚠️ Service still running after stop command');
-    }
+    service.invoke("stopService");
+    if (kDebugMode) print('🛑 Background tracking stopped');
   }
 
   @pragma('vm:entry-point')
@@ -151,412 +88,315 @@ class BackgroundTrackingService {
     return true;
   }
 
+  // ================= BACKGROUND ENGINE =================
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
 
-    if (kDebugMode) {
-      print('🎯 Background service STARTED - Independent Process');
-      print('📅 Service started at: ${DateTime.now()}');
+    // ✅ Load user info
+    final prefs = await SharedPreferences.getInstance();
+    final userId =
+        prefs.getString('employeeId') ??
+        prefs.getString('logged_in_emp_id') ??
+        prefs.getString('user_id');
+
+    if (userId == null) {
+      if (kDebugMode) print('❌ No user ID found, stopping background service');
+      service.stopSelf();
+      return;
     }
 
-    final FlutterLocalNotificationsPlugin notificationsPlugin =
-        FlutterLocalNotificationsPlugin();
+    // ✅ Load all user info for API
+    final roleId = prefs.getString('role_id') ?? '1';
+    final username =
+        prefs.getString('username') ?? prefs.getString('emp_name') ?? 'User';
+    final email =
+        prefs.getString('email') ??
+        prefs.getString('emp_email') ??
+        'user@example.com';
+    final fullname =
+        prefs.getString('fullname') ??
+        prefs.getString('emp_fullname') ??
+        username;
+    final avatar =
+        prefs.getString('avatar') ?? prefs.getString('profile_pic') ?? '';
+    final designationsId =
+        prefs.getString('designation_id') ??
+        prefs.getString('designations_id') ??
+        '1';
+    final zoneId = prefs.getString('zone_id');
+    final branchId = prefs.getString('branch_id');
 
-    // ✅ Initialize notifications in background isolate
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await notificationsPlugin.initialize(initializationSettings);
+    if (kDebugMode) {
+      print('✅ Background service started for user: $userId');
+      print('   Username: $username');
+      print('   Email: $email');
+    }
 
-    StreamSubscription<Position>? positionStream;
-    Timer? addressCheckTimer;
-    Timer? healthCheckTimer;
-    Timer? persistenceTimer; // ✅ NEW: Keep service alive
-    String? lastAddress;
-    int pointCount = 0;
-    double? lastSavedLat;
-    double? lastSavedLng;
-    DateTime? lastUpdateTime = DateTime.now();
+    StreamSubscription<Position>? gpsStream;
+    Timer? apiSyncTimer;
+    Timer? notificationTimer;
+    Timer? localSaveTimer;
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId =
-          prefs.getString('employeeId') ?? prefs.getString('logged_in_emp_id');
+    List<Map<String, dynamic>> routePoints = [];
+    List<Map<String, dynamic>> pendingApiCalls = [];
+    int totalPointsSaved = 0;
+    int apiSuccessCount = 0;
+    int apiFailCount = 0;
+    String? lastKnownAddress;
 
-      if (userId == null) {
-        if (kDebugMode) print('❌ No user ID found');
-        service.stopSelf();
-        return;
-      }
+    // Track last position to detect real movement
+    double? lastLat;
+    double? lastLng;
+    int gpsUpdateCount = 0;
 
-      final isCheckedIn = prefs.getBool('is_checked_in_$userId') ?? false;
-      final shouldRun = prefs.getBool('service_should_run_$userId') ?? false;
-
-      if (!isCheckedIn && !shouldRun) {
-        if (kDebugMode)
-          print('⚠️ User not checked in and service should not run');
-        service.stopSelf();
-        return;
-      }
-
-      // ✅ If checked in but service shouldn't run, mark it should
-      if (isCheckedIn && !shouldRun) {
-        await prefs.setBool('service_should_run_$userId', true);
-      }
-
-      if (kDebugMode) print('✅ Service running for user: $userId');
-
-      // ✅ Location settings: 20 meters threshold
-      const LocationSettings locationSettings = LocationSettings(
+    // ===== GPS TRACKING =====
+    gpsStream = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 20, // ← Trigger every 20 meters
-        timeLimit: Duration(seconds: 30),
-      );
+        distanceFilter: 20, // ← Trigger updates every 20 meters
+      ),
+    ).listen((position) async {
+      // ✅ Check if actually moved 20+ meters (matching distanceFilter)
+      if (lastLat != null && lastLng != null) {
+        final distance = Geolocator.distanceBetween(
+          lastLat!,
+          lastLng!,
+          position.latitude,
+          position.longitude,
+        );
 
-      // ✅ Start location tracking
-      positionStream = Geolocator.getPositionStream(
-        locationSettings: locationSettings,
-      ).listen(
-        (Position position) async {
-          try {
-            lastUpdateTime = DateTime.now();
-
-            // ✅ Check movement threshold (20 meters)
-            if (lastSavedLat != null && lastSavedLng != null) {
-              final distanceFromLast = Geolocator.distanceBetween(
-                lastSavedLat!,
-                lastSavedLng!,
-                position.latitude,
-                position.longitude,
-              );
-
-              // ✅ Skip if less than 20 meters (GPS drift)
-              if (distanceFromLast < 20.0) {
-                if (kDebugMode && pointCount % 10 == 0) {
-                  print(
-                    '⏭️ Skipping GPS drift: ${distanceFromLast.toStringAsFixed(1)}m',
-                  );
-                }
-                return;
-              }
-            }
-
-            // ✅ Save to SharedPreferences
-            final prefs = await SharedPreferences.getInstance();
-            final routeKey = 'route_points_$userId';
-
-            List<Map<String, double>> routePoints = [];
-            final routeJson = prefs.getString(routeKey);
-
-            if (routeJson != null) {
-              try {
-                final decoded = json.decode(routeJson) as List;
-                routePoints =
-                    decoded
-                        .map(
-                          (p) => {
-                            'lat': p['lat'] as double,
-                            'lng': p['lng'] as double,
-                          },
-                        )
-                        .toList();
-              } catch (e) {
-                if (kDebugMode) print('⚠️ Error decoding route: $e');
-                routePoints = [];
-              }
-            }
-
-            routePoints.add({
-              'lat': position.latitude,
-              'lng': position.longitude,
-              'timestamp': DateTime.now().millisecondsSinceEpoch.toDouble(),
-            });
-
-
-
-            // ✅ Save immediately with error handling
-            try {
-              await prefs.setString(routeKey, json.encode(routePoints));
-              await prefs.setString(
-                'last_tracking_update_$userId',
-                DateTime.now().toIso8601String(),
-              );
-
-              lastSavedLat = position.latitude;
-              lastSavedLng = position.longitude;
-              pointCount++;
-
-              if (kDebugMode) {
-                print('📍 BG Service: Point #$pointCount saved');
-                print(
-                  '   Location: ${position.latitude.toStringAsFixed(6)}, '
-                  '${position.longitude.toStringAsFixed(6)}',
-                );
-                print('   Total stored: ${routePoints.length}');
-              }
-            } catch (e) {
-              if (kDebugMode) print('❌ Error saving point: $e');
-            }
-
-            // ✅ Update notification with current status
-            final distance = await _calculateDistance(routePoints);
-            await notificationsPlugin.show(
-              888,
-              '🎯 Tracking Active',
-              '${routePoints.length} points • ${distance.toStringAsFixed(2)} km • '
-                  'Updated ${_getTimeAgo(lastUpdateTime!)}',
-              const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  'tracking_channel',
-                  'Location Tracking',
-                  icon: '@mipmap/ic_launcher',
-                  ongoing: true, // ← CRITICAL: Keeps notification persistent
-                  autoCancel: false,
-                  playSound: false,
-                  priority: Priority.max, // ← Changed to max
-                  importance: Importance.max, // ← Changed to max
-                  enableVibration: false,
-                  showWhen: true,
-                ),
-              ),
+        // Ignore GPS drift
+        if (distance < 20.0) {
+          if (kDebugMode && gpsUpdateCount % 20 == 0) {
+            print(
+              '⏭️ Background: Ignoring GPS drift (${distance.toStringAsFixed(1)}m)',
             );
-          } catch (e) {
-            if (kDebugMode) print('❌ BG Service Error: $e');
           }
-        },
-        onError: (e) {
-          if (kDebugMode) print('❌ Position stream error: $e');
-        },
-        cancelOnError: false,
-      );
+          return;
+        }
+      }
 
-      // ✅ Address checkpoint tracking (every 60 seconds)
-      addressCheckTimer = Timer.periodic(const Duration(seconds: 60), (
-        timer,
-      ) async {
+      gpsUpdateCount++;
+      lastLat = position.latitude;
+      lastLng = position.longitude;
+
+      // Add to local route points
+      final point = {
+        "lat": position.latitude,
+        "lng": position.longitude,
+        "accuracy": position.accuracy,
+        "time": DateTime.now().toIso8601String(),
+      };
+
+      routePoints.add(point);
+      totalPointsSaved++;
+
+      // ✅ Save to SharedPreferences
+      await prefs.setString('route_points_$userId', json.encode(routePoints));
+
+      if (kDebugMode && gpsUpdateCount % 5 == 0) {
+        print('📍 Background GPS Update #$gpsUpdateCount');
+        print(
+          '   Position: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
+        );
+        print('   Accuracy: ${position.accuracy.toStringAsFixed(1)}m');
+        print('   Total points: $totalPointsSaved');
+      }
+
+      // ✅ Get address every 5 real movements
+      if (gpsUpdateCount % 5 == 0) {
         try {
-          final position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            timeLimit: const Duration(seconds: 15),
-          );
-
-          final placemarks = await placemarkFromCoordinates(
+          final places = await placemarkFromCoordinates(
             position.latitude,
             position.longitude,
           );
-
-          if (placemarks.isNotEmpty) {
-            Placemark place = placemarks[0];
-            List<String> addressParts = [];
-
-            if (place.name != null && place.name!.isNotEmpty) {
-              addressParts.add(place.name!);
-            }
-            if (place.street != null && place.street!.isNotEmpty) {
-              addressParts.add(place.street!);
-            }
-            if (place.locality != null && place.locality!.isNotEmpty) {
-              addressParts.add(place.locality!);
-            }
-
-            String currentAddress = addressParts.join(', ');
-            if (currentAddress.isEmpty) currentAddress = 'Unknown Location';
-
-            if (lastAddress == null || lastAddress != currentAddress) {
-              final prefs = await SharedPreferences.getInstance();
-              final checkpointsKey = 'address_checkpoints_$userId';
-
-              List<Map<String, dynamic>> checkpoints = [];
-              final checkpointsJson = prefs.getString(checkpointsKey);
-
-              if (checkpointsJson != null) {
-                try {
-                  final decoded = json.decode(checkpointsJson) as List;
-                  checkpoints = decoded.cast<Map<String, dynamic>>();
-                } catch (e) {
-                  checkpoints = [];
-                }
-              }
-
-              double distanceFromLast = 0.0;
-              if (checkpoints.isNotEmpty) {
-                final lastCheckpoint = checkpoints.last;
-                distanceFromLast = Geolocator.distanceBetween(
-                  lastCheckpoint['latitude'] as double,
-                  lastCheckpoint['longitude'] as double,
-                  position.latitude,
-                  position.longitude,
-                );
-              }
-
-              if (checkpoints.isEmpty || distanceFromLast >= 50.0) {
-                checkpoints.add({
-                  'latitude': position.latitude,
-                  'longitude': position.longitude,
-                  'address': currentAddress,
-                  'timestamp': DateTime.now().toIso8601String(),
-                  'distanceFromPrevious': distanceFromLast,
-                });
-
-                await prefs.setString(checkpointsKey, json.encode(checkpoints));
-                lastAddress = currentAddress;
-
-                if (kDebugMode) {
-                  print(
-                    '🏠 BG Checkpoint #${checkpoints.length}: $currentAddress',
-                  );
-                }
-              }
-            }
+          if (places.isNotEmpty) {
+            final place = places.first;
+            lastKnownAddress = [
+              place.name,
+              place.street,
+              place.locality,
+              place.administrativeArea,
+            ].where((e) => e != null && e.isNotEmpty).join(', ');
           }
         } catch (e) {
-          if (kDebugMode) print('❌ Address check error: $e');
+          if (kDebugMode) print('❌ Address error: $e');
         }
-      });
+      }
+    });
 
-      // ✅ Health check timer (every 2 minutes)
-      healthCheckTimer = Timer.periodic(const Duration(minutes: 2), (
-        timer,
-      ) async {
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          final isStillCheckedIn =
-              prefs.getBool('is_checked_in_$userId') ?? false;
+    // ===== API SYNC EVERY 5 MINUTES =====
+    apiSyncTimer = Timer.periodic(const Duration(minutes: 5), (timer) async {
+      if (routePoints.isEmpty) {
+        if (kDebugMode) print('⏭️ No points to sync');
+        return;
+      }
 
-          final shouldRun =
-              prefs.getBool('service_should_run_$userId') ?? false;
+      try {
+        final pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 15),
+        );
 
-          if (!isStillCheckedIn && !shouldRun) {
-            if (kDebugMode) print('✅ User checked out, stopping service');
-            positionStream?.cancel();
-            addressCheckTimer?.cancel();
-            persistenceTimer?.cancel();
-            timer.cancel();
-            service.stopSelf();
-            return;
-          }
+        String address = lastKnownAddress ?? "Unknown location";
 
-          // ✅ Auto-restart if service died but should be running
-          if (shouldRun && !isStillCheckedIn) {
-            if (kDebugMode)
-              print(
-                '🔄 Service should run but not checked in, checking again...',
-              );
-            await Future.delayed(const Duration(seconds: 5));
-            final recheck = prefs.getBool('is_checked_in_$userId') ?? false;
-            if (recheck) {
-              if (kDebugMode)
-                print('✅ User checked back in, continuing service');
-            } else {
-              // Clear should run flag if still not checked in
-              await prefs.setBool('service_should_run_$userId', false);
-            }
-          }
+        // ✅ Prepare API payload
+        final payload = {
+          "user_id": userId,
+          "role_id": roleId,
+          "username": username,
+          "email": email,
+          "fullname": fullname,
+          "avatar": avatar,
+          "designations_id": designationsId,
+          "activity_type": "ROUTE_POINT",
+          "latitude": pos.latitude,
+          "longitude": pos.longitude,
+          "accuracy": pos.accuracy,
+          "captured_at": DateTime.now().toIso8601String(),
+          "device_time": DateTime.now().toIso8601String(),
+          "location_address": address,
+          "device_id": "BACKGROUND_SERVICE",
+          "battery_level": 0, // Can be enhanced with battery_plus
+          "network_type": "MOBILE", // Can be enhanced with connectivity_plus
+          if (zoneId != null) "zone_id": zoneId,
+          if (branchId != null) "branch_id": branchId,
+          "remarks": "Background tracking sync - ${routePoints.length} points",
+        };
 
-          if (lastUpdateTime != null) {
-            final timeSinceLastUpdate = DateTime.now().difference(
-              lastUpdateTime!,
-            );
-            if (timeSinceLastUpdate.inMinutes > 5) {
-              if (kDebugMode) {
-                print(
-                  '⚠️ No location updates for '
-                  '${timeSinceLastUpdate.inMinutes} minutes',
-                );
-              }
-            }
-          }
+        if (kDebugMode) {
+          print('📤 Background API Sync:');
+          print('   Endpoint: $saveLocationEndpoint');
+          print('   Points to sync: ${routePoints.length}');
+          print('   Location: ${pos.latitude}, ${pos.longitude}');
+          print('   Address: $address');
+        }
+
+        // ✅ Make API call
+        final response = await http
+            .post(
+              Uri.parse(saveLocationEndpoint),
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+              },
+              body: json.encode(payload),
+            )
+            .timeout(const Duration(seconds: 30));
+
+        if (kDebugMode) {
+          print('📥 Background API Response: ${response.statusCode}');
+          print('📥 Body: ${response.body}');
+        }
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          apiSuccessCount++;
+
+          // Clear synced points
+          routePoints.clear();
+          await prefs.setString(
+            'route_points_$userId',
+            json.encode(routePoints),
+          );
 
           if (kDebugMode) {
-            print('💓 Health Check: Service alive, $pointCount points saved');
+            print('✅ Background API sync successful');
+            print('   Success count: $apiSuccessCount');
           }
-        } catch (e) {
-          if (kDebugMode) print('❌ Health check error: $e');
+        } else {
+          throw Exception('API returned ${response.statusCode}');
         }
-      });
+      } catch (e) {
+        apiFailCount++;
 
-      // ✅ NEW: Persistence timer - keeps service alive
-      persistenceTimer = Timer.periodic(const Duration(seconds: 30), (
-        timer,
-      ) async {
-        try {
-          // Update notification to keep service alive
-          await notificationsPlugin.show(
-            888,
-            '🎯 Tracking Active',
-            'Service running • $pointCount points tracked',
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'tracking_channel',
-                'Location Tracking',
-                icon: '@mipmap/ic_launcher',
-                ongoing: true,
-                autoCancel: false,
-                playSound: false,
-                priority: Priority.max,
-                importance: Importance.max,
-                enableVibration: false,
-                showWhen: true,
-              ),
-            ),
-          );
-        } catch (e) {
-          if (kDebugMode) print('❌ Persistence update error: $e');
-        }
-      });
-
-      // ✅ Stop service command
-      service.on('stopService').listen((event) {
-        if (kDebugMode) print('🛑 Stop command received');
-        positionStream?.cancel();
-        addressCheckTimer?.cancel();
-        healthCheckTimer?.cancel();
-        persistenceTimer?.cancel();
-
-        // Clear service should run flag
-        try {
-          final prefs = SharedPreferences.getInstance();
-          prefs.then((p) async {
-            await p.setBool('service_should_run_$userId', false);
-          });
-        } catch (e) {
-          if (kDebugMode) print('⚠️ Error clearing service flag: $e');
+        if (kDebugMode) {
+          print('❌ Background API sync failed: $e');
+          print('   Fail count: $apiFailCount');
         }
 
-        service.stopSelf();
-      });
+        // Store failed call for retry
+        pendingApiCalls.add({
+          'timestamp': DateTime.now().toIso8601String(),
+          'error': e.toString(),
+          'points_count': routePoints.length,
+        });
 
-      if (kDebugMode) print('✅ All timers and listeners started');
-    } catch (e) {
-      if (kDebugMode) print('❌ Fatal error in service: $e');
-      // ✅ Don't stop service on error - let it continue
-      // Service will keep running and attempt recovery
-    }
-  }
+        // ✅ Retry logic: Try to sync pending calls
+        if (pendingApiCalls.length > 3) {
+          if (kDebugMode)
+            print(
+              '⚠️ Too many pending API calls (${pendingApiCalls.length}), clearing old ones',
+            );
+          pendingApiCalls = pendingApiCalls.sublist(pendingApiCalls.length - 3);
+        }
+      }
+    });
 
-  static String _getTimeAgo(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    return '${diff.inHours}h ago';
-  }
+    // ===== LOCAL SAVE EVERY 30 SECONDS =====
+    localSaveTimer = Timer.periodic(const Duration(seconds: 30), (timer) async {
+      if (routePoints.isNotEmpty) {
+        await prefs.setString('route_points_$userId', json.encode(routePoints));
 
-  static Future<double> _calculateDistance(
-    List<Map<String, double>> points,
-  ) async {
-    if (points.length < 2) return 0.0;
+        if (kDebugMode && routePoints.length % 10 == 0) {
+          print('💾 Local save: ${routePoints.length} points');
+        }
+      }
+    });
 
-    double total = 0.0;
-    for (int i = 1; i < points.length; i++) {
-      total += Geolocator.distanceBetween(
-        points[i - 1]['lat']!,
-        points[i - 1]['lng']!,
-        points[i]['lat']!,
-        points[i]['lng']!,
+    // ===== UPDATE NOTIFICATION EVERY 30 SECONDS =====
+    notificationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      FlutterLocalNotificationsPlugin().show(
+        888,
+        "🎯 Tracking Active",
+        "📍 Points: $totalPointsSaved | ✅ API: $apiSuccessCount | ❌ Fails: $apiFailCount",
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'tracking_channel',
+            'Location Tracking',
+            icon: '@mipmap/ic_launcher',
+            ongoing: true,
+            autoCancel: false,
+            importance: Importance.max,
+            priority: Priority.high,
+          ),
+        ),
       );
-    }
-    return total / 1000;
+    });
+
+    // ===== STOP SERVICE HANDLER =====
+    service.on("stopService").listen((event) {
+      if (kDebugMode) {
+        print('🛑 Background service stopping');
+        print('   Total points collected: $totalPointsSaved');
+        print('   API success: $apiSuccessCount');
+        print('   API fails: $apiFailCount');
+      }
+
+      gpsStream?.cancel();
+      apiSyncTimer?.cancel();
+      notificationTimer?.cancel();
+      localSaveTimer?.cancel();
+
+      service.stopSelf();
+    });
+
+    // ===== INITIAL NOTIFICATION =====
+    FlutterLocalNotificationsPlugin().show(
+      888,
+      "🎯 Tracking Started",
+      "📍 Background location tracking is active",
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'tracking_channel',
+          'Location Tracking',
+          icon: '@mipmap/ic_launcher',
+          ongoing: true,
+          autoCancel: false,
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+    );
   }
 }

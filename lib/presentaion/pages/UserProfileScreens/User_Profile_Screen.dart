@@ -7,6 +7,7 @@ import '../../../core/fonts/fonts.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
+import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart';
 import '../authenticationScreens/loginScreens/login_screen.dart';
 import 'FullImageViewScreen.dart';
 
@@ -25,6 +26,7 @@ class UserProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
+
             /// Profile Header Background
             Container(
               width: double.infinity,
@@ -38,6 +40,7 @@ class UserProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
                 children: [
+
                   /// Profile Avatar
                   GestureDetector(
                     onTap: () {
@@ -46,9 +49,11 @@ class UserProfileScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (_) => FullImageView(
+                                (_) =>
+                                FullImageView(
                                   imageUrl:
-                                      "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                  "https://app.draravindsivf.com/hrms/${user
+                                      .avatar}",
                                   tag: 'profileImageHero',
                                 ),
                           ),
@@ -61,26 +66,26 @@ class UserProfileScreen extends StatelessWidget {
                         radius: 60,
                         backgroundColor: Colors.white.withOpacity(0.2),
                         backgroundImage:
-                            (user?.avatar != null && user!.avatar!.isNotEmpty)
-                                ? NetworkImage(
-                                  "https://app.draravindsivf.com/hrms/${user.avatar}",
-                                )
-                                : null,
+                        (user?.avatar != null && user!.avatar!.isNotEmpty)
+                            ? NetworkImage(
+                          "https://app.draravindsivf.com/hrms/${user.avatar}",
+                        )
+                            : null,
                         child:
-                            (user?.avatar == null || user!.avatar!.isEmpty)
-                                ? Text(
-                                  user?.fullname != null &&
-                                          user!.fullname!.isNotEmpty
-                                      ? user.fullname![0].toUpperCase()
-                                      : "U",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 40,
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                )
-                                : null,
+                        (user?.avatar == null || user!.avatar!.isEmpty)
+                            ? Text(
+                          user?.fullname != null &&
+                              user!.fullname!.isNotEmpty
+                              ? user.fullname![0].toUpperCase()
+                              : "U",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 40,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        )
+                            : null,
                       ),
                     ),
                   ),
@@ -176,12 +181,12 @@ class UserProfileScreen extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    _showLogoutDialog(context);
+                    _showLogoutDialog(context,);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                        Colors
-                            .transparent, // make button background transparent
+                    Colors
+                        .transparent, // make button background transparent
                     shadowColor: Colors.transparent, // remove button shadow
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -252,64 +257,47 @@ class UserProfileScreen extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text(
-              "Logout",
-              style: TextStyle(fontFamily: AppFonts.poppins),
-            ),
-            content: const Text(
-              "Are you sure you want to logout?",
-              style: TextStyle(fontFamily: AppFonts.poppins),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  "Cancel",
-                  style: TextStyle(fontFamily: AppFonts.poppins),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _logout(context);
-                },
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-              ),
-            ],
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Logout"),
+        content: const Text("Are you sure you want to logout?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext); // close dialog
+              _logout(context); // ✅ correct context
+            },
+            child: const Text(
+              "Logout",
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   void _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-
-    // ✅ Get tracking provider from context
     final trackingProvider = context.read<UserTrackingProvider>();
 
-    // ✅ Clear session only (keep history)
-    await trackingProvider.clearCurrentUserData(clearHistory: false);
+    String token = prefs.getString('token') ?? '';
 
-    // ✅ Clear login data
-    await prefs.remove('userData');
-    await prefs.remove('isLoggedIn');
-    await prefs.remove('loginTime');
-    await prefs.remove('employeeId');
-    await prefs.remove('logged_in_emp_id'); // Also remove this
+    final logoutResponse = await ApiService.logoutUser(token);
 
-    if (context.mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-            (route) => false,
-      );
+    if (logoutResponse.status == "success") {
+      await trackingProvider.clearCurrentUserData(clearHistory: false);
+      await prefs.clear();
+
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => LoginScreen()),
+              (route) => false,
+        );
+      }
     }
-    debugPrint("👋 Logged out — session cleared, history kept");
-  }}
-
+  }
+}

@@ -4,6 +4,7 @@ import '../../../core/components/drawer/drawer.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../provider/UserTrackingProvider/User_TabView_Tracking_Provider.dart';
+import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import 'TackingHistoryScreen.dart';
 import 'UserTrackingScreen.dart';
@@ -20,20 +21,39 @@ class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> menuItems = ["Tracking", " History List"];
+  final List<Map<String, dynamic>> menuItems = [
+    {"title": "Tracking", "icon": Icons.map},
+    {"title": "History", "icon": Icons.history},
+  ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: menuItems.length, vsync: this);
 
+    // ✅ OPTIONAL: Listen to tab changes
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         context.read<UserTabViewTrackingProvider>().setCurrentTab(
           _tabController.index,
         );
+
+        // ✅ NEW: Sync data when switching to tracking tab
+        if (_tabController.index == 0) {
+          _onTrackingTabSelected();
+        }
       }
     });
+  }
+
+  // ✅ NEW: Called when tracking tab is selected
+  void _onTrackingTabSelected() {
+    final provider = context.read<UserTrackingProvider>();
+
+    // Sync with background service if checked in
+    if (provider.isCheckedIn) {
+      provider.syncWithBackground();
+    }
   }
 
   @override
@@ -76,7 +96,7 @@ class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
           ),
           bottom: TabBar(
             controller: _tabController,
-            isScrollable: false, // 👈 full-width tabs like WhatsApp
+            isScrollable: false,
             indicatorColor: Colors.white,
             indicatorWeight: 3,
             labelColor: Colors.white,
@@ -91,14 +111,22 @@ class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
               fontSize: 14,
               fontFamily: AppFonts.poppins,
             ),
-            labelPadding: EdgeInsets.zero, // 👈 removes left-right gap
-            tabs: menuItems.map((e) => Tab(text: e)).toList(),
+            labelPadding: EdgeInsets.zero,
+            // ✅ OPTIONAL: Add icons to tabs
+            tabs: menuItems.map((item) => Tab(
+              icon: Icon(item['icon'], size: 20),
+              text: item['title'],
+              iconMargin: const EdgeInsets.only(bottom: 4),
+            )).toList(),
           ),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [UserTrackingScreen(), TrackingHistoryScreen()],
+        children: const [
+          UserTrackingScreen(),
+          TrackingHistoryScreen(),
+        ],
       ),
     );
   }

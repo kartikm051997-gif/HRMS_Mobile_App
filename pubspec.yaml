@@ -64,6 +64,9 @@ dependencies:
   dropdown_search: ^6.0.1
   flutter_advanced_drawer: ^1.5.0
   cached_network_image: ^3.3.0
+  battery_plus: ^5.0.2
+  connectivity_plus: ^5.0.2
+  device_info_plus: ^9.1.1
 
 
 

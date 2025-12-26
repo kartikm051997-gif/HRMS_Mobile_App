@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../provider/login_provider/login_provider.dart';
+import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart';
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
 import '../../../controller/ui_controller/appbar_controllers.dart';
@@ -933,6 +935,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
               ),
             ),
             actions: [
+              // Cancel button
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
@@ -943,15 +946,49 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   ),
                 ),
               ),
+
+              // Logout button
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  // Close the dialog
                   Navigator.pop(context);
-                  final loginProvider = Provider.of<LoginProvider>(
-                    context,
-                    listen: false,
-                  );
-                  loginProvider.logout();
-                  Get.offAllNamed(AppRoutes.loginScreen);
+
+                  final prefs = await SharedPreferences.getInstance();
+
+                  // Get the user's token (assuming you have it saved after login)
+                  String token = prefs.getString('token') ?? '';
+
+                  try {
+                    // Call the logout API
+                    final logoutResponse = await ApiService.logoutUser(token);
+
+                    // If the logout response is successful
+                    if (logoutResponse.status == "success") {
+                      // Clear session data and login information
+                      final loginProvider = Provider.of<LoginProvider>(
+                        context,
+                        listen: false,
+                      );
+                      loginProvider.logout();
+
+                      // Clear session and preferences
+                      await prefs.remove('userData');
+                      await prefs.remove('isLoggedIn');
+                      await prefs.remove('loginTime');
+                      await prefs.remove('employeeId');
+                      await prefs.remove('logged_in_emp_id');
+
+                      // Navigate to the login screen
+                      Get.offAllNamed(AppRoutes.loginScreen);
+                    } else {
+                      // Handle unsuccessful logout
+                      debugPrint('Logout failed: ${logoutResponse.message}');
+                      // Optionally show a failure message
+                    }
+                  } catch (e) {
+                    debugPrint('Error logging out: $e');
+                    // Optionally show an error message
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,

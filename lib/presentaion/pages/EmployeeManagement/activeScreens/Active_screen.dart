@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../widgets/custom_textfield/Custom_date_field.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 import 'active_employee_details_screen.dart';
@@ -63,9 +61,6 @@ class _ActiveScreenState extends State<ActiveScreen>
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // ═══════════════════════════════════════════════════════════
-            // HEADER SECTION
-            // ═══════════════════════════════════════════════════════════
             SliverToBoxAdapter(
               child: Column(
                 children: [
@@ -784,66 +779,85 @@ class _ActiveScreenState extends State<ActiveScreen>
                             Expanded(
                               flex: 2,
                               child: InkWell(
-                                onTap: activeProvider.areAllFiltersSelected && !activeProvider.isLoading
-                                    ? () => activeProvider.searchEmployees()
-                                    : null,
+                                onTap:
+                                    activeProvider.areAllFiltersSelected &&
+                                            !activeProvider.isLoading
+                                        ? () => activeProvider.searchEmployees()
+                                        : null,
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
                                   decoration: BoxDecoration(
-                                    gradient: activeProvider.areAllFiltersSelected &&
-                                        !activeProvider.isLoading
-                                        ? const LinearGradient(
-                                      colors: [primaryColor, secondaryColor],
-                                    )
-                                        : null,
-                                    color: activeProvider.areAllFiltersSelected
-                                        ? (activeProvider.isLoading ? borderColor : null)
-                                        : borderColor,
+                                    gradient:
+                                        activeProvider.areAllFiltersSelected &&
+                                                !activeProvider.isLoading
+                                            ? const LinearGradient(
+                                              colors: [
+                                                primaryColor,
+                                                secondaryColor,
+                                              ],
+                                            )
+                                            : null,
+                                    color:
+                                        activeProvider.areAllFiltersSelected
+                                            ? (activeProvider.isLoading
+                                                ? borderColor
+                                                : null)
+                                            : borderColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(
-                                    child: activeProvider.isLoading
-                                    // ================= LOADER =================
-                                        ? const SizedBox(
-                                      height: 22,
-                                      width: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                    // ================= NORMAL CONTENT =================
-                                        : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.search_rounded,
-                                          size: 18,
-                                          color: activeProvider.areAllFiltersSelected
-                                              ? Colors.white
-                                              : textSecondary,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          activeProvider.areAllFiltersSelected
-                                              ? "Apply Filters"
-                                              : "Select All Filters",
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: AppFonts.poppins,
-                                            color: activeProvider.areAllFiltersSelected
-                                                ? Colors.white
-                                                : textSecondary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                    child:
+                                        activeProvider.isLoading
+                                            // ================= LOADER =================
+                                            ? const SizedBox(
+                                              height: 22,
+                                              width: 22,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2.5,
+                                                color: Colors.white,
+                                              ),
+                                            )
+                                            // ================= NORMAL CONTENT =================
+                                            : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.search_rounded,
+                                                  size: 18,
+                                                  color:
+                                                      activeProvider
+                                                              .areAllFiltersSelected
+                                                          ? Colors.white
+                                                          : textSecondary,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  activeProvider
+                                                          .areAllFiltersSelected
+                                                      ? "Apply Filters"
+                                                      : "Select All Filters",
+                                                  style: TextStyle(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontFamily:
+                                                        AppFonts.poppins,
+                                                    color:
+                                                        activeProvider
+                                                                .areAllFiltersSelected
+                                                            ? Colors.white
+                                                            : textSecondary,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                   ),
                                 ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ],
@@ -1323,40 +1337,6 @@ class _ActiveScreenState extends State<ActiveScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
-  // HELPER METHODS
-  // ═══════════════════════════════════════════════════════════════════════
-
-  Widget _summaryItem(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              fontFamily: AppFonts.poppins,
-              color: textPrimary,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              fontFamily: AppFonts.poppins,
-              color: Colors.red,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _getAvatarWidget(dynamic user, String name, String employeeId) {
     final avatar = user.avatar;
     String? imageUrl;
@@ -1422,6 +1402,44 @@ class _ActiveScreenState extends State<ActiveScreen>
             fontWeight: FontWeight.w700,
             color: Colors.white,
             fontFamily: AppFonts.poppins,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlayLoader() {
+    return Container(
+      color: Colors.black.withOpacity(0.5),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              SizedBox(
+                width: 50,
+                height: 50,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  strokeWidth: 4,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Loading...",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppFonts.poppins,
+                  color: textPrimary,
+                ),
+              ),
+            ],
           ),
         ),
       ),

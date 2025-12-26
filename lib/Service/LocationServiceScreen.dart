@@ -116,9 +116,13 @@ class LocationService {
         _lastLng = position.longitude;
 
         if (kDebugMode && _locationUpdateCount % 5 == 0) {
-          print('📡 Foreground: Location update #$_locationUpdateCount');
-          print('   Position: ${position.latitude.toStringAsFixed(6)}, '
+          if (kDebugMode) {
+            print('📡 Foreground: Location update #$_locationUpdateCount');
+          }
+          if (kDebugMode) {
+            print('   Position: ${position.latitude.toStringAsFixed(6)}, '
               '${position.longitude.toStringAsFixed(6)}');
+          }
         }
 
         // ✅ Trigger callback if actually moved

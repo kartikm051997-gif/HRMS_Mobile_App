@@ -10,9 +10,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
+import '../../../servicesAPI/ActiveUserService/UserTrackingService.dart';
 import 'FaceIdentificationScreen.dart';
 
-// ✅ ADD THIS: Map Styles Class
 class MapStyles {
   static const String modernTealStyle = '''
 [
@@ -25,82 +25,9 @@ class MapStyles {
     "stylers": [{"visibility": "off"}]
   },
   {
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#616161"}]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [{"color": "#f5f5f5"}]
-  },
-  {
-    "featureType": "administrative.land_parcel",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#bdbdbd"}]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "geometry",
-    "stylers": [{"color": "#eeeeee"}]
-  },
-  {
-    "featureType": "poi",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#757575"}]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "geometry",
-    "stylers": [{"color": "#e5f5f1"}]
-  },
-  {
-    "featureType": "poi.park",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#00897b"}]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [{"color": "#ffffff"}]
-  },
-  {
-    "featureType": "road.arterial",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#757575"}]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "geometry",
-    "stylers": [{"color": "#80cbc4"}]
-  },
-  {
-    "featureType": "road.highway",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#00897b"}]
-  },
-  {
-    "featureType": "road.local",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#9e9e9e"}]
-  },
-  {
-    "featureType": "transit.line",
-    "elementType": "geometry",
-    "stylers": [{"color": "#e5e5e5"}]
-  },
-  {
-    "featureType": "transit.station",
-    "elementType": "geometry",
-    "stylers": [{"color": "#eeeeee"}]
-  },
-  {
     "featureType": "water",
     "elementType": "geometry",
     "stylers": [{"color": "#b2dfdb"}]
-  },
-  {
-    "featureType": "water",
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#00897b"}]
   }
 ]
 ''';
@@ -123,12 +50,19 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
   int _lastRoutePointsCount = 0;
   int _lastCheckpointsCount = 0;
 
+  // ✅ NEW: API Status tracking
+  bool _isApiConnected = false;
+  String? _lastApiSyncTime;
+  bool _isSyncing = false;
+  Timer? _apiStatusTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeApp();
     context.read<UserTrackingProvider>().addListener(_onProviderChanged);
+    _startApiStatusCheck(); // ✅ NEW
   }
 
   void _onProviderChanged() {
@@ -143,6 +77,14 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
         _updateMapMarkersWithRoute();
       }
     }
+
+    // ✅ NEW: Update API status from provider
+    if (mounted) {
+      setState(() {
+        _isApiConnected = provider.isApiConnected;
+        _lastApiSyncTime = provider.lastApiSyncTime;
+      });
+    }
   }
 
   @override
@@ -154,13 +96,92 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     if (state == AppLifecycleState.resumed) {
       final provider = context.read<UserTrackingProvider>();
 
-      // ✅ Always call onAppResumed to sync data from background service
       provider.onAppResumed().then((_) {
         if (mounted) {
           _updateMapMarkersWithRoute();
+          _checkApiStatus(); // ✅ NEW: Check API when app resumes
           if (kDebugMode) print('🔄 Synced from background on resume');
         }
       });
+    }
+  }
+
+  // ✅ NEW: Start periodic API status check
+  void _startApiStatusCheck() {
+    _checkApiStatus();
+    _apiStatusTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _checkApiStatus();
+    });
+  }
+
+  // ✅ NEW: Check API connection status
+  Future<void> _checkApiStatus() async {
+    try {
+      final isConnected = await TrackingApiService.testConnection();
+
+      if (mounted) {
+        setState(() {
+          _isApiConnected = isConnected;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isApiConnected = false;
+        });
+      }
+    }
+  }
+
+  // ✅ NEW: Manual sync with API
+  Future<void> _manualSyncWithApi() async {
+    if (_isSyncing) return;
+
+    setState(() {
+      _isSyncing = true;
+    });
+
+    try {
+      final provider = context.read<UserTrackingProvider>();
+      await provider.manualSyncWithApi();
+
+      if (mounted) {
+        _showSnackBar(
+          '✓ Synced successfully with server',
+          backgroundColor: Colors.green,
+        );
+        _checkApiStatus();
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(
+          'Sync failed: ${e.toString()}',
+          backgroundColor: Colors.orange,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+        });
+      }
+    }
+  }
+
+  // ✅ NEW: Format last sync time
+  String _getLastSyncText() {
+    if (_lastApiSyncTime == null) return 'Never synced';
+
+    try {
+      final syncTime = DateTime.parse(_lastApiSyncTime!);
+      final diff = DateTime.now().difference(syncTime);
+
+      if (diff.inSeconds < 60) return 'Just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      return '${diff.inDays}d ago';
+    } catch (e) {
+      return 'Unknown';
     }
   }
 
@@ -168,11 +189,9 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     final provider = context.read<UserTrackingProvider>();
     await provider.initialize();
 
-    // ✅ Update map after initialization
     if (mounted) {
       _updateMapMarkersWithRoute();
 
-      // ✅ If checked in, animate to the last known location
       if (provider.isCheckedIn && provider.currentRoutePoints.isNotEmpty) {
         final lastPoint = provider.currentRoutePoints.last;
         _mapController?.animateCamera(
@@ -187,7 +206,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     }
   }
 
-  // ✅ ADD THIS: Apply custom map style
   Future<void> _applyMapStyle(GoogleMapController controller) async {
     try {
       await controller.setMapStyle(MapStyles.modernTealStyle);
@@ -279,16 +297,18 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
       return;
     }
 
+    // Check if location services are enabled
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       _showLocationRequiredDialog(
         title: 'Location Service Disabled',
-        message: 'Please enable location servicesAPI to check in',
+        message: 'Please enable location services to check in',
         isServiceIssue: true,
       );
       return;
     }
 
+    // Check location permissions
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -312,50 +332,48 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
       return;
     }
 
-    final hasVerified = await _hasFaceVerifiedToday();
+    // ===================== FACE VERIFICATION COMMENTED =====================
+    /*
+  final hasVerified = await _hasFaceVerifiedToday();
 
-    if (hasVerified) {
-      if (kDebugMode)
-        print('👤 Showing face identification (already verified today)');
-
-      // Show face identification in display mode (no capture required)
-      final result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => FaceIdentificationScreen(
-                employeeId: 'EMP001',
-                employeeName: 'John Doe',
-                isCheckIn: true,
-                displayOnly: true, // Display mode - no capture required
-              ),
+  if (hasVerified) {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FaceIdentificationScreen(
+          employeeId: 'EMP001',
+          employeeName: 'John Doe',
+          isCheckIn: true,
+          displayOnly: true,
         ),
-      );
+      ),
+    );
 
-      if (result == true && mounted) {
-        await _performActualCheckIn();
-      }
-    } else {
-      if (kDebugMode) print('📸 Showing face verification (first time today)');
-
-      final result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => FaceIdentificationScreen(
-                employeeId: 'EMP001',
-                employeeName: 'John Doe',
-                isCheckIn: true,
-                displayOnly: false, // Capture mode - requires face capture
-              ),
-        ),
-      );
-
-      if (result == true && mounted) {
-        await _markFaceVerifiedToday();
-        await _performActualCheckIn();
-      }
+    if (result == true && mounted) {
+      await _performActualCheckIn();
     }
+  } else {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FaceIdentificationScreen(
+          employeeId: 'EMP001',
+          employeeName: 'John Doe',
+          isCheckIn: true,
+          displayOnly: false,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _markFaceVerifiedToday();
+      await _performActualCheckIn();
+    }
+  }
+  */
+
+    // ===================== DIRECT CHECK-IN WITHOUT FACE =====================
+    await _performActualCheckIn();
   }
 
   Future<void> _performActualCheckIn() async {
@@ -373,8 +391,13 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
           );
         }
 
+        // ✅ Check API status after check-in
+        _checkApiStatus();
+
+        // ✅ Enhanced message mentioning API
         _showSnackBar(
-          '✓ Checked in successfully at ${provider.currentCheckInTime}\n🎯 Tracking active',
+          '✓ Checked in at ${provider.currentCheckInTime}\n'
+          '🎯 Tracking active • ${_isApiConnected ? "🌐 Syncing to server" : "📱 Saving locally"}',
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
         );
@@ -403,8 +426,14 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
       if (success && mounted) {
         final totalDistance = provider.getTotalDistance();
 
+        // ✅ Check API status after check-out
+        _checkApiStatus();
+
+        // ✅ Enhanced message mentioning API
         _showSnackBar(
-          '✓ Checked out successfully\n${(totalDistance / 1000).toStringAsFixed(2)} km traveled',
+          '✓ Checked out successfully\n'
+          '📏 ${(totalDistance / 1000).toStringAsFixed(2)} km traveled\n'
+          '${_isApiConnected ? "🌐 Data synced to server" : "📱 Data saved locally"}',
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         );
@@ -450,7 +479,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-
           title: Row(
             children: [
               Icon(Icons.location_off, color: Colors.red.shade700, size: 24),
@@ -553,7 +581,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Map - Full screen behind the filter
+          // Map - Full screen
           Selector<UserTrackingProvider, LatLng?>(
             selector: (_, provider) => provider.currentLocation,
             builder: (context, currentLocation, child) {
@@ -568,7 +596,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                 ),
                 markers: _markers,
                 polylines: _polyLines,
-                // ✅ MODIFIED: Apply custom style when map is created
                 onMapCreated: (controller) async {
                   _mapController = controller;
                   await _applyMapStyle(controller);
@@ -590,8 +617,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
             },
           ),
 
-          // Filter Header - Positioned on top
-          // Replace your Positioned widget with this:
+          // Header with API Status
           Positioned(
             top: 0,
             left: 0,
@@ -609,6 +635,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                         checkpointsCount:
                             provider.currentAddressCheckpoints.length,
                         totalDistance: provider.getTotalDistance(),
+                        failedApiCallsCount: provider.failedApiCallsCount,
                       ),
                   builder: (context, headerData, child) {
                     return AnimatedContainer(
@@ -639,7 +666,143 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Toggle button with enhanced animation
+                          // ✅ NEW: API Status Row
+                          Row(
+                            children: [
+                              // Connection indicator
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      _isApiConnected
+                                          ? Colors.green.withOpacity(0.1)
+                                          : Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color:
+                                        _isApiConnected
+                                            ? Colors.green.withOpacity(0.3)
+                                            : Colors.red.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color:
+                                            _isApiConnected
+                                                ? Colors.green
+                                                : Colors.red,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      _isApiConnected ? 'Online' : 'Offline',
+                                      style: TextStyle(
+                                        color:
+                                            _isApiConnected
+                                                ? Colors.green
+                                                : Colors.red,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: AppFonts.poppins,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+
+                              // Last sync time
+                              Expanded(
+                                child: Text(
+                                  'Synced ${_getLastSyncText()}',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 11,
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                ),
+                              ),
+
+                              // Failed calls indicator
+                              if (headerData.failedApiCallsCount > 0)
+                                Container(
+                                  margin: const EdgeInsets.only(right: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.orange),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.sync_problem,
+                                        size: 12,
+                                        color: Colors.orange,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${headerData.failedApiCallsCount}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.orange,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              // Manual sync button
+                              InkWell(
+                                onTap: _isSyncing ? null : _manualSyncWithApi,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColor.primaryColor1.withOpacity(
+                                      0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child:
+                                      _isSyncing
+                                          ? SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                    AppColor.primaryColor1,
+                                                  ),
+                                            ),
+                                          )
+                                          : Icon(
+                                            Icons.sync,
+                                            size: 16,
+                                            color: AppColor.primaryColor1,
+                                          ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Toggle button
                           GestureDetector(
                             onTap: () {
                               setState(() {
@@ -703,7 +866,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                             ),
                           ),
 
-                          // Animated content with fade and slide
+                          // Expandable content (rest of your existing code)
                           AnimatedSize(
                             duration: const Duration(milliseconds: 350),
                             curve: Curves.easeInOutCubic,
@@ -729,7 +892,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                               children: [
                                                 const SizedBox(height: 16),
                                                 if (headerData.isCheckedIn) ...[
-                                                  // Enhanced status indicator
+                                                  // Status indicator
                                                   Container(
                                                     padding:
                                                         const EdgeInsets.all(
@@ -757,7 +920,6 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                                     ),
                                                     child: Row(
                                                       children: [
-                                                        // Animated pulsing indicator
                                                         TweenAnimationBuilder<
                                                           double
                                                         >(
@@ -834,7 +996,8 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                                     ),
                                                   ),
                                                   const SizedBox(height: 14),
-                                                  // Enhanced address container
+
+                                                  // Address container
                                                   Container(
                                                     padding:
                                                         const EdgeInsets.all(
@@ -925,7 +1088,8 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                                   ),
                                                   const SizedBox(height: 20),
                                                 ],
-                                                // Enhanced buttons
+
+                                                // Buttons
                                                 Row(
                                                   children: [
                                                     Expanded(
@@ -968,10 +1132,10 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
                                                             elevation: 0,
                                                             backgroundColor:
                                                                 Colors
-                                                                    .transparent, // IMPORTANT
+                                                                    .transparent,
                                                             shadowColor:
                                                                 Colors
-                                                                    .transparent, // Remove shadow color
+                                                                    .transparent,
                                                           ),
                                                           child:
                                                               headerData
@@ -1104,6 +1268,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
   void dispose() {
     context.read<UserTrackingProvider>().removeListener(_onProviderChanged);
     WidgetsBinding.instance.removeObserver(this);
+    _apiStatusTimer?.cancel(); // ✅ NEW
     _mapController?.dispose();
     super.dispose();
   }
@@ -1117,6 +1282,7 @@ class _HeaderData {
   final int routePointsCount;
   final int checkpointsCount;
   final double totalDistance;
+  final int failedApiCallsCount; // ✅ NEW
 
   _HeaderData({
     required this.isCheckedIn,
@@ -1126,6 +1292,7 @@ class _HeaderData {
     required this.routePointsCount,
     required this.checkpointsCount,
     required this.totalDistance,
+    required this.failedApiCallsCount, // ✅ NEW
   });
 
   @override
@@ -1138,7 +1305,8 @@ class _HeaderData {
           checkInAddress == other.checkInAddress &&
           routePointsCount == other.routePointsCount &&
           checkpointsCount == other.checkpointsCount &&
-          totalDistance == other.totalDistance;
+          totalDistance == other.totalDistance &&
+          failedApiCallsCount == other.failedApiCallsCount;
 
   @override
   int get hashCode => Object.hash(
@@ -1149,5 +1317,6 @@ class _HeaderData {
     routePointsCount,
     checkpointsCount,
     totalDistance,
+    failedApiCallsCount,
   );
 }
