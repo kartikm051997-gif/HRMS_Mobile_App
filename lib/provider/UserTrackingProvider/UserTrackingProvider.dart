@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Service/BackgroundTrackingScreen.dart';
 import '../../Service/LocationServiceScreen.dart';
-import '../../servicesAPI/ActiveUserService/UserTrackingService.dart';
+import '../../servicesAPI/UserTrackingService/UserTrackingService.dart';
 import '../../model/UserTrackingModel/UserTrackingModel.dart';
 
 class UserTrackingProvider extends ChangeNotifier {
@@ -29,7 +29,6 @@ class UserTrackingProvider extends ChangeNotifier {
   String? _currentUserId;
   Timer? _syncTimer;
   Timer? _apiSyncTimer; // ✅ NEW: Periodic API sync
-  bool _isSearching = false;
   bool _isInitialized = false;
 
   // ✅ API Status tracking

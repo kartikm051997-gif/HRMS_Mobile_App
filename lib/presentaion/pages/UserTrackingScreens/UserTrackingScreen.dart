@@ -10,8 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
-import '../../../servicesAPI/ActiveUserService/UserTrackingService.dart';
-import 'FaceIdentificationScreen.dart';
+import '../../../servicesAPI/UserTrackingService/UserTrackingService.dart';
 
 class MapStyles {
   static const String modernTealStyle = '''

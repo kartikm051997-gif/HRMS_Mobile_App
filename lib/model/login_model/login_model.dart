@@ -6,7 +6,14 @@ class LoginApiModel {
   String? role;
   User? user;
 
-  LoginApiModel({this.status, this.message, this.token, this.userId, this.role, this.user});
+  LoginApiModel({
+    this.status,
+    this.message,
+    this.token,
+    this.userId,
+    this.role,
+    this.user,
+  });
 
   LoginApiModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];

@@ -1,65 +1,56 @@
+// File: lib/provider/AdminTrackingProvider/AdminTrackingProvider.dart
+
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
+import '../../model/Employee_management/getAllFiltersModel.dart'; // ✅ YOUR MODEL
+import '../../model/UserTrackingModel/GetLocationHistoryModel.dart'; // ✅ YOUR MODEL
+import '../../servicesAPI/AdminTrackingService/AdminTrackingService.dart';
+import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 class AdminTrackingProvider with ChangeNotifier {
-  // Filter values
+  // Services
+  final AdminTrackingService _adminService = AdminTrackingService();
+  final AuthService _authService = AuthService();
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER DATA (FROM API)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  List<Employees> _employees = [];
+  List<Branches> _branches = [];
+  List<Designations> _designations = [];
+
+  bool _isLoadingFilters = false;
+  String? _filterErrorMessage;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER VALUES (USER SELECTIONS)
+  // ═══════════════════════════════════════════════════════════════════════
+
   String? _selectedEmployeeId;
   String? _selectedBranch;
   String? _selectedDesignation;
   DateTime? _selectedDate;
 
-  // Filter expansion
   bool _isFilterExpanded = false;
+  final adminDateController = TextEditingController();
 
+  // ═══════════════════════════════════════════════════════════════════════
+  // TRACKING DATA
+  // ═══════════════════════════════════════════════════════════════════════
 
-
-
-  // Search results
   bool _hasSearched = false;
   bool _isLoading = false;
   List<TrackingRecord> _trackingRecords = [];
+  String? _errorMessage;
 
-  // Dummy data
-  final List<EmployeeModel> _employees = [
-    EmployeeModel(id: 'EMP001', name: 'Rajesh Kumar'),
-    EmployeeModel(id: 'EMP002', name: 'Priya Sharma'),
-    EmployeeModel(id: 'EMP003', name: 'Amit Patel'),
-    EmployeeModel(id: 'EMP004', name: 'Sneha Reddy'),
-    EmployeeModel(id: 'EMP005', name: 'Vijay Singh'),
-    EmployeeModel(id: 'EMP005', name: 'g Singh'),
-    EmployeeModel(id: 'EMP005', name: 'h h'),
-    EmployeeModel(id: 'EMP005', name: 't h'),
-    EmployeeModel(id: 'EMP005', name: 't f'),
-    EmployeeModel(id: 'EMP005', name: 'e h'),
-    EmployeeModel(id: 'EMP005', name: 'w k'),
-    EmployeeModel(id: 'EMP005', name: 'h j'),
-    EmployeeModel(id: 'EMP005', name: 'r o'),
-    EmployeeModel(id: 'EMP005', name: 'e j'),
-    EmployeeModel(id: 'EMP005', name: 'w yi'),
-  ];
+  // ═══════════════════════════════════════════════════════════════════════
+  // GETTERS
+  // ═══════════════════════════════════════════════════════════════════════
 
-  final List<String> _branches = [
-    'Chennai',
-    'Mumbai',
-    'Delhi',
-    'Bangalore',
-    'Hyderabad',
-    'Pune',
-  ];
-
-  final List<String> _designation = [
-    'Sales Executive',
-    'Manager',
-    'Team Lead',
-    'Admin',
-    'HR',
-    'Finance',
-  ];
-
-  final adminDateController = TextEditingController();
-
-
-  // Getters
   String? get selectedEmployeeId => _selectedEmployeeId;
   String? get selectedBranch => _selectedBranch;
   String? get selectedDesignation => _selectedDesignation;
@@ -67,21 +58,93 @@ class AdminTrackingProvider with ChangeNotifier {
   bool get isFilterExpanded => _isFilterExpanded;
   bool get hasSearched => _hasSearched;
   bool get isLoading => _isLoading;
+  bool get isLoadingFilters => _isLoadingFilters;
   List<TrackingRecord> get trackingRecords => _trackingRecords;
-  List<EmployeeModel> get employees => _employees;
-  List<String> get branches => _branches;
-  List<String> get roles => _designation;
+  List<String> get branchNames => _branches.map((b) => b.name ?? '').toList();
+  List<String> get roles =>
+      _designations.map((d) => d.designations ?? '').toList();
+  String? get errorMessage => _errorMessage;
+  String? get filterErrorMessage => _filterErrorMessage;
 
-  // Check if all filters are selected
   bool get isFiltersValid =>
       _selectedEmployeeId != null &&
-          _selectedBranch != null &&
-          _selectedDesignation != null &&
-          _selectedDate != null;
+      _selectedBranch != null &&
+      _selectedDesignation != null &&
+      _selectedDate != null;
 
-  // Set filter values
+  // ═══════════════════════════════════════════════════════════════════════
+  // INITIALIZATION
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Initialize - Load filter data from API
+  Future<void> initialize() async {
+    await loadFilterData();
+  }
+
+  /// Load all filter data (employees, branches, designations)
+  Future<void> loadFilterData() async {
+    try {
+      _isLoadingFilters = true;
+      _filterErrorMessage = null;
+      notifyListeners();
+
+      if (kDebugMode) print("🔄 Loading admin filter data...");
+
+      // Get auth token
+      final token = await _authService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        _filterErrorMessage = 'Please login again - Session expired';
+        _isLoadingFilters = false;
+        notifyListeners();
+        return;
+      }
+
+      // Fetch filter data from API
+      final filterData = await _adminService.getAllEmployees(token: token);
+
+      if (filterData?.data != null) {
+        _employees = filterData!.data!.employees ?? [];
+        _branches = filterData.data!.branches ?? [];
+
+        // Extract designations from departments
+        _designations = [];
+        if (filterData.data!.departments != null) {
+          for (var dept in filterData.data!.departments!) {
+            if (dept.designations != null) {
+              _designations.addAll(dept.designations!);
+            }
+          }
+        }
+
+        if (kDebugMode) {
+          print("✅ Filter data loaded:");
+          print("   - Employees: ${_employees.length}");
+          print("   - Branches: ${_branches.length}");
+          print("   - Designations: ${_designations.length}");
+        }
+      } else {
+        _filterErrorMessage = 'No filter data available';
+      }
+    } catch (e) {
+      _filterErrorMessage = "Error loading filters: ${e.toString()}";
+      if (kDebugMode) print("❌ Error loading filters: $e");
+    } finally {
+      _isLoadingFilters = false;
+      notifyListeners();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER SETTERS
+  // ═══════════════════════════════════════════════════════════════════════
+
   void setEmployeeId(String? value) {
     _selectedEmployeeId = value;
+
+    if (kDebugMode && value != null) {
+      print("📝 Selected Employee ID: $value");
+    }
+
     notifyListeners();
   }
 
@@ -110,183 +173,263 @@ class AdminTrackingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Search functionality
+  // ═══════════════════════════════════════════════════════════════════════
+  // SEARCH / FETCH TRACKING DATA
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Perform search with selected filters
   Future<void> performSearch() async {
-    if (!isFiltersValid) return;
+    if (!isFiltersValid) {
+      _errorMessage = 'Please select all filters';
+      notifyListeners();
+      return;
+    }
 
     _isLoading = true;
     _hasSearched = false;
+    _errorMessage = null;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("🔍 Performing search with filters:");
+        print("   - Employee ID: $_selectedEmployeeId");
+        print("   - Branch: $_selectedBranch");
+        print("   - Designation: $_selectedDesignation");
+        print(
+          "   - Date: ${_selectedDate != null ? AdminTrackingService.formatDateForApi(_selectedDate!) : 'N/A'}",
+        );
+        print("═══════════════════════════════════════");
+      }
 
-    // Generate dummy tracking data with multiple sessions for history
-    _trackingRecords = _generateDummyTrackingData();
-    _hasSearched = true;
-    _isLoading = false;
-    _isFilterExpanded = false; // Collapse filter after search
+      // Get auth token
+      final token = await _authService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Please login again - Session expired');
+      }
 
-    notifyListeners();
+      // ✅ Use employment_id as user_id for API call
+      final historyData = await _adminService.getEmployeeLocationHistory(
+        token: token,
+        userId: _selectedEmployeeId!, // Using employment_id
+        employeeId: _selectedEmployeeId,
+        branch: _selectedBranch,
+        designation: _selectedDesignation,
+        date:
+            _selectedDate != null
+                ? AdminTrackingService.formatDateForApi(_selectedDate!)
+                : null,
+      );
+
+      // Convert API response to TrackingRecords
+      if (historyData?.data?.locations != null &&
+          historyData!.data!.locations!.isNotEmpty) {
+        _trackingRecords = _convertApiResponseToRecords(historyData);
+
+        if (kDebugMode) {
+          print("✅ Search completed successfully");
+          print("📊 Results: ${_trackingRecords.length} sessions found");
+        }
+      } else {
+        _trackingRecords = [];
+        if (kDebugMode) print("⚠️ No tracking data found");
+      }
+
+      _hasSearched = true;
+      _isFilterExpanded = false;
+    } catch (e) {
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
+      if (kDebugMode) print("❌ Search failed: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // ✅ UPDATED: Generate multiple sessions for history view
-  List<TrackingRecord> _generateDummyTrackingData() {
-    final selectedEmployee = _employees.firstWhere(
-          (e) => e.id == _selectedEmployeeId,
-      orElse: () => _employees.first,
+  // ═══════════════════════════════════════════════════════════════════════
+  // DATA CONVERSION (API Response → TrackingRecord)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Convert API response to TrackingRecord list
+  List<TrackingRecord> _buildSessionsFromLocations(List<Locations> locations) {
+    final List<TrackingRecord> sessions = [];
+
+    locations.sort(
+      (a, b) => DateTime.parse(
+        a.capturedAt!,
+      ).compareTo(DateTime.parse(b.capturedAt!)),
     );
 
-    return [
-      // Today's session
-      TrackingRecord(
-        sessionId: 'SESSION_${DateTime.now().millisecondsSinceEpoch}',
-        employeeId: _selectedEmployeeId!,
-        employeeName: selectedEmployee.name,
-        date: _selectedDate!,
-        checkInTime: '09:00 AM',
-        checkOutTime: '06:00 PM',
-        checkInLocation: const LatLng(13.0827, 80.2707),
-        checkInAddress: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        checkOutLocation: const LatLng(13.0358, 80.2298),
-        checkOutAddress: '18, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        trackingPoints: [
-          TrackingPoint(
-            location: const LatLng(13.0827, 80.2707),
-            address: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '09:00 AM',
-            distanceFromPrevious: 0,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0878, 80.2785),
-            address: '1, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '10:30 AM',
-            distanceFromPrevious: 377,
-            waitTime: const Duration(minutes: 15),
-            isCheckpoint: false,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0569, 80.2425),
-            address: '60A, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '12:45 PM',
-            distanceFromPrevious: 178,
-            waitTime: const Duration(minutes: 30),
-            isCheckpoint: false,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0475, 80.2380),
-            address: '14, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '03:20 PM',
-            distanceFromPrevious: 231,
-            waitTime: const Duration(minutes: 20),
-            isCheckpoint: false,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0358, 80.2298),
-            address: '18, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '06:00 PM',
-            distanceFromPrevious: 450,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-        ],
-      ),
+    List<Locations> currentSession = [];
 
-      // Yesterday's session
-      TrackingRecord(
-        sessionId: 'SESSION_${DateTime.now().subtract(const Duration(days: 1)).millisecondsSinceEpoch}',
-        employeeId: _selectedEmployeeId!,
-        employeeName: selectedEmployee.name,
-        date: _selectedDate!.subtract(const Duration(days: 1)),
-        checkInTime: '09:15 AM',
-        checkOutTime: '05:45 PM',
-        checkInLocation: const LatLng(13.0827, 80.2707),
-        checkInAddress: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        checkOutLocation: const LatLng(13.0569, 80.2425),
-        checkOutAddress: '60A, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        trackingPoints: [
-          TrackingPoint(
-            location: const LatLng(13.0827, 80.2707),
-            address: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '09:15 AM',
-            distanceFromPrevious: 0,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0678, 80.2485),
-            address: 'Saidapet, Chennai, Tamil Nadu, India',
-            time: '11:00 AM',
-            distanceFromPrevious: 520,
-            waitTime: const Duration(minutes: 25),
-            isCheckpoint: false,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0569, 80.2425),
-            address: '60A, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '05:45 PM',
-            distanceFromPrevious: 380,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-        ],
-      ),
+    for (final loc in locations) {
+      if (loc.activityType == "CHECK_IN") {
+        currentSession = [];
+        currentSession.add(loc);
+      } else if (loc.activityType == "CHECK_OUT") {
+        currentSession.add(loc);
+        sessions.add(_createTrackingRecordFromLocations(currentSession));
+        currentSession = [];
+      } else {
+        currentSession.add(loc);
+      }
+    }
 
-      // 2 days ago - Not checked out yet
-      TrackingRecord(
-        sessionId: 'SESSION_${DateTime.now().subtract(const Duration(days: 2)).millisecondsSinceEpoch}',
-        employeeId: _selectedEmployeeId!,
-        employeeName: selectedEmployee.name,
-        date: _selectedDate!.subtract(const Duration(days: 2)),
-        checkInTime: '09:05 AM',
-        checkOutTime: '06:30 PM',
-        checkInLocation: const LatLng(13.0827, 80.2707),
-        checkInAddress: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        checkOutLocation: const LatLng(13.0878, 80.2785),
-        checkOutAddress: '1, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-        trackingPoints: [
-          TrackingPoint(
-            location: const LatLng(13.0827, 80.2707),
-            address: '119, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '09:05 AM',
-            distanceFromPrevious: 0,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-          TrackingPoint(
-            location: const LatLng(13.0878, 80.2785),
-            address: '1, Pallikaranai, Chennai, Tamil Nadu, 600100, India',
-            time: '06:30 PM',
-            distanceFromPrevious: 377,
-            waitTime: null,
-            isCheckpoint: true,
-          ),
-        ],
-      ),
-    ];
+    return sessions;
   }
 
-  // Fetch history for date range
-  Future<void> fetchHistory() async {
-    if (_selectedEmployeeId == null) return;
+  List<TrackingRecord> _convertApiResponseToRecords(
+    GetLocationHistoryModel historyData,
+  ) {
+    final locations = historyData.data!.locations!;
+    return _buildSessionsFromLocations(locations);
 
-    _isLoading = true;
-    notifyListeners();
-
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Generate history data
-    _trackingRecords = _generateDummyTrackingData();
-    _hasSearched = true;
-    _isLoading = false;
-
-    notifyListeners();
+    // Sort by time
   }
 
-  // Reset filters
+  /// Create a single TrackingRecord from locations
+  TrackingRecord _createTrackingRecordFromLocations(List<Locations> locations) {
+    final firstLocation = locations.first;
+    final date = DateTime.parse(firstLocation.capturedAt!);
+
+    // Find check-in and check-out
+    final checkInLoc = locations.firstWhere(
+      (l) => l.activityType == 'CHECK_IN',
+      orElse: () => locations.first,
+    );
+
+    final checkOutLoc = locations.lastWhere(
+      (l) => l.activityType == 'CHECK_OUT',
+      orElse: () => locations.last,
+    );
+
+    // Create tracking points
+    List<TrackingPoint> trackingPoints = [];
+
+    for (int i = 0; i < locations.length; i++) {
+      final loc = locations[i];
+      final dt = DateTime.parse(loc.capturedAt!);
+
+      double distance = 0;
+      if (i > 0) {
+        distance = _calculateDistance(locations[i - 1], loc);
+      }
+
+      trackingPoints.add(
+        TrackingPoint(
+          location: LatLng(
+            double.parse(loc.latitude ?? '0'),
+            double.parse(loc.longitude ?? '0'),
+          ),
+          address: loc.locationAddress ?? 'Unknown location',
+          time: DateFormat('hh:mm a').format(dt),
+          distanceFromPrevious: distance,
+          waitTime: null,
+          isCheckpoint:
+              loc.activityType == 'CHECK_IN' || loc.activityType == 'CHECK_OUT',
+        ),
+      );
+    }
+
+    // Get employee name from first location
+    final employeeName = firstLocation.fullname ?? 'Unknown Employee';
+
+    return TrackingRecord(
+      sessionId: 'session_${date.millisecondsSinceEpoch}',
+      employeeId: _selectedEmployeeId ?? '',
+      employeeName: employeeName,
+      date: date,
+      checkInTime: DateFormat(
+        'hh:mm a',
+      ).format(DateTime.parse(checkInLoc.capturedAt!)),
+      checkOutTime:
+          checkOutLoc.activityType == 'CHECK_OUT'
+              ? DateFormat(
+                'hh:mm a',
+              ).format(DateTime.parse(checkOutLoc.capturedAt!))
+              : '--:--',
+      checkInLocation: LatLng(
+        double.parse(checkInLoc.latitude ?? '0'),
+        double.parse(checkInLoc.longitude ?? '0'),
+      ),
+      checkInAddress: checkInLoc.locationAddress ?? 'Unknown',
+      checkOutLocation: LatLng(
+        double.parse(checkOutLoc.latitude ?? '0'),
+        double.parse(checkOutLoc.longitude ?? '0'),
+      ),
+      checkOutAddress: checkOutLoc.locationAddress ?? 'Unknown',
+      trackingPoints: trackingPoints,
+    );
+  }
+
+  /// Calculate distance between two locations (in meters)
+  double _calculateDistance(Locations start, Locations end) {
+    try {
+      final lat1 = double.parse(start.latitude ?? '0') * (math.pi / 180);
+      final lon1 = double.parse(start.longitude ?? '0') * (math.pi / 180);
+      final lat2 = double.parse(end.latitude ?? '0') * (math.pi / 180);
+      final lon2 = double.parse(end.longitude ?? '0') * (math.pi / 180);
+
+      const earthRadius = 6371000;
+      final dLat = lat2 - lat1;
+      final dLon = lon2 - lon1;
+
+      final a =
+          math.sin(dLat / 2) * math.sin(dLat / 2) +
+          math.cos(lat1) *
+              math.cos(lat2) *
+              math.sin(dLon / 2) *
+              math.sin(dLon / 2);
+      final c = 2 * math.asin(math.sqrt(a));
+
+      return earthRadius * c;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // FILTER SEARCH HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
+
+  List<EmployeeModel> getFilteredEmployees(String query) {
+    final filtered =
+        _employees.where((emp) {
+          final id = (emp.employmentId ?? '').toLowerCase();
+          final name = (emp.fullname ?? '').toLowerCase();
+          final q = query.toLowerCase();
+          return id.contains(q) || name.contains(q);
+        }).toList();
+
+    return filtered
+        .map(
+          (e) => EmployeeModel(
+            id: e.employmentId ?? '',
+            name: e.fullname ?? 'Unknown',
+          ),
+        )
+        .toList();
+  }
+
+  List<String> getFilteredBranches(String query) {
+    if (query.isEmpty) return branchNames;
+    return branchNames
+        .where((branch) => branch.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  List<String> getFilteredRoles(String query) {
+    if (query.isEmpty) return roles;
+    return roles
+        .where((role) => role.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // RESET
+  // ═══════════════════════════════════════════════════════════════════════
+
   void resetFilters() {
     _selectedEmployeeId = null;
     _selectedBranch = null;
@@ -294,49 +437,34 @@ class AdminTrackingProvider with ChangeNotifier {
     _selectedDate = DateTime.now();
     _hasSearched = false;
     _trackingRecords = [];
+    _errorMessage = null;
     notifyListeners();
   }
 
-  // Get filtered employees by search query
-  List<EmployeeModel> getFilteredEmployees(String query) {
-    if (query.isEmpty) return _employees;
+  List<EmployeeModel> get employees {
     return _employees
-        .where(
-          (emp) =>
-      emp.id.toLowerCase().contains(query.toLowerCase()) ||
-          emp.name.toLowerCase().contains(query.toLowerCase()),
-    )
-        .toList();
-  }
-
-  // Get filtered branches by search query
-  List<String> getFilteredBranches(String query) {
-    if (query.isEmpty) return _branches;
-    return _branches
-        .where((branch) => branch.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-  }
-
-  // Get filtered roles by search query
-  List<String> getFilteredRoles(String query) {
-    if (query.isEmpty) return _designation;
-    return _designation
-        .where((role) => role.toLowerCase().contains(query.toLowerCase()))
+        .map(
+          (e) => EmployeeModel(
+            id: e.employmentId ?? '',
+            name: e.fullname ?? 'Unknown',
+          ),
+        )
         .toList();
   }
 }
 
-// Models
+// ═══════════════════════════════════════════════════════════════════════
+// MODELS (Keep existing TrackingRecord, TrackingPoint, EmployeeModel)
+// ═══════════════════════════════════════════════════════════════════════
+
 class EmployeeModel {
   final String id;
   final String name;
-
   EmployeeModel({required this.id, required this.name});
 }
 
-// ✅ UPDATED: Added sessionId field
 class TrackingRecord {
-  final String sessionId; // ✅ NEW FIELD
+  final String sessionId;
   final String employeeId;
   final String employeeName;
   final DateTime date;
@@ -349,7 +477,7 @@ class TrackingRecord {
   final List<TrackingPoint> trackingPoints;
 
   TrackingRecord({
-    required this.sessionId, // ✅ NEW FIELD
+    required this.sessionId,
     required this.employeeId,
     required this.employeeName,
     required this.date,
@@ -365,47 +493,13 @@ class TrackingRecord {
   double get totalDistance {
     return trackingPoints.fold(
       0.0,
-          (sum, point) => sum + point.distanceFromPrevious,
+      (sum, point) => sum + point.distanceFromPrevious,
     );
   }
 
   Duration get totalDuration {
     if (trackingPoints.length < 2) return Duration.zero;
-
-    // Parse check-in and check-out times to calculate duration
-    try {
-      // For proper calculation, you'd parse the actual times
-      // For now, using a simple calculation based on number of points
-      final hours = (trackingPoints.length - 1) * 2; // Rough estimate
-      return Duration(hours: hours.clamp(0, 10));
-    } catch (e) {
-      return const Duration(hours: 9); // Default 9 hours
-    }
-  }
-
-  // ✅ Optional: Add fromJson for API integration
-  factory TrackingRecord.fromJson(Map<String, dynamic> json) {
-    return TrackingRecord(
-      sessionId: json['sessionId'] ?? json['session_id'] ?? '',
-      employeeId: json['employeeId'] ?? json['employee_id'] ?? '',
-      employeeName: json['employeeName'] ?? json['employee_name'] ?? '',
-      date: DateTime.parse(json['date'] ?? DateTime.now().toIso8601String()),
-      checkInTime: json['checkInTime'] ?? json['check_in_time'] ?? '',
-      checkOutTime: json['checkOutTime'] ?? json['check_out_time'] ?? '',
-      checkInLocation: LatLng(
-        json['checkInLocation']?['latitude'] ?? 0.0,
-        json['checkInLocation']?['longitude'] ?? 0.0,
-      ),
-      checkInAddress: json['checkInAddress'] ?? json['check_in_address'] ?? '',
-      checkOutLocation: LatLng(
-        json['checkOutLocation']?['latitude'] ?? 0.0,
-        json['checkOutLocation']?['longitude'] ?? 0.0,
-      ),
-      checkOutAddress: json['checkOutAddress'] ?? json['check_out_address'] ?? '',
-      trackingPoints: (json['trackingPoints'] as List?)
-          ?.map((e) => TrackingPoint.fromJson(e))
-          .toList() ?? [],
-    );
+    return const Duration(hours: 9);
   }
 }
 
@@ -413,9 +507,9 @@ class TrackingPoint {
   final LatLng location;
   final String address;
   final String time;
-  final double distanceFromPrevious; // in meters
+  final double distanceFromPrevious;
   final Duration? waitTime;
-  final bool isCheckpoint; // true for check-in/check-out
+  final bool isCheckpoint;
 
   TrackingPoint({
     required this.location,
@@ -425,22 +519,4 @@ class TrackingPoint {
     this.waitTime,
     this.isCheckpoint = false,
   });
-
-  // ✅ Optional: Add fromJson for API integration
-  factory TrackingPoint.fromJson(Map<String, dynamic> json) {
-    return TrackingPoint(
-      location: LatLng(
-        json['latitude'] ?? 0.0,
-        json['longitude'] ?? 0.0,
-      ),
-      address: json['address'] ?? '',
-      time: json['time'] ?? '',
-      distanceFromPrevious: (json['distanceFromPrevious'] ??
-          json['distance_from_previous'] ?? 0).toDouble(),
-      waitTime: json['waitTime'] != null || json['wait_time'] != null
-          ? Duration(minutes: json['waitTime'] ?? json['wait_time'] ?? 0)
-          : null,
-      isCheckpoint: json['isCheckpoint'] ?? json['is_checkpoint'] ?? false,
-    );
-  }
 }

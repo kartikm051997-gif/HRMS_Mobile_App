@@ -1,8 +1,9 @@
-// File: lib/servicesAPI/auth_service.dart
+// File: lib/servicesAPI/LogInService/LogIn_Service.dart
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,24 +63,29 @@ class AuthService {
     required String password,
   }) async {
     try {
-      if (kDebugMode) print("🔄 AuthService: Attempting login...");
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("🔄 AuthService: Attempting login...");
+        print("👤 Username: $username");
+        print("═══════════════════════════════════════");
+      }
 
       final response = await http
           .post(
-            Uri.parse(ApiBase.loginEndpoint),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode({
-              'user_name': username.trim(),
-              'password': password.trim(),
-            }),
-          )
+        Uri.parse(ApiBase.loginEndpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'user_name': username.trim(),
+          'password': password.trim(),
+        }),
+      )
           .timeout(
-            _apiTimeout,
-            onTimeout: () => throw TimeoutException('Connection timeout'),
-          );
+        _apiTimeout,
+        onTimeout: () => throw TimeoutException('Connection timeout'),
+      );
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
@@ -95,7 +101,11 @@ class AuthService {
           // Save session data
           await saveLoginSession(loginModel);
 
-          if (kDebugMode) print("✅ Login successful");
+          if (kDebugMode) {
+            print("═══════════════════════════════════════");
+            print("✅ Login successful");
+            print("═══════════════════════════════════════");
+          }
           return loginModel;
         } else {
           throw Exception(loginModel.message ?? "Invalid credentials");
@@ -103,9 +113,9 @@ class AuthService {
       } else {
         // Handle HTTP errors
         final bodyText =
-            response.body.isNotEmpty && response.body.length > 160
-                ? "${response.body.substring(0, 160)}..."
-                : response.body;
+        response.body.isNotEmpty && response.body.length > 160
+            ? "${response.body.substring(0, 160)}..."
+            : response.body;
 
         if (kDebugMode) {
           print("❌ Login failed. Status: ${response.statusCode}");
@@ -138,15 +148,42 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       final userData = loginModel.toJson();
 
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("💾 Saving login session...");
+        print("📦 Full Response: ${jsonEncode(userData)}");
+        print("═══════════════════════════════════════");
+      }
+
       // Save entire login response
       await prefs.setString(_keyUserData, jsonEncode(userData));
       await prefs.setBool(_keyIsLoggedIn, true);
       await prefs.setInt(_keyLoginTime, DateTime.now().millisecondsSinceEpoch);
 
-      // Extract and save auth token
-      final token = userData['token']?.toString() ?? '';
+      // ✅ IMPROVED: Extract token from multiple possible locations
+      String token = _extractToken(userData);
+
+      // Save token
       if (token.isNotEmpty) {
         await prefs.setString(_keyAuthToken, token);
+        if (kDebugMode) {
+          print("✅ Token saved successfully");
+          print("🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...");
+          print("📏 Token length: ${token.length} characters");
+        }
+      } else {
+        if (kDebugMode) {
+          print("⚠️ WARNING: No token found in login response!");
+          print("📦 Available keys in response: ${userData.keys.toList()}");
+
+          // Check nested data
+          if (userData['data'] != null) {
+            print("📦 Keys in 'data': ${(userData['data'] as Map).keys.toList()}");
+          }
+          if (userData['user'] != null) {
+            print("📦 Keys in 'user': ${(userData['user'] as Map).keys.toList()}");
+          }
+        }
       }
 
       // Extract and save employee ID
@@ -154,16 +191,22 @@ class AuthService {
       if (userId.isNotEmpty) {
         await prefs.setString(_keyEmployeeId, userId);
         await prefs.setString(_keyLoggedInEmpId, userId);
+        if (kDebugMode) print("✅ Employee ID saved: $userId");
+      } else {
+        if (kDebugMode) print("⚠️ Warning: No employee ID found");
       }
 
       if (kDebugMode) {
+        print("═══════════════════════════════════════");
         print("✅ Session saved successfully");
-        print("🔑 Token: ${token.isNotEmpty ? 'Saved' : 'Not found'}");
-        print("🆔 Employee ID: $userId");
+        print("═══════════════════════════════════════");
       }
     } catch (e) {
-      if (kDebugMode) print("❌ Error saving session: $e");
-      throw Exception("Failed to save session data");
+      if (kDebugMode) {
+        print("❌ Error saving session: $e");
+        print("Stack trace: ${StackTrace.current}");
+      }
+      throw Exception("Failed to save session data: $e");
     }
   }
 
@@ -187,7 +230,10 @@ class AuthService {
       final decoded = jsonDecode(userData);
       final loginModel = LoginApiModel.fromJson(decoded);
 
-      if (kDebugMode) print("✅ Session loaded successfully");
+      if (kDebugMode) {
+        print("✅ Session loaded successfully");
+        print("🆔 User ID: ${await getEmployeeId()}");
+      }
       return loginModel;
     } catch (e) {
       if (kDebugMode) print("❌ Error loading session: $e");
@@ -212,14 +258,17 @@ class AuthService {
       final minutesSinceLogin = now.difference(loginDate).inMinutes;
 
       if (minutesSinceLogin >= _sessionExpiryMinutes) {
-        if (kDebugMode) print("❌ Session expired after 2 days");
+        if (kDebugMode) {
+          print("❌ Session expired");
+          print("⏰ Session was ${minutesSinceLogin} minutes old (max: $_sessionExpiryMinutes)");
+        }
         await clearSession();
         return false;
       }
 
       if (kDebugMode) {
         print("✅ Session is valid");
-        print("⏰ Session age: $minutesSinceLogin minutes");
+        print("⏰ Session age: $minutesSinceLogin minutes (expires in ${_sessionExpiryMinutes - minutesSinceLogin} min)");
       }
       return true;
     } catch (e) {
@@ -241,7 +290,11 @@ class AuthService {
       await prefs.remove(_keyLoggedInEmpId);
       await prefs.remove(_keyAuthToken);
 
-      if (kDebugMode) print("✅ Session cleared successfully");
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("✅ Session cleared successfully");
+        print("═══════════════════════════════════════");
+      }
     } catch (e) {
       if (kDebugMode) print("❌ Error clearing session: $e");
       throw Exception("Failed to clear session");
@@ -259,9 +312,13 @@ class AuthService {
       final token = prefs.getString(_keyAuthToken);
 
       if (kDebugMode) {
-        print(
-          token != null ? "✅ Auth token retrieved" : "❌ Auth token not found",
-        );
+        if (token != null && token.isNotEmpty) {
+          print("✅ Auth token retrieved");
+          print("🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...");
+        } else {
+          print("❌ Auth token not found in storage");
+          print("💡 Available keys: ${prefs.getKeys().toList()}");
+        }
       }
 
       return token;
@@ -297,6 +354,17 @@ class AuthService {
     }
   }
 
+  /// Check if user is currently logged in
+  Future<bool> isLoggedIn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getBool(_keyIsLoggedIn) ?? false;
+    } catch (e) {
+      if (kDebugMode) print("❌ Error checking login status: $e");
+      return false;
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════════════════
   // HELPER METHODS
   // ═══════════════════════════════════════════════════════════════════════
@@ -310,13 +378,81 @@ class AuthService {
         status == 'true';
   }
 
+  /// Extract token from login response - checks multiple possible locations
+  String _extractToken(Map<String, dynamic> userData) {
+    // Try different possible token locations
+
+    // 1. Direct token field
+    if (userData['token'] != null && userData['token'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Token found in: userData['token']");
+      return userData['token'].toString();
+    }
+
+    // 2. data.token
+    if (userData['data'] != null && userData['data'] is Map) {
+      final data = userData['data'] as Map;
+      if (data['token'] != null && data['token'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Token found in: userData['data']['token']");
+        return data['token'].toString();
+      }
+    }
+
+    // 3. user.token
+    if (userData['user'] != null && userData['user'] is Map) {
+      final user = userData['user'] as Map;
+      if (user['token'] != null && user['token'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Token found in: userData['user']['token']");
+        return user['token'].toString();
+      }
+    }
+
+    // 4. access_token
+    if (userData['access_token'] != null && userData['access_token'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Token found in: userData['access_token']");
+      return userData['access_token'].toString();
+    }
+
+    // 5. data.access_token
+    if (userData['data'] != null && userData['data'] is Map) {
+      final data = userData['data'] as Map;
+      if (data['access_token'] != null && data['access_token'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Token found in: userData['data']['access_token']");
+        return data['access_token'].toString();
+      }
+    }
+
+    // 6. bearer_token
+    if (userData['bearer_token'] != null && userData['bearer_token'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Token found in: userData['bearer_token']");
+      return userData['bearer_token'].toString();
+    }
+
+    if (kDebugMode) print("❌ Token not found in any expected location");
+    return '';
+  }
+
   /// Extract user ID from login response
   String _extractUserId(Map<String, dynamic> userData) {
     // Try multiple possible locations for user ID
-    if (userData['user'] != null && userData['user']['user_id'] != null) {
-      return userData['user']['user_id'].toString();
+
+    // 1. user.user_id
+    if (userData['user'] != null && userData['user'] is Map) {
+      final user = userData['user'] as Map;
+      if (user['user_id'] != null) {
+        return user['user_id'].toString();
+      }
+      if (user['id'] != null) {
+        return user['id'].toString();
+      }
+      if (user['employee_id'] != null) {
+        return user['employee_id'].toString();
+      }
+      if (user['employment_id'] != null) {
+        return user['employment_id'].toString();
+      }
     }
 
+    // 2. Direct fields
     if (userData['user_id'] != null) {
       return userData['user_id'].toString();
     }
@@ -325,6 +461,26 @@ class AuthService {
       return userData['userId'].toString();
     }
 
+    if (userData['employee_id'] != null) {
+      return userData['employee_id'].toString();
+    }
+
+    if (userData['employment_id'] != null) {
+      return userData['employment_id'].toString();
+    }
+
+    // 3. data.user_id
+    if (userData['data'] != null && userData['data'] is Map) {
+      final data = userData['data'] as Map;
+      if (data['user_id'] != null) {
+        return data['user_id'].toString();
+      }
+      if (data['employee_id'] != null) {
+        return data['employee_id'].toString();
+      }
+    }
+
+    if (kDebugMode) print("⚠️ User ID not found in any expected location");
     return '';
   }
 
@@ -332,19 +488,60 @@ class AuthService {
   Future<void> debugPrintSessionData() async {
     if (!kDebugMode) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    print("═══════════════════════════════════════");
-    print("📝 SESSION DATA:");
-    print("═══════════════════════════════════════");
-    print("✅ isLoggedIn: ${prefs.getBool(_keyIsLoggedIn)}");
-    print("⏰ loginTime: ${prefs.getInt(_keyLoginTime)}");
-    print("🆔 employeeId: ${prefs.getString(_keyEmployeeId)}");
-    print(
-      "🔑 authToken: ${prefs.getString(_keyAuthToken) != null ? 'Present' : 'Missing'}",
-    );
-    print(
-      "📦 userData: ${prefs.getString(_keyUserData)?.substring(0, 100)}...",
-    );
-    print("═══════════════════════════════════════");
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_keyAuthToken);
+      final userData = prefs.getString(_keyUserData);
+
+      print("═══════════════════════════════════════");
+      print("📝 COMPLETE SESSION DATA:");
+      print("═══════════════════════════════════════");
+      print("✅ isLoggedIn: ${prefs.getBool(_keyIsLoggedIn)}");
+      print("⏰ loginTime: ${prefs.getInt(_keyLoginTime)}");
+      print("🆔 employeeId: ${prefs.getString(_keyEmployeeId)}");
+      print("🆔 logged_in_emp_id: ${prefs.getString(_keyLoggedInEmpId)}");
+
+      if (token != null && token.isNotEmpty) {
+        print("🔑 authToken: ${token.substring(0, min(50, token.length))}...");
+        print("📏 Token length: ${token.length} chars");
+      } else {
+        print("🔑 authToken: NOT FOUND");
+      }
+
+      if (userData != null && userData.isNotEmpty) {
+        print("📦 userData (first 200 chars): ${userData.substring(0, min(200, userData.length))}...");
+      } else {
+        print("📦 userData: NOT FOUND");
+      }
+
+      print("═══════════════════════════════════════");
+      print("🔧 All SharedPreferences Keys:");
+      print(prefs.getKeys().toList());
+      print("═══════════════════════════════════════");
+    } catch (e) {
+      print("❌ Error printing debug data: $e");
+    }
+  }
+
+  /// Validate token format (basic check)
+  bool isValidTokenFormat(String? token) {
+    if (token == null || token.isEmpty) return false;
+
+    // Basic validation: token should be at least 20 characters
+    // and contain alphanumeric characters
+    return token.length >= 20 && RegExp(r'^[a-zA-Z0-9._-]+$').hasMatch(token);
+  }
+
+  /// Force refresh session (call after login)
+  Future<void> refreshSession() async {
+    try {
+      final session = await loadLoginSession();
+      if (session != null) {
+        await saveLoginSession(session);
+        if (kDebugMode) print("✅ Session refreshed");
+      }
+    } catch (e) {
+      if (kDebugMode) print("❌ Error refreshing session: $e");
+    }
   }
 }

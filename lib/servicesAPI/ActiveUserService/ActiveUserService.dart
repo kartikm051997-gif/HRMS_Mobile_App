@@ -28,8 +28,9 @@ class ActiveUserService {
       if (cmpid != null) queryParams['cmpid'] = cmpid;
       if (zoneId != null) queryParams['zone_id'] = zoneId;
       if (locationsId != null) queryParams['locations_id'] = locationsId;
-      if (designationsId != null)
+      if (designationsId != null) {
         queryParams['designations_id'] = designationsId;
+      }
       if (ctcRange != null) queryParams['ctc_range'] = ctcRange;
       if (punch != null) queryParams['punch'] = punch;
       if (dolpFromdate != null) queryParams['dolp_fromdate'] = dolpFromdate;

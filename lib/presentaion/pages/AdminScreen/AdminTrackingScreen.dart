@@ -29,8 +29,11 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-  }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AdminTrackingProvider>().initialize();
+    });
+  }
   @override
   void dispose() {
     _tabController.dispose();

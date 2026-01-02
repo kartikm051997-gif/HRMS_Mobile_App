@@ -1,12 +1,13 @@
-import 'GetLocationHistoryModel.dart';
-
 class TrackingSession {
   final DateTime date;
   final DateTime checkInTime;
-  final DateTime? checkOutTime;
+  DateTime? checkOutTime;
   final String? checkInAddress;
-  final String? checkOutAddress;
-  final List<Locations> points;
+  String? checkOutAddress;
+  final String? checkInLat;
+  final String? checkInLng;
+  String? checkOutLat;
+  String? checkOutLng;
 
   TrackingSession({
     required this.date,
@@ -14,6 +15,9 @@ class TrackingSession {
     this.checkOutTime,
     this.checkInAddress,
     this.checkOutAddress,
-    required this.points,
+    this.checkInLat,
+    this.checkInLng,
+    this.checkOutLat,
+    this.checkOutLng,
   });
 }
