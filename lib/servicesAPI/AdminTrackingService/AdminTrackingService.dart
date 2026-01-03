@@ -9,7 +9,7 @@ import '../../model/UserTrackingModel/GetLocationHistoryModel.dart';
 class AdminTrackingService {
   // Singleton pattern
   static final AdminTrackingService _instance =
-  AdminTrackingService._internal();
+      AdminTrackingService._internal();
   factory AdminTrackingService() => _instance;
   AdminTrackingService._internal();
 
@@ -30,13 +30,13 @@ class AdminTrackingService {
 
       final response = await http
           .get(
-        Uri.parse(ApiBase.getAllFilters),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      )
+            Uri.parse(ApiBase.getAllFilters),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
           .timeout(_timeout);
 
       if (kDebugMode) {
@@ -106,8 +106,9 @@ class AdminTrackingService {
         queryParams['to_date'] = toDate;
       }
 
-      final uri = Uri.parse(ApiBase.getLocationHistory)
-          .replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        ApiBase.getLocationHistory,
+      ).replace(queryParameters: queryParams);
 
       if (kDebugMode) {
         print("═══════════════════════════════════════");
@@ -122,13 +123,13 @@ class AdminTrackingService {
 
       final response = await http
           .get(
-        uri,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      )
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
           .timeout(_timeout);
 
       if (kDebugMode) {

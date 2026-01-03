@@ -2,9 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/fonts/fonts.dart';
 import '../../../provider/AdminTrackingProvider/AdminTrackingProvider.dart';
+import '../../../provider/login_provider/login_provider.dart';
 
 class MapTabScreen extends StatefulWidget {
   final TrackingRecord? session;
@@ -25,6 +28,8 @@ class _MapTabScreenState extends State<MapTabScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+    final user = loginProvider.loginData?.user;
     if (widget.session == null || widget.session!.trackingPoints.isEmpty) {
       return Center(
         child: Column(
@@ -216,20 +221,41 @@ class _MapTabScreenState extends State<MapTabScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.session!.employeeName,
+                              user?.fullname ?? "Welcome!",
                               style: const TextStyle(
-                                fontSize: 17,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.white,
                                 fontFamily: AppFonts.poppins,
-                                fontWeight: FontWeight.w600,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              widget.session!.employeeId,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.white70,
-                                fontFamily: AppFonts.poppins,
+                            const SizedBox(height: 5),
+
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    user?.username ?? "Welcome!",
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.white70,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
                           ],

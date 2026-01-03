@@ -34,6 +34,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
       context.read<AdminTrackingProvider>().initialize();
     });
   }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -195,82 +196,108 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               const SizedBox(height: 12),
                               _DatePickerField(provider: adminTrackingProvider),
                               const SizedBox(height: 20),
-                              GestureDetector(
-                                onTap:
-                                    _isSearching
-                                        ? null
-                                        : () async {
-                                          if (!adminTrackingProvider
-                                              .isFiltersValid) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  'Please select all filters',
+                              Row(
+                                children: [
+                                  // CLEAR BUTTON
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        context
+                                            .read<AdminTrackingProvider>()
+                                            .clearFilters();
+                                      },
+                                      child: Container(
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          "Clear",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: AppFonts.poppins,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 12),
+
+                                  // SEARCH BUTTON
+                                  Expanded(
+                                    flex: 2,
+                                    child: GestureDetector(
+                                      onTap:
+                                          _isSearching
+                                              ? null
+                                              : () async {
+                                                final provider =
+                                                    context
+                                                        .read<
+                                                          AdminTrackingProvider
+                                                        >();
+
+                                                if (!provider.isFiltersValid) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Please select all filters',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+
+                                                setState(
+                                                  () => _isSearching = true,
+                                                );
+
+                                                await provider.performSearch();
+
+                                                setState(() {
+                                                  _isSearching = false;
+                                                  _selectedSession = null;
+                                                  _tabController.animateTo(0);
+                                                });
+                                              },
+                                      child: Container(
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: AppColor.primaryColor2,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child:
+                                            _isSearching
+                                                ? const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                )
+                                                : const Text(
+                                                  "Search",
                                                   style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
                                                     fontFamily:
                                                         AppFonts.poppins,
                                                   ),
                                                 ),
-                                                backgroundColor: Colors.red,
-                                              ),
-                                            );
-                                            return;
-                                          }
-
-                                          setState(() {
-                                            _isSearching = true;
-                                          });
-
-                                          await adminTrackingProvider
-                                              .performSearch();
-
-                                          setState(() {
-                                            _isSearching = false;
-                                            _selectedSession = null;
-                                            _tabController.animateTo(0);
-                                          });
-                                        },
-                                child: Container(
-                                  height: 48,
-                                  width: double.infinity,
-                                  alignment: Alignment.center,
-                                  decoration: BoxDecoration(
-                                    color: AppColor.primaryColor2,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: AppColor.primaryColor2
-                                            .withOpacity(0.3),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 3),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                  child:
-                                      _isSearching
-                                          ? const SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                              strokeWidth: 3,
-                                            ),
-                                          )
-                                          : const Text(
-                                            "Search",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                              fontFamily: AppFonts.poppins,
-                                            ),
-                                          ),
-                                ),
+                                ],
                               ),
                             ],
                           ),

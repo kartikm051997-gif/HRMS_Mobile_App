@@ -297,15 +297,9 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
-                            Icons.location_on_rounded,
-                            color: Colors.white70,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              user?.branch ?? "Branch",
+                              user?.username ?? "Welcome!",
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white70,

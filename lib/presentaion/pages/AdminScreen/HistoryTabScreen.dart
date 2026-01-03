@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import '../../../core/fonts/fonts.dart';
 import '../../../provider/AdminTrackingProvider/AdminTrackingProvider.dart';
+import '../../../provider/login_provider/login_provider.dart';
 
 class HistoryTabScreen extends StatelessWidget {
   final List<TrackingRecord> sessions;
@@ -16,6 +18,8 @@ class HistoryTabScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context);
+    final user = loginProvider.loginData?.user;
     if (sessions.isEmpty) {
       return Center(
         child: Text(
@@ -87,12 +91,44 @@ class HistoryTabScreen extends StatelessWidget {
                               fontFamily: AppFonts.poppins,
                             ),
                           ),
+                          const SizedBox(height: 4),
+
                           Text(
-                            session.employeeName,
+                            user?.fullname ?? "Welcome!",
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white70,
                               fontFamily: AppFonts.poppins,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  user?.username ?? "Welcome!",
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
                             ),
                           ),
                         ],

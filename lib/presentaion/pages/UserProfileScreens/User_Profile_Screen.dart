@@ -26,7 +26,6 @@ class UserProfileScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-
             /// Profile Header Background
             Container(
               width: double.infinity,
@@ -40,7 +39,6 @@ class UserProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
                 children: [
-
                   /// Profile Avatar
                   GestureDetector(
                     onTap: () {
@@ -49,11 +47,9 @@ class UserProfileScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (_) =>
-                                FullImageView(
+                                (_) => FullImageView(
                                   imageUrl:
-                                  "https://app.draravindsivf.com/hrms/${user
-                                      .avatar}",
+                                      "https://app.draravindsivf.com/hrms/${user.avatar}",
                                   tag: 'profileImageHero',
                                 ),
                           ),
@@ -66,26 +62,26 @@ class UserProfileScreen extends StatelessWidget {
                         radius: 60,
                         backgroundColor: Colors.white.withOpacity(0.2),
                         backgroundImage:
-                        (user?.avatar != null && user!.avatar!.isNotEmpty)
-                            ? NetworkImage(
-                          "https://app.draravindsivf.com/hrms/${user.avatar}",
-                        )
-                            : null,
+                            (user?.avatar != null && user!.avatar!.isNotEmpty)
+                                ? NetworkImage(
+                                  "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                )
+                                : null,
                         child:
-                        (user?.avatar == null || user!.avatar!.isEmpty)
-                            ? Text(
-                          user?.fullname != null &&
-                              user!.fullname!.isNotEmpty
-                              ? user.fullname![0].toUpperCase()
-                              : "U",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 40,
-                            fontFamily: AppFonts.poppins,
-                          ),
-                        )
-                            : null,
+                            (user?.avatar == null || user!.avatar!.isEmpty)
+                                ? Text(
+                                  user?.fullname != null &&
+                                          user!.fullname!.isNotEmpty
+                                      ? user.fullname![0].toUpperCase()
+                                      : "U",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 40,
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                )
+                                : null,
                       ),
                     ),
                   ),
@@ -151,15 +147,22 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildProfileDetailRow(
-                    icon: Icons.location_on_outlined,
-                    label: "Branch",
-                    value: user?.branch ?? "N/A",
+                    icon: Icons.person_outline,
+                    label: "Email",
+                    value: user?.email ?? "N/A",
                   ),
                   const SizedBox(height: 16),
                   _buildProfileDetailRow(
                     icon: Icons.badge_outlined,
-                    label: "Employee ID",
-                    value: userId ?? "N/A",
+                    label: "UserName",
+                    value: user?.username ?? "N/A",
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildProfileDetailRow(
+                    icon: Icons.badge_outlined,
+                    label: "LastLogin",
+                    value: user?.lastLogin ?? "N/A",
                   ),
                 ],
               ),
@@ -181,12 +184,12 @@ class UserProfileScreen extends StatelessWidget {
                 ),
                 child: ElevatedButton(
                   onPressed: () {
-                    _showLogoutDialog(context,);
+                    _showLogoutDialog(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor:
-                    Colors
-                        .transparent, // make button background transparent
+                        Colors
+                            .transparent, // make button background transparent
                     shadowColor: Colors.transparent, // remove button shadow
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -257,26 +260,27 @@ class UserProfileScreen extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Are you sure you want to logout?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
+      builder:
+          (dialogContext) => AlertDialog(
+            title: const Text("Logout"),
+            content: const Text("Are you sure you want to logout?"),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext); // close dialog
+                  _logout(context); // ✅ correct context
+                },
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext); // close dialog
-              _logout(context); // ✅ correct context
-            },
-            child: const Text(
-              "Logout",
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -295,7 +299,7 @@ class UserProfileScreen extends StatelessWidget {
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => LoginScreen()),
-              (route) => false,
+          (route) => false,
         );
       }
     }

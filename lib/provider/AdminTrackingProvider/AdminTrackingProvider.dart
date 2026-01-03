@@ -3,6 +3,7 @@
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../model/Employee_management/getAllFiltersModel.dart'; // ✅ YOUR MODEL
@@ -37,6 +38,19 @@ class AdminTrackingProvider with ChangeNotifier {
 
   bool _isFilterExpanded = false;
   final adminDateController = TextEditingController();
+
+  void clearFilters() {
+    _selectedEmployeeId = null;
+    _selectedBranch = null;
+    _selectedDesignation = null;
+    _selectedDate = null;
+
+    _trackingRecords.clear();
+    _hasSearched = false;
+    _isFilterExpanded = false;
+
+    notifyListeners();
+  }
 
   // ═══════════════════════════════════════════════════════════════════════
   // TRACKING DATA
@@ -282,84 +296,65 @@ class AdminTrackingProvider with ChangeNotifier {
   List<TrackingRecord> _convertApiResponseToRecords(
     GetLocationHistoryModel historyData,
   ) {
-    final locations = historyData.data!.locations!;
-    return _buildSessionsFromLocations(locations);
+    final allLocations = historyData.data!.locations!;
 
-    // Sort by time
+    // 1️⃣ Filter by selected date
+    final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+
+    final filteredLocations =
+        allLocations.where((loc) {
+          if (loc.capturedAt == null) return false;
+          final locDay = loc.capturedAt!.split(" ").first;
+          return locDay == selectedDay;
+        }).toList();
+
+    if (kDebugMode) {
+      print("📅 Selected Date: $selectedDay");
+      print("📍 Locations after date filter: ${filteredLocations.length}");
+    }
+
+    // 2️⃣ Convert to sessions (CHECK_IN → CHECK_OUT)
+    return _buildSessionsFromLocations(filteredLocations);
   }
 
   /// Create a single TrackingRecord from locations
   TrackingRecord _createTrackingRecordFromLocations(List<Locations> locations) {
-    final firstLocation = locations.first;
-    final date = DateTime.parse(firstLocation.capturedAt!);
-
-    // Find check-in and check-out
     final checkInLoc = locations.firstWhere(
-      (l) => l.activityType == 'CHECK_IN',
-      orElse: () => locations.first,
+      (l) => l.activityType == "CHECK_IN",
     );
 
     final checkOutLoc = locations.lastWhere(
-      (l) => l.activityType == 'CHECK_OUT',
-      orElse: () => locations.last,
+      (l) => l.activityType == "CHECK_OUT",
     );
 
-    // Create tracking points
-    List<TrackingPoint> trackingPoints = [];
+    final checkInTime = DateTime.parse(checkInLoc.capturedAt!);
+    final checkOutTime = DateTime.parse(checkOutLoc.capturedAt!);
 
+    // 🔥 Correct tracking points with distance & wait time
+    final List<TrackingPoint> points = [];
     for (int i = 0; i < locations.length; i++) {
-      final loc = locations[i];
-      final dt = DateTime.parse(loc.capturedAt!);
-
-      double distance = 0;
-      if (i > 0) {
-        distance = _calculateDistance(locations[i - 1], loc);
-      }
-
-      trackingPoints.add(
-        TrackingPoint(
-          location: LatLng(
-            double.parse(loc.latitude ?? '0'),
-            double.parse(loc.longitude ?? '0'),
-          ),
-          address: loc.locationAddress ?? 'Unknown location',
-          time: DateFormat('hh:mm a').format(dt),
-          distanceFromPrevious: distance,
-          waitTime: null,
-          isCheckpoint:
-              loc.activityType == 'CHECK_IN' || loc.activityType == 'CHECK_OUT',
-        ),
-      );
+      final current = locations[i];
+      final previous = i == 0 ? null : locations[i - 1];
+      points.add(TrackingPoint.fromLocation(current, previous));
     }
 
-    // Get employee name from first location
-    final employeeName = firstLocation.fullname ?? 'Unknown Employee';
+    double distance = 0;
+    for (int i = 0; i < locations.length - 1; i++) {
+      distance += _calculateDistance(locations[i], locations[i + 1]);
+    }
 
     return TrackingRecord(
-      sessionId: 'session_${date.millisecondsSinceEpoch}',
-      employeeId: _selectedEmployeeId ?? '',
-      employeeName: employeeName,
-      date: date,
-      checkInTime: DateFormat(
-        'hh:mm a',
-      ).format(DateTime.parse(checkInLoc.capturedAt!)),
-      checkOutTime:
-          checkOutLoc.activityType == 'CHECK_OUT'
-              ? DateFormat(
-                'hh:mm a',
-              ).format(DateTime.parse(checkOutLoc.capturedAt!))
-              : '--:--',
-      checkInLocation: LatLng(
-        double.parse(checkInLoc.latitude ?? '0'),
-        double.parse(checkInLoc.longitude ?? '0'),
-      ),
-      checkInAddress: checkInLoc.locationAddress ?? 'Unknown',
-      checkOutLocation: LatLng(
-        double.parse(checkOutLoc.latitude ?? '0'),
-        double.parse(checkOutLoc.longitude ?? '0'),
-      ),
-      checkOutAddress: checkOutLoc.locationAddress ?? 'Unknown',
-      trackingPoints: trackingPoints,
+      employeeId: checkInLoc.userId ?? "", // ✅ correct
+      employeeName: checkInLoc.fullname ?? "Unknown",
+      date: DateTime(checkInTime.year, checkInTime.month, checkInTime.day),
+      checkIn: checkInTime,
+      checkOut: checkOutTime,
+      trackingPoints: points,
+      totalDistance: distance,
+      totalDuration:
+          checkOutTime == null
+              ? Duration.zero
+              : checkOutTime.difference(checkInTime),
     );
   }
 
@@ -389,9 +384,7 @@ class AdminTrackingProvider with ChangeNotifier {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════
   // FILTER SEARCH HELPERS
-  // ═══════════════════════════════════════════════════════════════════════
 
   List<EmployeeModel> getFilteredEmployees(String query) {
     final filtered =
@@ -464,52 +457,43 @@ class EmployeeModel {
 }
 
 class TrackingRecord {
-  final String sessionId;
   final String employeeId;
   final String employeeName;
   final DateTime date;
-  final String checkInTime;
-  final String checkOutTime;
-  final LatLng checkInLocation;
-  final String checkInAddress;
-  final LatLng checkOutLocation;
-  final String checkOutAddress;
+
+  final DateTime checkIn;
+  final DateTime? checkOut;
+
   final List<TrackingPoint> trackingPoints;
+  final double totalDistance;
+  final Duration totalDuration;
 
   TrackingRecord({
-    required this.sessionId,
     required this.employeeId,
     required this.employeeName,
     required this.date,
-    required this.checkInTime,
-    required this.checkOutTime,
-    required this.checkInLocation,
-    required this.checkInAddress,
-    required this.checkOutLocation,
-    required this.checkOutAddress,
+    required this.checkIn,
+    required this.checkOut,
     required this.trackingPoints,
+    required this.totalDistance,
+    required this.totalDuration,
   });
 
-  double get totalDistance {
-    return trackingPoints.fold(
-      0.0,
-      (sum, point) => sum + point.distanceFromPrevious,
-    );
-  }
+  // 👇 UI uses these getters
+  String get checkInTime => DateFormat('hh:mm a').format(checkIn);
 
-  Duration get totalDuration {
-    if (trackingPoints.length < 2) return Duration.zero;
-    return const Duration(hours: 9);
-  }
+  String get checkOutTime =>
+      checkOut == null
+          ? 'Not checked out'
+          : DateFormat('hh:mm a').format(checkOut!);
 }
 
 class TrackingPoint {
   final LatLng location;
   final String address;
   final String time;
-  final double distanceFromPrevious;
-  final Duration? waitTime;
-  final bool isCheckpoint;
+  final double distanceFromPrevious; // meters
+  final Duration? waitTime; // null for first point
 
   TrackingPoint({
     required this.location,
@@ -517,6 +501,40 @@ class TrackingPoint {
     required this.time,
     required this.distanceFromPrevious,
     this.waitTime,
-    this.isCheckpoint = false,
   });
+
+  factory TrackingPoint.fromLocation(Locations loc, Locations? previous) {
+    final lat = double.tryParse(loc.latitude ?? "0") ?? 0;
+    final lng = double.tryParse(loc.longitude ?? "0") ?? 0;
+
+    double distance = 0;
+    Duration? wait;
+
+    if (previous != null) {
+      final prevLat = double.tryParse(previous.latitude ?? "0") ?? 0;
+      final prevLng = double.tryParse(previous.longitude ?? "0") ?? 0;
+
+      distance = Geolocator.distanceBetween(prevLat, prevLng, lat, lng);
+
+      if (previous.capturedAt != null && loc.capturedAt != null) {
+        wait = DateTime.parse(
+          loc.capturedAt!,
+        ).difference(DateTime.parse(previous.capturedAt!));
+      }
+    }
+
+    return TrackingPoint(
+      location: LatLng(lat, lng),
+      address: loc.locationAddress ?? "Unknown location",
+      time: _formatTime(loc.capturedAt),
+      distanceFromPrevious: distance,
+      waitTime: wait,
+    );
+  }
+
+  static String _formatTime(String? value) {
+    if (value == null) return "";
+    final dt = DateTime.parse(value);
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
 }
