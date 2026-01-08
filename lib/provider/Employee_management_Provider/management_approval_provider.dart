@@ -39,7 +39,12 @@ class ManagementApprovalProvider extends ChangeNotifier {
 
   /// Dropdown data
   final List<String> _zone = ["North", "South", "East", "West"];
-  final List<String> _branch = ["Chennai", "Bangalore", "Hyderabad", "Tiruppur"];
+  final List<String> _branch = [
+    "Chennai",
+    "Bangalore",
+    "Hyderabad",
+    "Tiruppur",
+  ];
   final List<String> _designation = [
     "Manager",
     "HR",
@@ -47,7 +52,7 @@ class ManagementApprovalProvider extends ChangeNotifier {
     "Admin",
     "Receptionist",
     "Jr.Admin",
-    "Lab Technician"
+    "Lab Technician",
   ];
 
   List<String> get zone => _zone;
@@ -84,11 +89,16 @@ class ManagementApprovalProvider extends ChangeNotifier {
     if (query.isEmpty) {
       _filteredEmployees = List.from(_allEmployees);
     } else {
-      _filteredEmployees = _allEmployees.where((employee) {
-        return employee.name.toLowerCase().contains(query.toLowerCase()) ||
-            employee.employeeId.toLowerCase().contains(query.toLowerCase()) ||
-            employee.designation.toLowerCase().contains(query.toLowerCase());
-      }).toList();
+      _filteredEmployees =
+          _allEmployees.where((employee) {
+            return employee.name.toLowerCase().contains(query.toLowerCase()) ||
+                employee.employeeId.toLowerCase().contains(
+                  query.toLowerCase(),
+                ) ||
+                employee.designation.toLowerCase().contains(
+                  query.toLowerCase(),
+                );
+          }).toList();
     }
     notifyListeners();
   }
@@ -175,11 +185,12 @@ class ManagementApprovalProvider extends ChangeNotifier {
 
       if (searchController.text.isNotEmpty) {
         final query = searchController.text.toLowerCase();
-        _filteredEmployees = _filteredEmployees.where((employee) {
-          return employee.name.toLowerCase().contains(query) ||
-              employee.employeeId.toLowerCase().contains(query) ||
-              employee.designation.toLowerCase().contains(query);
-        }).toList();
+        _filteredEmployees =
+            _filteredEmployees.where((employee) {
+              return employee.name.toLowerCase().contains(query) ||
+                  employee.employeeId.toLowerCase().contains(query) ||
+                  employee.designation.toLowerCase().contains(query);
+            }).toList();
       }
 
       _isLoading = false;

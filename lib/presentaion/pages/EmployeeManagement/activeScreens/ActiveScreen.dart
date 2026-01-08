@@ -1,7 +1,8 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 import 'active_employee_details_screen.dart';
@@ -17,15 +18,6 @@ class _ActiveScreenState extends State<ActiveScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  // Colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
 
   @override
   void initState() {
@@ -55,7 +47,7 @@ class _ActiveScreenState extends State<ActiveScreen>
     final activeProvider = Provider.of<ActiveProvider>(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
@@ -481,7 +473,7 @@ class _ActiveScreenState extends State<ActiveScreen>
 
                   Container(
                     decoration: BoxDecoration(
-                      color: cardColor,
+                      color: AppColor.cardColor,
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.05),
@@ -515,8 +507,8 @@ class _ActiveScreenState extends State<ActiveScreen>
                                             activeProvider.showFilters
                                                 ? const LinearGradient(
                                                   colors: [
-                                                    primaryColor,
-                                                    secondaryColor,
+                                                    AppColor.primaryColor,
+                                                    AppColor.secondaryColor,
                                                   ],
                                                 )
                                                 : null,
@@ -529,7 +521,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                           color:
                                               activeProvider.showFilters
                                                   ? Colors.transparent
-                                                  : borderColor,
+                                                  : AppColor.borderColor,
                                         ),
                                       ),
                                       child: Row(
@@ -540,7 +532,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                             color:
                                                 activeProvider.showFilters
                                                     ? Colors.white
-                                                    : textSecondary,
+                                                    : AppColor.textSecondary,
                                           ),
                                           const SizedBox(width: 10),
                                           Text(
@@ -552,7 +544,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                               color:
                                                   activeProvider.showFilters
                                                       ? Colors.white
-                                                      : textSecondary,
+                                                      : AppColor.textSecondary,
                                             ),
                                           ),
                                           const Spacer(),
@@ -561,7 +553,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                             color:
                                                 activeProvider.showFilters
                                                     ? Colors.white
-                                                    : textSecondary,
+                                                    : AppColor.textSecondary,
                                           ),
                                         ],
                                       ),
@@ -582,7 +574,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                             decoration: BoxDecoration(
                               color: const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
+                              border: Border.all(color: AppColor.borderColor),
                             ),
                             child: TextField(
                               controller: activeProvider.searchController,
@@ -592,7 +584,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                               style: const TextStyle(
                                 fontSize: 15,
                                 fontFamily: AppFonts.poppins,
-                                color: textPrimary,
+                                color: AppColor.textPrimary,
                               ),
                               decoration: InputDecoration(
                                 filled: true,
@@ -601,11 +593,13 @@ class _ActiveScreenState extends State<ActiveScreen>
                                 hintStyle: TextStyle(
                                   fontSize: 14,
                                   fontFamily: AppFonts.poppins,
-                                  color: textSecondary.withOpacity(0.7),
+                                  color: AppColor.textSecondary.withOpacity(
+                                    0.7,
+                                  ),
                                 ),
                                 prefixIcon: const Icon(
                                   Icons.search_rounded,
-                                  color: textSecondary,
+                                  color: AppColor.textSecondary,
                                   size: 22,
                                 ),
                                 suffixIcon:
@@ -619,7 +613,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                   activeProvider.clearSearch(),
                                           icon: const Icon(
                                             Icons.close_rounded,
-                                            color: textSecondary,
+                                            color: AppColor.textSecondary,
                                             size: 18,
                                           ),
                                         )
@@ -690,29 +684,27 @@ class _ActiveScreenState extends State<ActiveScreen>
                             const SizedBox(height: 12),
 
                             // ================= ZONE =================
-                            CustomSearchDropdownWithSearch(
-                              labelText: "Zone",
-                              isMandatory: true,
+                            MultiSelectDropdown(
+                              label: "Zone",
                               items: activeProvider.zone,
-                              selectedValue: activeProvider.selectedZone,
-                              onChanged: activeProvider.setSelectedZone,
-                              hintText: "Select Zone",
+                              selectedItems: activeProvider.selectedZones,
+                              onChanged: (values) {
+                                activeProvider.setZones(values);
+                              },
                             ),
 
                             const SizedBox(height: 12),
 
                             // ================= BRANCH =================
-                            CustomSearchDropdownWithSearch(
-                              labelText: "Branch",
-                              isMandatory: true,
-                              items: activeProvider.branch,
-                              selectedValue: activeProvider.selectedBranch,
-                              onChanged: activeProvider.setSelectedBranch,
-                              hintText:
-                                  activeProvider.selectedZone == null
-                                      ? "Select zone first"
-                                      : "Select Branch",
-                              readOnly: activeProvider.selectedZone == null,
+                            MultiSelectDropdown(
+                              label: "Branch",
+                              items:
+                                  activeProvider
+                                      .branch, // already filtered by selected zones
+                              selectedItems: activeProvider.selectedBranches,
+                              onChanged: (values) {
+                                activeProvider.setBranches(values);
+                              },
                             ),
 
                             const SizedBox(height: 12),
@@ -755,7 +747,9 @@ class _ActiveScreenState extends State<ActiveScreen>
                                     vertical: 14,
                                   ),
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: borderColor),
+                                    border: Border.all(
+                                      color: AppColor.borderColor,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Center(
@@ -765,7 +759,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
                                         fontFamily: AppFonts.poppins,
-                                        color: textSecondary,
+                                        color: AppColor.textSecondary,
                                       ),
                                     ),
                                   ),
@@ -795,17 +789,17 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                 !activeProvider.isLoading
                                             ? const LinearGradient(
                                               colors: [
-                                                primaryColor,
-                                                secondaryColor,
+                                                AppColor.primaryColor,
+                                                AppColor.secondaryColor,
                                               ],
                                             )
                                             : null,
                                     color:
                                         activeProvider.areAllFiltersSelected
                                             ? (activeProvider.isLoading
-                                                ? borderColor
+                                                ? AppColor.borderColor
                                                 : null)
-                                            : borderColor,
+                                            : AppColor.borderColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Center(
@@ -832,7 +826,8 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                       activeProvider
                                                               .areAllFiltersSelected
                                                           ? Colors.white
-                                                          : textSecondary,
+                                                          : AppColor
+                                                              .textSecondary,
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Text(
@@ -849,7 +844,8 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                         activeProvider
                                                                 .areAllFiltersSelected
                                                             ? Colors.white
-                                                            : textSecondary,
+                                                            : AppColor
+                                                                .textSecondary,
                                                   ),
                                                 ),
                                               ],
@@ -882,7 +878,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                         height: 50,
                         child: CircularProgressIndicator(
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            primaryColor,
+                            AppColor.primaryColor,
                           ),
                           strokeWidth: 3,
                         ),
@@ -891,7 +887,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                       const Text(
                         "Loading employees...",
                         style: TextStyle(
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                           fontSize: 15,
                           fontFamily: AppFonts.poppins,
                         ),
@@ -931,7 +927,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             fontFamily: AppFonts.poppins,
-                            color: textPrimary,
+                            color: AppColor.textPrimary,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -941,7 +937,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                           style: const TextStyle(
                             fontSize: 14,
                             fontFamily: AppFonts.poppins,
-                            color: textSecondary,
+                            color: AppColor.textSecondary,
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,
@@ -952,7 +948,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                           icon: const Icon(Icons.refresh_rounded),
                           label: const Text("Retry"),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
+                            backgroundColor: AppColor.primaryColor,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
@@ -987,7 +983,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                         child: const Icon(
                           Icons.person_search_rounded,
                           size: 48,
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -997,7 +993,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           fontFamily: AppFonts.poppins,
-                          color: textPrimary,
+                          color: AppColor.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -1006,7 +1002,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                         style: TextStyle(
                           fontSize: 14,
                           fontFamily: AppFonts.poppins,
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                         ),
                       ),
                     ],
@@ -1037,7 +1033,10 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                   decoration: BoxDecoration(
                                     gradient: const LinearGradient(
-                                      colors: [primaryColor, secondaryColor],
+                                      colors: [
+                                        AppColor.primaryColor,
+                                        AppColor.secondaryColor,
+                                      ],
                                     ),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
@@ -1058,7 +1057,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     fontFamily: AppFonts.poppins,
-                                    color: textPrimary,
+                                    color: AppColor.textPrimary,
                                   ),
                                 ),
                               ],
@@ -1077,7 +1076,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                     return Container(
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: cardColor,
+                        color: AppColor.cardColor,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -1108,7 +1107,10 @@ class _ActiveScreenState extends State<ActiveScreen>
                               padding: const EdgeInsets.all(16),
                               decoration: const BoxDecoration(
                                 gradient: LinearGradient(
-                                  colors: [primaryColor, secondaryColor],
+                                  colors: [
+                                    AppColor.primaryColor,
+                                    AppColor.secondaryColor,
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
@@ -1132,10 +1134,27 @@ class _ActiveScreenState extends State<ActiveScreen>
                                       ),
                                     ),
                                     child: ClipOval(
-                                      child: _getAvatarWidget(
-                                        user,
-                                        employeeName,
-                                        employeeId,
+                                      child: Builder(
+                                        builder: (_) {
+                                          final imageUrl = getAvatarUrl(
+                                            user.avatar,
+                                          );
+                                          print(
+                                            'FINAL AVATAR URL 👉 $imageUrl',
+                                          );
+
+                                          return imageUrl.isNotEmpty
+                                              ? Image.network(
+                                                imageUrl,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (_, __, ___) =>
+                                                        _defaultAvatar(
+                                                          employeeName,
+                                                        ),
+                                              )
+                                              : _defaultAvatar(employeeName);
+                                        },
                                       ),
                                     ),
                                   ),
@@ -1211,9 +1230,8 @@ class _ActiveScreenState extends State<ActiveScreen>
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: primaryColor.withOpacity(
-                                              0.1,
-                                            ),
+                                            color: AppColor.primaryColor
+                                                .withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -1221,7 +1239,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                           child: const Icon(
                                             Icons.work_outline_rounded,
                                             size: 16,
-                                            color: primaryColor,
+                                            color: AppColor.primaryColor,
                                           ),
                                         ),
                                         const SizedBox(width: 10),
@@ -1236,7 +1254,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w600,
                                                   fontFamily: AppFonts.poppins,
-                                                  color: textSecondary
+                                                  color: AppColor.textSecondary
                                                       .withOpacity(0.7),
                                                   letterSpacing: 0.5,
                                                 ),
@@ -1248,7 +1266,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
                                                   fontFamily: AppFonts.poppins,
-                                                  color: textPrimary,
+                                                  color: AppColor.textPrimary,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -1262,7 +1280,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   Container(
                                     height: 40,
                                     width: 1,
-                                    color: borderColor,
+                                    color: AppColor.borderColor,
                                   ),
                                   const SizedBox(width: 16),
 
@@ -1273,9 +1291,8 @@ class _ActiveScreenState extends State<ActiveScreen>
                                         Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: secondaryColor.withOpacity(
-                                              0.1,
-                                            ),
+                                            color: AppColor.secondaryColor
+                                                .withOpacity(0.1),
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
@@ -1283,7 +1300,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                           child: const Icon(
                                             Icons.location_on_outlined,
                                             size: 16,
-                                            color: secondaryColor,
+                                            color: AppColor.secondaryColor,
                                           ),
                                         ),
                                         const SizedBox(width: 10),
@@ -1298,7 +1315,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w600,
                                                   fontFamily: AppFonts.poppins,
-                                                  color: textSecondary
+                                                  color: AppColor.textSecondary
                                                       .withOpacity(0.7),
                                                   letterSpacing: 0.5,
                                                 ),
@@ -1310,7 +1327,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
                                                   fontFamily: AppFonts.poppins,
-                                                  color: textPrimary,
+                                                  color: AppColor.textPrimary,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -1337,109 +1354,36 @@ class _ActiveScreenState extends State<ActiveScreen>
     );
   }
 
-  Widget _getAvatarWidget(dynamic user, String name, String employeeId) {
-    final avatar = user.avatar;
-    String? imageUrl;
-
-    if (avatar != null &&
-        avatar.isNotEmpty &&
-        avatar != 'null' &&
-        avatar != 'none') {
-      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
-        imageUrl = avatar;
-      } else {
-        final cleanPath = avatar.startsWith('/') ? avatar.substring(1) : avatar;
-        imageUrl = 'http://192.168.0.11/hrms/$cleanPath';
-      }
+  String getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
     }
 
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: 50,
-        height: 50,
-        fit: BoxFit.cover,
-        placeholder:
-            (context, url) => Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [primaryColor, secondaryColor],
-                ),
-              ),
-              child: const Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-            ),
-        errorWidget: (context, url, error) {
-          return _getDefaultAvatar(name, employeeId);
-        },
-      );
+    // If backend already sends full URL
+    if (avatar.startsWith('http')) {
+      // Replace localhost for real device access
+      return avatar.replaceFirst('http://localhost', 'http://192.168.0.100');
     }
 
-    return _getDefaultAvatar(name, employeeId);
+    // Relative path case
+    return 'http://192.168.0.100/hrms/$avatar';
   }
 
-  Widget _getDefaultAvatar(String name, String employeeId) {
-    String displayLetter = "E";
-    if (name.isNotEmpty && name != "Unknown") {
-      displayLetter = name[0].toUpperCase();
-    } else if (employeeId.isNotEmpty) {
-      displayLetter = employeeId[0].toUpperCase();
-    }
-
+  Widget _defaultAvatar(String employeeName) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
       ),
       child: Center(
         child: Text(
-          displayLetter,
+          employeeName.isNotEmpty ? employeeName[0].toUpperCase() : 'E',
           style: const TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: Colors.white,
             fontFamily: AppFonts.poppins,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOverlayLoader() {
-    return Container(
-      color: Colors.black.withOpacity(0.5),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              SizedBox(
-                width: 50,
-                height: 50,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                  strokeWidth: 4,
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                "Loading...",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: textPrimary,
-                ),
-              ),
-            ],
           ),
         ),
       ),

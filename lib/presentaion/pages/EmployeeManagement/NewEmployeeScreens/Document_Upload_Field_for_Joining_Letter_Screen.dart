@@ -100,7 +100,7 @@ class _DocumentUploadFieldState extends State<DocumentUploadField> {
         RichText(
           text: TextSpan(
             text: widget.labelText,
-            style:  TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColor.blackColor,

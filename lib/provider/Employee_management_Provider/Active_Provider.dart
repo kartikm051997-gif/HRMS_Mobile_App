@@ -1,5 +1,3 @@
-// File: lib/provider/Employee_management_Provider/Active_Provider.dart
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../model/Employee_management/ActiveUserListModel.dart' as models;
@@ -21,7 +19,6 @@ class ActiveProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
 
-  int pageSize = 10;
   int currentPage = 0;
 
   bool _isLoading = false;
@@ -58,12 +55,12 @@ class ActiveProvider extends ChangeNotifier {
   List<String> get company => _companyList.map((e) => e['name']!).toList();
   List<String> get zone => _zoneList.map((e) => e['name']!).toList();
   List<String> get branch {
-    // Filter branches based on selected zone
-    if (_selectedZoneId == null) {
+    if (_selectedZoneIds.isEmpty) {
       return _branchList.map((e) => e['name']!).toList();
     }
+
     return _branchList
-        .where((b) => b['zone_id'] == _selectedZoneId)
+        .where((b) => _selectedZoneIds.contains(b['zone_id']))
         .map((e) => e['name']!)
         .toList();
   }
@@ -79,11 +76,43 @@ class ActiveProvider extends ChangeNotifier {
   String? _selectedCompany;
   String? _selectedCompanyId;
 
-  String? _selectedZone;
-  String? _selectedZoneId;
+  List<String> _selectedZoneIds = [];
+  List<String> _selectedZoneNames = [];
 
-  String? _selectedBranch;
-  String? _selectedBranchId;
+  List<String> _selectedBranchIds = [];
+  List<String> _selectedBranchNames = [];
+
+  void toggleZone(String zoneName) {
+    final zone = _zoneList.firstWhere((z) => z['name'] == zoneName);
+
+    if (_selectedZoneIds.contains(zone['id'])) {
+      _selectedZoneIds.remove(zone['id']);
+      _selectedZoneNames.remove(zone['name']);
+    } else {
+      _selectedZoneIds.add(zone['id']!);
+      _selectedZoneNames.add(zone['name']!);
+    }
+
+    // Reset branches when zone changes
+    _selectedBranchIds.clear();
+    _selectedBranchNames.clear();
+
+    notifyListeners();
+  }
+
+  void toggleBranch(String branchName) {
+    final branch = _branchList.firstWhere((b) => b['name'] == branchName);
+
+    if (_selectedBranchIds.contains(branch['id'])) {
+      _selectedBranchIds.remove(branch['id']);
+      _selectedBranchNames.remove(branch['name']);
+    } else {
+      _selectedBranchIds.add(branch['id']!);
+      _selectedBranchNames.add(branch['name']!);
+    }
+
+    notifyListeners();
+  }
 
   String? _selectedDesignation;
   String? _selectedDesignationId;
@@ -93,16 +122,17 @@ class ActiveProvider extends ChangeNotifier {
 
   // Getters
   String? get selectedCompany => _selectedCompany;
-  String? get selectedZone => _selectedZone;
-  String? get selectedBranch => _selectedBranch;
+  List<String> get selectedZones => _selectedZoneNames;
+  List<String> get selectedBranches => _selectedBranchNames;
+
   String? get selectedDesignation => _selectedDesignation;
   String? get selectedCTC => _selectedCTC;
 
   /// Check if all required filters are selected
   bool get areAllFiltersSelected {
     return _selectedCompanyId != null &&
-        _selectedZoneId != null &&
-        _selectedBranchId != null &&
+        _selectedZoneIds.isNotEmpty &&
+        _selectedBranchIds.isNotEmpty &&
         _selectedDesignationId != null;
   }
 
@@ -315,8 +345,6 @@ class ActiveProvider extends ChangeNotifier {
             dolpTodate: dolpTodate,
             fromdate: fromdate,
             todate: todate,
-            page: page ?? currentPage,
-            perPage: perPage ?? pageSize,
             search: search ?? searchController.text,
           );
 
@@ -396,36 +424,31 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedZone(String? displayName) {
-    _selectedZone = displayName;
-    if (displayName != null) {
-      final item = _zoneList.firstWhere(
-        (z) => z['name'] == displayName,
-        orElse: () => {},
-      );
-      _selectedZoneId = item['id'];
-    } else {
-      _selectedZoneId = null;
-    }
+  void setZones(List<String> zoneNames) {
+    _selectedZoneNames = zoneNames;
+
+    _selectedZoneIds =
+        _zoneList
+            .where((z) => zoneNames.contains(z['name']))
+            .map((z) => z['id']!)
+            .toList();
 
     // Clear branch when zone changes
-    _selectedBranch = null;
-    _selectedBranchId = null;
+    _selectedBranchNames.clear();
+    _selectedBranchIds.clear();
 
     notifyListeners();
   }
 
-  void setSelectedBranch(String? displayName) {
-    _selectedBranch = displayName;
-    if (displayName != null) {
-      final item = _branchList.firstWhere(
-        (b) => b['name'] == displayName,
-        orElse: () => {},
-      );
-      _selectedBranchId = item['id'];
-    } else {
-      _selectedBranchId = null;
-    }
+  void setBranches(List<String> branchNames) {
+    _selectedBranchNames = branchNames;
+
+    _selectedBranchIds =
+        _branchList
+            .where((b) => branchNames.contains(b['name']))
+            .map((b) => b['id']!)
+            .toList();
+
     notifyListeners();
   }
 
@@ -468,20 +491,10 @@ class ActiveProvider extends ChangeNotifier {
       return;
     }
 
-    if (kDebugMode) {
-      print("🔍 Searching with filters:");
-      print("   Company ID: $_selectedCompanyId");
-      print("   Zone ID: $_selectedZoneId");
-      print("   Branch ID: $_selectedBranchId");
-      print("   Designation ID: $_selectedDesignationId");
-      print("   CTC ID: $_selectedCTCId");
-    }
-
-    // Call API with filter IDs
     fetchActiveUsers(
       cmpid: _selectedCompanyId,
-      zoneId: _selectedZoneId,
-      locationsId: _selectedBranchId,
+      zoneId: _selectedZoneIds.join(','),
+      locationsId: _selectedBranchIds.join(','),
       designationsId: _selectedDesignationId,
       ctcRange: _selectedCTCId,
       fromdate:
@@ -524,21 +537,26 @@ class ActiveProvider extends ChangeNotifier {
   void clearAllFilters() {
     _selectedCompany = null;
     _selectedCompanyId = null;
-    _selectedZone = null;
-    _selectedZoneId = null;
-    _selectedBranch = null;
-    _selectedBranchId = null;
+
+    _selectedZoneIds.clear();
+    _selectedZoneNames.clear();
+
+    _selectedBranchIds.clear();
+    _selectedBranchNames.clear();
+
     _selectedDesignation = null;
     _selectedDesignationId = null;
+
     _selectedCTC = null;
     _selectedCTCId = null;
+
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
+
     _errorMessage = null;
     notifyListeners();
 
-    // Reload default data
     fetchActiveUsers();
   }
 
@@ -548,12 +566,6 @@ class ActiveProvider extends ChangeNotifier {
 
   void toggleFilters() {
     _showFilters = !_showFilters;
-    notifyListeners();
-  }
-
-  void setPageSize(int newSize) {
-    pageSize = newSize;
-    currentPage = 0;
     notifyListeners();
   }
 

@@ -24,49 +24,38 @@ class ActiveUserList {
 
 class Data {
   List<Users>? users;
-  Pagination? pagination;
   Summary? summary;
-  FiltersApplied? filtersApplied;
+  Pagination? pagination; // Add this
 
-  Data({this.users, this.pagination, this.summary, this.filtersApplied});
+  Data({this.users, this.summary, this.pagination});
 
   Data.fromJson(Map<String, dynamic> json) {
     if (json['users'] != null) {
-      users = <Users>[];
+      users = [];
       json['users'].forEach((v) {
-        users!.add(new Users.fromJson(v));
+        users!.add(Users.fromJson(v));
       });
     }
-    pagination =
-        json['pagination'] != null
-            ? new Pagination.fromJson(json['pagination'])
-            : null;
-    summary =
-        json['summary'] != null ? new Summary.fromJson(json['summary']) : null;
-    filtersApplied =
-        json['filters_applied'] != null
-            ? new FiltersApplied.fromJson(json['filters_applied'])
-            : null;
+    summary = json['summary'] != null ? Summary.fromJson(json['summary']) : null;
+    pagination = json['pagination'] != null
+        ? Pagination.fromJson(json['pagination'])
+        : null; // Add this
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.users != null) {
-      data['users'] = this.users!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = {};
+    if (users != null) {
+      data['users'] = users!.map((v) => v.toJson()).toList();
     }
-    if (this.pagination != null) {
-      data['pagination'] = this.pagination!.toJson();
+    if (summary != null) {
+      data['summary'] = summary!.toJson();
     }
-    if (this.summary != null) {
-      data['summary'] = this.summary!.toJson();
-    }
-    if (this.filtersApplied != null) {
-      data['filters_applied'] = this.filtersApplied!.toJson();
+    if (pagination != null) {
+      data['pagination'] = pagination!.toJson(); // Add this
     }
     return data;
   }
 }
-
 class Users {
   String? userId;
   String? employmentId;
@@ -150,35 +139,42 @@ class Users {
 }
 
 class Pagination {
-  int? currentPage;
+  int? total;
   int? perPage;
-  int? totalRecords;
-  int? totalPages;
+  int? currentPage;
+  int? lastPage;
+  int? from;
+  int? to;
 
   Pagination({
-    this.currentPage,
+    this.total,
     this.perPage,
-    this.totalRecords,
-    this.totalPages,
+    this.currentPage,
+    this.lastPage,
+    this.from,
+    this.to,
   });
 
   Pagination.fromJson(Map<String, dynamic> json) {
-    currentPage = json['current_page'];
+    total = json['total'];
     perPage = json['per_page'];
-    totalRecords = json['total_records'];
-    totalPages = json['total_pages'];
+    currentPage = json['current_page'];
+    lastPage = json['last_page'];
+    from = json['from'];
+    to = json['to'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['current_page'] = this.currentPage;
-    data['per_page'] = this.perPage;
-    data['total_records'] = this.totalRecords;
-    data['total_pages'] = this.totalPages;
-    return data;
+    return {
+      'total': total,
+      'per_page': perPage,
+      'current_page': currentPage,
+      'last_page': lastPage,
+      'from': from,
+      'to': to,
+    };
   }
 }
-
 class Summary {
   String? grandTotal;
   String? totalMonthlyCtc;

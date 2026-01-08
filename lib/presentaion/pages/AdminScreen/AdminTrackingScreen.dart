@@ -7,6 +7,7 @@ import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/constants/appcolor_dart.dart';
 import '../../../provider/AdminTrackingProvider/AdminTrackingProvider.dart';
+import '../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import 'HistoryTabScreen.dart';
 import 'MapTabScreen.dart';
 import 'TimeLineScreen.dart';
@@ -31,6 +32,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
     _tabController = TabController(length: 3, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Only load filter options, no default data
       context.read<AdminTrackingProvider>().initialize();
     });
   }
@@ -45,7 +47,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
   void _onViewDetails(TrackingRecord session) {
     setState(() {
       _selectedSession = session;
-      _tabController.animateTo(1); // Switch to Timeline tab
+      _tabController.animateTo(1);
     });
   }
 
@@ -59,7 +61,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
       appBar: const CustomAppBar(title: "Admin Tracking"),
       body: Column(
         children: [
-          // ✅ HEADER SECTION (Filter button + expandable filters + TabBar)
+          // HEADER SECTION
           Column(
             children: [
               // Filter Toggle Button
@@ -114,7 +116,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                 ),
               ),
 
-              // Expandable Filter Section (Scrollable when expanded)
+              // Expandable Filter Section
               if (adminTrackingProvider.isFilterExpanded)
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -123,7 +125,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                     final screenHeight = MediaQuery.of(context).size.height;
                     final appBarHeight =
                         MediaQuery.of(context).padding.top + kToolbarHeight;
-                    final filterButtonHeight = 100.0; // Approximate height
+                    final filterButtonHeight = 100.0;
                     final tabBarHeight =
                         adminTrackingProvider.hasSearched ? 48.0 : 0.0;
 
@@ -133,7 +135,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                         filterButtonHeight -
                         tabBarHeight -
                         keyboardHeight -
-                        50; // Extra padding
+                        50;
 
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
@@ -150,15 +152,12 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               SimpleSearchDropdown(
                                 label: "Employee",
                                 value: adminTrackingProvider.selectedEmployeeId,
-
                                 items:
                                     adminTrackingProvider
                                         .getFilteredEmployees("")
                                         .map((e) => "${e.name} (${e.id})")
                                         .toList(),
-
                                 onChanged: (selectedText) {
-                                  // Extract only ID from:  Name (ID)
                                   final id =
                                       selectedText
                                           .split("(")
@@ -170,24 +169,40 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               ),
 
                               const SizedBox(height: 12),
-                              SimpleSearchDropdown(
-                                label: "Branch",
-                                value: adminTrackingProvider.selectedBranch,
-                                items: adminTrackingProvider
-                                    .getFilteredBranches(""), // ← use this
-                                onChanged: (value) {
-                                  adminTrackingProvider.setBranch(value);
+
+                              // Multi-select Zone Dropdown
+                              MultiSelectDropdown(
+                                label: "Zone",
+                                selectedItems:
+                                    adminTrackingProvider.selectedZones,
+                                items: adminTrackingProvider.zoneNames,
+                                onChanged: (selected) {
+                                  adminTrackingProvider.setZones(selected);
                                 },
                               ),
 
                               const SizedBox(height: 12),
+
+                              // Multi-select Branch Dropdown
+                              MultiSelectDropdown(
+                                label: "Branch",
+                                selectedItems:
+                                    adminTrackingProvider.selectedBranches,
+                                items: adminTrackingProvider.branchNames,
+                                onChanged: (selected) {
+                                  adminTrackingProvider.setBranches(selected);
+                                },
+                              ),
+
+                              const SizedBox(height: 12),
+
                               SimpleSearchDropdown(
                                 label: "Role",
                                 value:
                                     adminTrackingProvider.selectedDesignation,
                                 items: adminTrackingProvider.getFilteredRoles(
                                   "",
-                                ), // ← use this
+                                ),
                                 onChanged: (value) {
                                   adminTrackingProvider.setRole(value);
                                 },
@@ -195,6 +210,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
 
                               const SizedBox(height: 12),
                               _DatePickerField(provider: adminTrackingProvider),
+
                               const SizedBox(height: 20),
                               Row(
                                 children: [
@@ -261,9 +277,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                                                 setState(
                                                   () => _isSearching = true,
                                                 );
-
                                                 await provider.performSearch();
-
                                                 setState(() {
                                                   _isSearching = false;
                                                   _selectedSession = null;
@@ -323,8 +337,6 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                       dividerColor: Colors.transparent,
                       overlayColor: WidgetStateProperty.all(Colors.transparent),
                       splashFactory: NoSplash.splashFactory,
-
-                      // Animated indicator with smooth transition
                       indicator: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
@@ -340,11 +352,9 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                           ),
                         ],
                       ),
-
                       labelColor: Colors.white,
                       unselectedLabelColor: Colors.black54,
                       indicatorSize: TabBarIndicatorSize.tab,
-
                       labelStyle: const TextStyle(
                         fontFamily: AppFonts.poppins,
                         fontWeight: FontWeight.w600,
@@ -357,7 +367,6 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                         fontSize: 13,
                         letterSpacing: 0.3,
                       ),
-
                       tabs: const [
                         Tab(height: 44, text: "History"),
                         Tab(height: 44, text: "Timeline"),
@@ -369,7 +378,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
             ],
           ),
 
-          // ✅ CONTENT AREA (TabBarView with full remaining height)
+          // CONTENT AREA
           if (adminTrackingProvider.hasSearched &&
               adminTrackingProvider.isFiltersValid)
             Expanded(
@@ -446,7 +455,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                       ),
             ),
 
-          // ✅ Empty state when no search performed
+          // Empty state
           if (!adminTrackingProvider.hasSearched ||
               !adminTrackingProvider.isFiltersValid)
             Expanded(
@@ -490,11 +499,12 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
   }
 }
 
+// Simple Search Dropdown (for single select) with Search
 class SimpleSearchDropdown extends StatefulWidget {
   final String label;
   final String? value;
   final List<String> items;
-  final ValueChanged<String> onChanged;
+  final Function(String) onChanged;
 
   const SimpleSearchDropdown({
     super.key,
@@ -509,16 +519,27 @@ class SimpleSearchDropdown extends StatefulWidget {
 }
 
 class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
-  bool isOpen = false;
-  String search = '';
+  bool _isExpanded = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<String> get _filteredItems {
+    if (_searchQuery.isEmpty) return widget.items;
+    return widget.items
+        .where(
+          (item) => item.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filtered =
-        widget.items
-            .where((item) => item.toLowerCase().contains(search.toLowerCase()))
-            .toList();
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -527,124 +548,154 @@ class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: AppColor.primaryColor1,
+            color: Colors.grey[700],
             fontFamily: AppFonts.poppins,
           ),
         ),
         const SizedBox(height: 6),
-
-        // MAIN DROPDOWN BUTTON
         GestureDetector(
-          onTap: () => setState(() => isOpen = !isOpen),
+          onTap: () {
+            setState(() {
+              _isExpanded = !_isExpanded;
+              if (!_isExpanded) {
+                _searchQuery = '';
+                _searchController.clear();
+              }
+            });
+          },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.grey[50],
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isOpen ? AppColor.primaryColor1 : Colors.grey.shade300,
-                width: 1.3,
-              ),
+              border: Border.all(color: Colors.grey.shade300),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
-                    widget.value ?? "Select ${widget.label}",
+                    widget.value ?? 'Select ${widget.label}',
                     style: TextStyle(
                       fontFamily: AppFonts.poppins,
                       fontSize: 14,
                       color:
-                          widget.value == null
-                              ? Colors.grey[600]
-                              : AppColor.primaryColor1,
+                          widget.value != null
+                              ? AppColor.primaryColor1
+                              : Colors.grey[600],
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Icon(
-                  isOpen ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                  color: AppColor.primaryColor1,
+                  _isExpanded
+                      ? Icons.keyboard_arrow_up
+                      : Icons.keyboard_arrow_down,
+                  color: const Color(0xFF8E0E6B),
                 ),
               ],
             ),
           ),
         ),
-
-        // DROPDOWN BODY
-        if (isOpen)
+        if (_isExpanded)
           Container(
-            margin: const EdgeInsets.only(top: 6),
-            padding: const EdgeInsets.all(10),
+            margin: const EdgeInsets.only(top: 4),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColor.primaryColor1, width: 1.3),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // SEARCH FIELD
-                TextField(
-                  style: const TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 14,
-                    color: Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: "Search...",
-                    hintStyle: TextStyle(
+                // Search TextField
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search ${widget.label}...',
+                      hintStyle: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 13,
+                        color: Colors.grey[400],
+                      ),
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF8E0E6B)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    style: const TextStyle(
                       fontFamily: AppFonts.poppins,
                       fontSize: 14,
-                      color: AppColor.primaryColor1.withOpacity(0.5),
                     ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      size: 20,
-                      color: AppColor.primaryColor1,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: AppColor.primaryColor1,
-                        width: 1.3,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: AppColor.primaryColor1,
-                        width: 1.8,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onChanged: (v) => setState(() => search = v),
-                ),
-
-                const SizedBox(height: 10),
-
-                // LIST
-                SizedBox(
-                  height: 160,
-                  child: ListView.builder(
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final item = filtered[index];
-                      return ListTile(
-                        title: Text(
-                          item,
-                          style: TextStyle(
-                            fontFamily: AppFonts.poppins,
-                            fontSize: 14,
-                            color: AppColor.primaryColor1,
-                          ),
-                        ),
-                        onTap: () {
-                          widget.onChanged(item);
-                          setState(() => isOpen = false);
-                        },
-                      );
+                    onChanged: (value) {
+                      setState(() => _searchQuery = value);
                     },
                   ),
+                ),
+                // List of items
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child:
+                      _filteredItems.isEmpty
+                          ? Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              'No ${widget.label.toLowerCase()} found',
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: _filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _filteredItems[index];
+                              return ListTile(
+                                dense: true,
+                                title: Text(
+                                  item,
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                onTap: () {
+                                  widget.onChanged(item);
+                                  setState(() {
+                                    _isExpanded = false;
+                                    _searchQuery = '';
+                                    _searchController.clear();
+                                  });
+                                },
+                              );
+                            },
+                          ),
                 ),
               ],
             ),

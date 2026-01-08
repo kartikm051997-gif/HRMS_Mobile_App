@@ -20,6 +20,10 @@ class LoginProvider extends ChangeNotifier {
   LoginApiModel? _loginData;
   String? _errorMessage;
   bool _rememberMe = false;
+  String get userRole {
+    return _loginData?.user?.roleId?.toString() ?? "";
+  }
+
 
   // Getters
   bool get isLoading => _isLoading;

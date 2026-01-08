@@ -56,6 +56,11 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
     final loginProvider = Provider.of<LoginProvider>(context);
     final user = loginProvider.loginData?.user;
     final AppBarController appBarController = Get.find<AppBarController>();
+    final bool isAdmin = loginProvider.userRole == "1";
+
+    if (loginProvider.loginData == null) {
+      return const Drawer(child: Center(child: CircularProgressIndicator()));
+    }
 
     return Drawer(
       backgroundColor: backgroundColor,
@@ -94,53 +99,61 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                       route: AppRoutes.userTrackingScreen,
                       index: 0,
                     ),
-                    _buildNavItem(
-                      icon: Icons.admin_panel_settings_rounded,
-                      title: 'Admin Tracking',
-                      route: AppRoutes.adminTracking,
-                      index: 1,
-                    ),
+
+                    // 🔹 Deliverables → Everyone
                     _buildNavItem(
                       icon: Icons.dashboard_rounded,
                       title: 'Deliverables Overview',
                       route: AppRoutes.deliverablesOverview,
                       index: 2,
                     ),
-                    _buildNavItem(
-                      icon: Icons.people_alt_rounded,
-                      title: 'Employee Management',
-                      route: AppRoutes.employeeManagement,
-                      index: 3,
-                    ),
+
+                    // 🔹 Admin-only menus
+                    if (isAdmin) ...[
+                      _buildNavItem(
+                        icon: Icons.admin_panel_settings_rounded,
+                        title: 'Admin Tracking',
+                        route: AppRoutes.adminTracking,
+                        index: 1,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.people_alt_rounded,
+                        title: 'Employee Management',
+                        route: AppRoutes.employeeManagement,
+                        index: 3,
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
-                    _buildSectionLabel("MODULES"),
-                    const SizedBox(height: 8),
+                    if (isAdmin) ...[
+                      _buildSectionLabel("MODULES"),
+                      const SizedBox(height: 8),
 
-                    // Expandable Sections
-                    _buildPayrollSection(appBarController),
-                    const SizedBox(height: 4),
-                    _buildEmployeesSection(appBarController),
-                    const SizedBox(height: 4),
-                    _buildRecruitmentSection(appBarController),
+                      _buildPayrollSection(appBarController),
+                      const SizedBox(height: 4),
+                      _buildEmployeesSection(appBarController),
+                      const SizedBox(height: 4),
+                      _buildRecruitmentSection(appBarController),
+                    ],
 
                     const SizedBox(height: 16),
-                    _buildSectionLabel("OTHERS"),
-                    const SizedBox(height: 8),
+                    if (isAdmin) ...[
+                      _buildSectionLabel("OTHERS"),
+                      const SizedBox(height: 8),
 
-                    _buildNavItem(
-                      icon: Icons.receipt_long_rounded,
-                      title: 'PaySlips',
-                      route: AppRoutes.paySlips,
-                      index: 4,
-                    ),
-                    _buildNavItem(
-                      icon: Icons.inventory_2_rounded,
-                      title: 'Asset Details',
-                      route: AppRoutes.assetDetails,
-                      index: 5,
-                    ),
-
+                      _buildNavItem(
+                        icon: Icons.receipt_long_rounded,
+                        title: 'PaySlips',
+                        route: AppRoutes.paySlips,
+                        index: 4,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.inventory_2_rounded,
+                        title: 'Asset Details',
+                        route: AppRoutes.assetDetails,
+                        index: 5,
+                      ),
+                    ],
                     const SizedBox(height: 20),
                   ],
                 ),

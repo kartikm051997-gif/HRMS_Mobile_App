@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/All_Employees_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
@@ -18,15 +19,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Modern gradient colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
-
   @override
   void initState() {
     super.initState();
@@ -40,7 +32,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     _animationController.forward();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AllEmployeesProvider>(context, listen: false).initializeEmployees();
+      Provider.of<AllEmployeesProvider>(
+        context,
+        listen: false,
+      ).initializeEmployees();
     });
   }
 
@@ -55,22 +50,18 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     final provider = Provider.of<AllEmployeesProvider>(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             // Header Section
-            SliverToBoxAdapter(
-              child: _buildHeaderSection(provider),
-            ),
+            SliverToBoxAdapter(child: _buildHeaderSection(provider)),
 
             // Filter Section
             if (provider.showFilters)
-              SliverToBoxAdapter(
-                child: _buildFilterSection(provider),
-              ),
+              SliverToBoxAdapter(child: _buildFilterSection(provider)),
 
             // Results Section
             _buildResultsSection(provider),
@@ -83,7 +74,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
   Widget _buildHeaderSection(AllEmployeesProvider provider) {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -100,9 +91,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             // Filter Toggle and Page Size Row
             Row(
               children: [
-                Expanded(
-                  child: _buildFilterToggleButton(provider),
-                ),
+                Expanded(child: _buildFilterToggleButton(provider)),
                 const SizedBox(width: 12),
                 _buildPageSizeDropdown(provider),
               ],
@@ -131,13 +120,22 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              gradient: provider.showFilters
-                  ? const LinearGradient(colors: [primaryColor, secondaryColor])
-                  : null,
+              gradient:
+                  provider.showFilters
+                      ? const LinearGradient(
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
+                      )
+                      : null,
               color: provider.showFilters ? null : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: provider.showFilters ? Colors.transparent : borderColor,
+                color:
+                    provider.showFilters
+                        ? Colors.transparent
+                        : AppColor.borderColor,
               ),
             ),
             child: Row(
@@ -145,7 +143,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 Icon(
                   Icons.tune_rounded,
                   size: 20,
-                  color: provider.showFilters ? Colors.white : textSecondary,
+                  color:
+                      provider.showFilters
+                          ? Colors.white
+                          : AppColor.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -154,7 +155,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: provider.showFilters ? Colors.white : textSecondary,
+                    color:
+                        provider.showFilters
+                            ? Colors.white
+                            : AppColor.textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -163,7 +167,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                   duration: const Duration(milliseconds: 200),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: provider.showFilters ? Colors.white : textSecondary,
+                    color:
+                        provider.showFilters
+                            ? Colors.white
+                            : AppColor.textSecondary,
                   ),
                 ),
               ],
@@ -178,9 +185,9 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: AppColor.borderColor),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.02),
@@ -192,21 +199,25 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
           value: provider.pageSize,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: textSecondary),
-          items: [5, 10, 15, 20].map((e) {
-            return DropdownMenuItem(
-              value: e,
-              child: Text(
-                "$e",
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            );
-          }).toList(),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            color: AppColor.textSecondary,
+          ),
+          items:
+              [5, 10, 15, 20].map((e) {
+                return DropdownMenuItem(
+                  value: e,
+                  child: Text(
+                    "$e",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: AppFonts.poppins,
+                      color: AppColor.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
           onChanged: (val) {
             if (val != null) provider.setPageSize(val);
           },
@@ -222,7 +233,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          border: Border.all(color: AppColor.borderColor),
         ),
         child: TextField(
           controller: provider.searchController,
@@ -230,7 +241,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
-            color: textPrimary,
+            color: AppColor.textPrimary,
           ),
           decoration: InputDecoration(
             filled: true,
@@ -239,29 +250,41 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             hintStyle: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
-              color: textSecondary.withOpacity(0.7),
+              color: AppColor.textSecondary.withOpacity(0.7),
             ),
-            prefixIcon: const Icon(Icons.search_rounded, color: textSecondary, size: 22),
-            suffixIcon: provider.searchController.text.isNotEmpty
-                ? IconButton(
-                    onPressed: () => provider.clearSearch(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: textSecondary.withOpacity(0.1),
-                        shape: BoxShape.circle,
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: AppColor.textSecondary,
+              size: 22,
+            ),
+            suffixIcon:
+                provider.searchController.text.isNotEmpty
+                    ? IconButton(
+                      onPressed: () => provider.clearSearch(),
+                      icon: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColor.textSecondary.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: AppColor.textSecondary,
+                          size: 16,
+                        ),
                       ),
-                      child: const Icon(Icons.close_rounded, color: textSecondary, size: 16),
-                    ),
-                  )
-                : null,
+                    )
+                    : null,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
             disabledBorder: InputBorder.none,
             errorBorder: InputBorder.none,
             focusedErrorBorder: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ),
@@ -272,14 +295,16 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
-        color: cardColor,
-        border: Border(bottom: BorderSide(color: borderColor.withOpacity(0.5))),
+        color: AppColor.cardColor,
+        border: Border(
+          bottom: BorderSide(color: AppColor.borderColor.withOpacity(0.5)),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           children: [
-            Divider(color: borderColor.withOpacity(0.5), height: 1),
+            Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,7 +370,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: borderColor),
+            border: Border.all(color: AppColor.borderColor),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Center(
@@ -355,7 +380,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 fontFamily: AppFonts.poppins,
-                color: textSecondary,
+                color: AppColor.textSecondary,
               ),
             ),
           ),
@@ -382,26 +407,37 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              gradient: canApply
-                  ? const LinearGradient(colors: [primaryColor, secondaryColor])
-                  : null,
-              color: canApply ? null : borderColor,
+              gradient:
+                  canApply
+                      ? const LinearGradient(
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
+                      )
+                      : null,
+              color: canApply ? null : AppColor.borderColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: canApply
-                  ? [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
+              boxShadow:
+                  canApply
+                      ? [
+                        BoxShadow(
+                          color: AppColor.primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                      : null,
             ),
             child: Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.search_rounded, size: 18, color: canApply ? Colors.white : textSecondary),
+                  Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: canApply ? Colors.white : AppColor.textSecondary,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     canApply ? "Apply Filters" : "Select All Filters",
@@ -409,7 +445,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : textSecondary,
+                      color: canApply ? Colors.white : AppColor.textSecondary,
                     ),
                   ),
                 ],
@@ -469,11 +505,18 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [primaryColor.withOpacity(0.1), secondaryColor.withOpacity(0.1)],
+                    colors: [
+                      AppColor.primaryColor.withOpacity(0.1),
+                      AppColor.secondaryColor.withOpacity(0.1),
+                    ],
                   ),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.people_rounded, size: 48, color: primaryColor),
+                child: const Icon(
+                  Icons.people_rounded,
+                  size: 48,
+                  color: AppColor.primaryColor,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -482,7 +525,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -492,23 +535,32 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 style: TextStyle(
                   fontSize: 14,
                   fontFamily: AppFonts.poppins,
-                  color: textSecondary,
+                  color: AppColor.textSecondary,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColor.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColor.primaryColor.withOpacity(0.3),
+                  ),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.touch_app_rounded, size: 18, color: primaryColor),
+                    Icon(
+                      Icons.touch_app_rounded,
+                      size: 18,
+                      color: AppColor.primaryColor,
+                    ),
                     SizedBox(width: 8),
                     Text(
                       "Tap 'Filters' above to start",
@@ -516,7 +568,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppFonts.poppins,
-                        color: primaryColor,
+                        color: AppColor.primaryColor,
                       ),
                     ),
                   ],
@@ -538,14 +590,18 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             width: 50,
             height: 50,
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
               strokeWidth: 3,
             ),
           ),
           const SizedBox(height: 20),
           Text(
             "Loading all employees...",
-            style: TextStyle(color: textSecondary, fontSize: 15, fontFamily: AppFonts.poppins),
+            style: TextStyle(
+              color: AppColor.textSecondary,
+              fontSize: 15,
+              fontFamily: AppFonts.poppins,
+            ),
           ),
         ],
       ),
@@ -560,18 +616,34 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
           children: [
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-              child: const Icon(Icons.person_search_rounded, size: 48, color: textSecondary),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_search_rounded,
+                size: 48,
+                color: AppColor.textSecondary,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "No employees found",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, fontFamily: AppFonts.poppins, color: textPrimary),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+                color: AppColor.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
               "Try adjusting your filters",
-              style: TextStyle(fontSize: 14, fontFamily: AppFonts.poppins, color: textSecondary),
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: AppFonts.poppins,
+                color: AppColor.textSecondary,
+              ),
             ),
           ],
         ),
@@ -588,9 +660,14 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+                  gradient: const LinearGradient(
+                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -606,7 +683,12 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
               const SizedBox(width: 10),
               const Text(
                 "Employees Found",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: AppFonts.poppins, color: textPrimary),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: AppFonts.poppins,
+                  color: AppColor.textPrimary,
+                ),
               ),
             ],
           ),
@@ -614,8 +696,13 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             TextButton.icon(
               onPressed: () => provider.toggleFilters(),
               icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 18),
-              label: const Text("Hide", style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins)),
-              style: TextButton.styleFrom(foregroundColor: textSecondary),
+              label: const Text(
+                "Hide",
+                style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColor.textSecondary,
+              ),
             ),
         ],
       ),
@@ -659,7 +746,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -677,14 +764,22 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => AllEmployeeDetailsScreens(
-                  empId: employee.employeeId,
-                  employee: employee,
-                ),
+                pageBuilder:
+                    (_, __, ___) => AllEmployeeDetailsScreens(
+                      empId: employee.employeeId,
+                      employee: employee,
+                    ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
-                    position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-                        .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                     child: child,
                   );
                 },
@@ -698,7 +793,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [primaryColor, secondaryColor],
+                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -715,33 +810,50 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: Colors.white.withOpacity(0.2),
-                        border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 2,
+                        ),
                       ),
                       child: ClipOval(
-                        child: employee.photoUrl != null && employee.photoUrl!.isNotEmpty
-                            ? Image.network(
-                                employee.photoUrl!,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildDefaultAvatar(employee.name);
-                                },
-                                loadingBuilder: (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Center(
-                                    child: CircularProgressIndicator(
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
-                                          : null,
-                                      strokeWidth: 2,
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  );
-                                },
-                              )
-                            : _buildDefaultAvatar(employee.name),
+                        child:
+                            employee.photoUrl != null &&
+                                    employee.photoUrl!.isNotEmpty
+                                ? Image.network(
+                                  employee.photoUrl!,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildDefaultAvatar(employee.name);
+                                  },
+                                  loadingBuilder: (
+                                    context,
+                                    child,
+                                    loadingProgress,
+                                  ) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: CircularProgressIndicator(
+                                        value:
+                                            loadingProgress
+                                                        .expectedTotalBytes !=
+                                                    null
+                                                ? loadingProgress
+                                                        .cumulativeBytesLoaded /
+                                                    loadingProgress
+                                                        .expectedTotalBytes!
+                                                : null,
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            const AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                )
+                                : _buildDefaultAvatar(employee.name),
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -762,7 +874,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
@@ -782,7 +897,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                     ),
                     // Status Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
@@ -817,17 +935,21 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                         icon: Icons.work_outline_rounded,
                         label: "DESIGNATION",
                         value: employee.designation,
-                        color: primaryColor,
+                        color: AppColor.primaryColor,
                       ),
                     ),
-                    Container(height: 40, width: 1, color: borderColor),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: AppColor.borderColor,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildInfoItem(
                         icon: Icons.location_on_outlined,
                         label: "BRANCH",
                         value: employee.branch,
-                        color: secondaryColor,
+                        color: AppColor.secondaryColor,
                       ),
                     ),
                   ],
@@ -867,7 +989,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textSecondary.withOpacity(0.7),
+                  color: AppColor.textSecondary.withOpacity(0.7),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -878,7 +1000,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -896,7 +1018,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
       height: 50,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [primaryColor, secondaryColor],
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
         ),
         shape: BoxShape.circle,
       ),

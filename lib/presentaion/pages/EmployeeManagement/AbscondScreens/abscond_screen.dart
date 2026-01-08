@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/Abscond_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
@@ -16,15 +17,6 @@ class _AbscondScreenState extends State<AbscondScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  // Modern gradient colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
 
   @override
   void initState() {
@@ -57,7 +49,7 @@ class _AbscondScreenState extends State<AbscondScreen>
     final provider = Provider.of<AbscondProvider>(context);
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: CustomScrollView(
@@ -76,7 +68,7 @@ class _AbscondScreenState extends State<AbscondScreen>
   Widget _buildHeaderSection(AbscondProvider provider) {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -127,13 +119,19 @@ class _AbscondScreenState extends State<AbscondScreen>
               gradient:
                   provider.showFilters
                       ? const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
                       )
                       : null,
               color: provider.showFilters ? null : const Color(0xFFF1F5F9),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: provider.showFilters ? Colors.transparent : borderColor,
+                color:
+                    provider.showFilters
+                        ? Colors.transparent
+                        : AppColor.borderColor,
               ),
             ),
             child: Row(
@@ -141,7 +139,10 @@ class _AbscondScreenState extends State<AbscondScreen>
                 Icon(
                   Icons.tune_rounded,
                   size: 20,
-                  color: provider.showFilters ? Colors.white : textSecondary,
+                  color:
+                      provider.showFilters
+                          ? Colors.white
+                          : AppColor.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -150,7 +151,10 @@ class _AbscondScreenState extends State<AbscondScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: provider.showFilters ? Colors.white : textSecondary,
+                    color:
+                        provider.showFilters
+                            ? Colors.white
+                            : AppColor.textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -159,7 +163,10 @@ class _AbscondScreenState extends State<AbscondScreen>
                   duration: const Duration(milliseconds: 200),
                   child: Icon(
                     Icons.keyboard_arrow_down_rounded,
-                    color: provider.showFilters ? Colors.white : textSecondary,
+                    color:
+                        provider.showFilters
+                            ? Colors.white
+                            : AppColor.textSecondary,
                   ),
                 ),
               ],
@@ -174,16 +181,16 @@ class _AbscondScreenState extends State<AbscondScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: AppColor.borderColor),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
           value: provider.pageSize,
           icon: const Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: textSecondary,
+            color: AppColor.textSecondary,
           ),
           items:
               [5, 10, 15, 20].map((e) {
@@ -194,7 +201,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                     style: const TextStyle(
                       fontSize: 14,
                       fontFamily: AppFonts.poppins,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -215,7 +222,7 @@ class _AbscondScreenState extends State<AbscondScreen>
         decoration: BoxDecoration(
           color: const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
+          border: Border.all(color: AppColor.borderColor),
         ),
         child: TextField(
           controller: provider.searchController,
@@ -223,7 +230,7 @@ class _AbscondScreenState extends State<AbscondScreen>
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
-            color: textPrimary,
+            color: AppColor.textPrimary,
           ),
           decoration: InputDecoration(
             filled: true,
@@ -232,11 +239,11 @@ class _AbscondScreenState extends State<AbscondScreen>
             hintStyle: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
-              color: textSecondary.withOpacity(0.7),
+              color: AppColor.textSecondary.withOpacity(0.7),
             ),
             prefixIcon: const Icon(
               Icons.search_rounded,
-              color: textSecondary,
+              color: AppColor.textSecondary,
               size: 22,
             ),
             suffixIcon:
@@ -246,12 +253,12 @@ class _AbscondScreenState extends State<AbscondScreen>
                       icon: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: textSecondary.withOpacity(0.1),
+                          color: AppColor.textSecondary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.close_rounded,
-                          color: textSecondary,
+                          color: AppColor.textSecondary,
                           size: 16,
                         ),
                       ),
@@ -272,14 +279,16 @@ class _AbscondScreenState extends State<AbscondScreen>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
-        color: cardColor,
-        border: Border(bottom: BorderSide(color: borderColor.withOpacity(0.5))),
+        color: AppColor.cardColor,
+        border: Border(
+          bottom: BorderSide(color: AppColor.borderColor.withOpacity(0.5)),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
           children: [
-            Divider(color: borderColor.withOpacity(0.5), height: 1),
+            Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
 
             CustomSearchDropdownWithSearch(
@@ -339,7 +348,7 @@ class _AbscondScreenState extends State<AbscondScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            border: Border.all(color: borderColor),
+            border: Border.all(color: AppColor.borderColor),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Center(
@@ -349,7 +358,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 fontFamily: AppFonts.poppins,
-                color: textSecondary,
+                color: AppColor.textSecondary,
               ),
             ),
           ),
@@ -379,16 +388,19 @@ class _AbscondScreenState extends State<AbscondScreen>
               gradient:
                   canApply
                       ? const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
                       )
                       : null,
-              color: canApply ? null : borderColor,
+              color: canApply ? null : AppColor.borderColor,
               borderRadius: BorderRadius.circular(12),
               boxShadow:
                   canApply
                       ? [
                         BoxShadow(
-                          color: primaryColor.withOpacity(0.3),
+                          color: AppColor.primaryColor.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -402,7 +414,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   Icon(
                     Icons.search_rounded,
                     size: 18,
-                    color: canApply ? Colors.white : textSecondary,
+                    color: canApply ? Colors.white : AppColor.textSecondary,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -411,7 +423,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : textSecondary,
+                      color: canApply ? Colors.white : AppColor.textSecondary,
                     ),
                   ),
                 ],
@@ -472,8 +484,8 @@ class _AbscondScreenState extends State<AbscondScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      primaryColor.withOpacity(0.1),
-                      secondaryColor.withOpacity(0.1),
+                      AppColor.primaryColor.withOpacity(0.1),
+                      AppColor.secondaryColor.withOpacity(0.1),
                     ],
                   ),
                   shape: BoxShape.circle,
@@ -481,7 +493,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                 child: const Icon(
                   Icons.person_off_rounded,
                   size: 48,
-                  color: primaryColor,
+                  color: AppColor.primaryColor,
                 ),
               ),
               const SizedBox(height: 24),
@@ -491,7 +503,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -501,7 +513,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                 style: TextStyle(
                   fontSize: 14,
                   fontFamily: AppFonts.poppins,
-                  color: textSecondary,
+                  color: AppColor.textSecondary,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -513,9 +525,11 @@ class _AbscondScreenState extends State<AbscondScreen>
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColor.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: primaryColor.withOpacity(0.3)),
+                  border: Border.all(
+                    color: AppColor.primaryColor.withOpacity(0.3),
+                  ),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -523,7 +537,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                     Icon(
                       Icons.touch_app_rounded,
                       size: 18,
-                      color: primaryColor,
+                      color: AppColor.primaryColor,
                     ),
                     SizedBox(width: 8),
                     Text(
@@ -532,7 +546,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppFonts.poppins,
-                        color: primaryColor,
+                        color: AppColor.primaryColor,
                       ),
                     ),
                   ],
@@ -551,14 +565,14 @@ class _AbscondScreenState extends State<AbscondScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
             strokeWidth: 3,
           ),
           SizedBox(height: 20),
           Text(
             "Loading absconded employees...",
             style: TextStyle(
-              color: textSecondary,
+              color: AppColor.textSecondary,
               fontSize: 15,
               fontFamily: AppFonts.poppins,
             ),
@@ -582,7 +596,7 @@ class _AbscondScreenState extends State<AbscondScreen>
             child: const Icon(
               Icons.person_search_rounded,
               size: 48,
-              color: textSecondary,
+              color: AppColor.textSecondary,
             ),
           ),
           const SizedBox(height: 20),
@@ -592,7 +606,7 @@ class _AbscondScreenState extends State<AbscondScreen>
               fontSize: 18,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: textPrimary,
+              color: AppColor.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -601,7 +615,7 @@ class _AbscondScreenState extends State<AbscondScreen>
             style: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
-              color: textSecondary,
+              color: AppColor.textSecondary,
             ),
           ),
         ],
@@ -624,7 +638,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                 ),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [primaryColor, secondaryColor],
+                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
                   ),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -645,7 +659,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
               ),
             ],
@@ -658,7 +672,9 @@ class _AbscondScreenState extends State<AbscondScreen>
                 "Hide",
                 style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins),
               ),
-              style: TextButton.styleFrom(foregroundColor: textSecondary),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColor.textSecondary,
+              ),
             ),
         ],
       ),
@@ -669,7 +685,7 @@ class _AbscondScreenState extends State<AbscondScreen>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -717,7 +733,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [primaryColor, secondaryColor],
+                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -829,17 +845,21 @@ class _AbscondScreenState extends State<AbscondScreen>
                         icon: Icons.work_outline_rounded,
                         label: "DESIGNATION",
                         value: employee.designation,
-                        color: primaryColor,
+                        color: AppColor.primaryColor,
                       ),
                     ),
-                    Container(height: 40, width: 1, color: borderColor),
+                    Container(
+                      height: 40,
+                      width: 1,
+                      color: AppColor.borderColor,
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildInfoItem(
                         icon: Icons.location_on_outlined,
                         label: "BRANCH",
                         value: employee.branch,
-                        color: secondaryColor,
+                        color: AppColor.secondaryColor,
                       ),
                     ),
                   ],
@@ -879,7 +899,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textSecondary.withOpacity(0.7),
+                  color: AppColor.textSecondary.withOpacity(0.7),
                   letterSpacing: 0.5,
                 ),
               ),
@@ -890,7 +910,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

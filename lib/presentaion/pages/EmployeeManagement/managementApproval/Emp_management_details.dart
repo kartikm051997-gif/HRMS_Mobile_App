@@ -1,39 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
-class EmploManagementApprovalDetailsScreen extends StatefulWidget {
+class EmployeeManagementApprovalDetailsScreen extends StatefulWidget {
   final String empId;
   final Employee employee;
-  const EmploManagementApprovalDetailsScreen({
+  const EmployeeManagementApprovalDetailsScreen({
     super.key,
     required this.empId,
     required this.employee,
   });
 
   @override
-  State<EmploManagementApprovalDetailsScreen> createState() =>
-      _EmploManagementApprovalDetailsScreenState();
+  State<EmployeeManagementApprovalDetailsScreen> createState() =>
+      _EmployeeManagementApprovalDetailsScreenState();
 }
 
-class _EmploManagementApprovalDetailsScreenState
-    extends State<EmploManagementApprovalDetailsScreen>
+class _EmployeeManagementApprovalDetailsScreenState
+    extends State<EmployeeManagementApprovalDetailsScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  // Modern gradient colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
 
   @override
   void initState() {
@@ -69,14 +61,30 @@ class _EmploManagementApprovalDetailsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          "Employee Details",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            fontFamily: AppFonts.poppins,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: AppColor.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+        ),
+      ),
+
+      backgroundColor: AppColor.backgroundColor,
       drawer: const TabletMobileDrawer(),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // Custom Gradient App Bar
-          _buildGradientAppBar(),
-
           // Content
           SliverToBoxAdapter(
             child: FadeTransition(
@@ -113,75 +121,10 @@ class _EmploManagementApprovalDetailsScreenState
     );
   }
 
-  Widget _buildGradientAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      elevation: 0,
-      backgroundColor: primaryColor,
-      leading: IconButton(
-        onPressed: () => Get.back(),
-        icon: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: const Icon(
-            Icons.arrow_back_ios_new_rounded,
-            color: Colors.white,
-            size: 18,
-          ),
-        ),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [primaryColor, secondaryColor],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(60, 16, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    "Management Approval",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      fontFamily: AppFonts.poppins,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Review and approve employee",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildEmployeeHeaderCard() {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -199,7 +142,7 @@ class _EmploManagementApprovalDetailsScreenState
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [primaryColor, secondaryColor],
+                colors: [AppColor.primaryColor, AppColor.secondaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -223,16 +166,19 @@ class _EmploManagementApprovalDetailsScreenState
                     ),
                   ),
                   child: ClipOval(
-                    child: widget.employee.photoUrl != null &&
-                            widget.employee.photoUrl!.isNotEmpty
-                        ? Image.network(
-                            widget.employee.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildDefaultAvatar(widget.employee.name);
-                            },
-                          )
-                        : _buildDefaultAvatar(widget.employee.name),
+                    child:
+                        widget.employee.photoUrl != null &&
+                                widget.employee.photoUrl!.isNotEmpty
+                            ? Image.network(
+                              widget.employee.photoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildDefaultAvatar(
+                                  widget.employee.name,
+                                );
+                              },
+                            )
+                            : _buildDefaultAvatar(widget.employee.name),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -252,7 +198,10 @@ class _EmploManagementApprovalDetailsScreenState
 
                 // ID Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -296,7 +245,9 @@ class _EmploManagementApprovalDetailsScreenState
   Widget _buildDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
       ),
       child: Center(
         child: Text(
@@ -326,22 +277,25 @@ class _EmploManagementApprovalDetailsScreenState
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => EmployeeDetailsScreen(
-                  empId: widget.employee.employeeId,
-                  empPhoto: widget.employee.photoUrl ?? "",
-                  empName: widget.employee.name,
-                  empDesignation: widget.employee.designation,
-                  empBranch: widget.employee.branch,
-                ),
+                pageBuilder:
+                    (_, __, ___) => EmployeeDetailsScreen(
+                      empId: widget.employee.employeeId,
+                      empPhoto: widget.employee.photoUrl ?? "",
+                      empName: widget.employee.name,
+                      empDesignation: widget.employee.designation,
+                      empBranch: widget.employee.branch,
+                    ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
                     position: Tween<Offset>(
                       begin: const Offset(1, 0),
                       end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    )),
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                     child: child,
                   );
                 },
@@ -353,11 +307,13 @@ class _EmploManagementApprovalDetailsScreenState
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+              gradient: const LinearGradient(
+                colors: [AppColor.primaryColor, AppColor.secondaryColor],
+              ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.3),
+                  color: AppColor.primaryColor.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -398,7 +354,7 @@ class _EmploManagementApprovalDetailsScreenState
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -418,8 +374,8 @@ class _EmploManagementApprovalDetailsScreenState
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    primaryColor.withOpacity(0.1),
-                    secondaryColor.withOpacity(0.05),
+                    AppColor.primaryColor.withOpacity(0.1),
+                    AppColor.secondaryColor.withOpacity(0.05),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -432,10 +388,19 @@ class _EmploManagementApprovalDetailsScreenState
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.business_center_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -444,7 +409,7 @@ class _EmploManagementApprovalDetailsScreenState
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ],
@@ -456,10 +421,27 @@ class _EmploManagementApprovalDetailsScreenState
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildDetailRow("Department", widget.employee.department, Icons.business_rounded),
-                  _buildDetailRow("Branch", widget.employee.branch, Icons.location_on_rounded),
-                  _buildDetailRow("Date of Joining", widget.employee.doj, Icons.calendar_today_rounded),
-                  _buildDetailRow("Payroll Category", widget.employee.payrollCategory, Icons.category_rounded, isLast: true),
+                  _buildDetailRow(
+                    "Department",
+                    widget.employee.department,
+                    Icons.business_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Branch",
+                    widget.employee.branch,
+                    Icons.location_on_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Date of Joining",
+                    widget.employee.doj,
+                    Icons.calendar_today_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Payroll Category",
+                    widget.employee.payrollCategory,
+                    Icons.category_rounded,
+                    isLast: true,
+                  ),
                 ],
               ),
             ),
@@ -469,7 +451,12 @@ class _EmploManagementApprovalDetailsScreenState
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, {bool isLast = false}) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool isLast = false,
+  }) {
     return Column(
       children: [
         Padding(
@@ -480,10 +467,10 @@ class _EmploManagementApprovalDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColor.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: primaryColor),
+                child: Icon(icon, size: 18, color: AppColor.primaryColor),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -496,7 +483,7 @@ class _EmploManagementApprovalDetailsScreenState
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppFonts.poppins,
-                        color: textSecondary,
+                        color: AppColor.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -506,7 +493,7 @@ class _EmploManagementApprovalDetailsScreenState
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         fontFamily: AppFonts.poppins,
-                        color: textPrimary,
+                        color: AppColor.textPrimary,
                       ),
                     ),
                   ],
@@ -515,7 +502,8 @@ class _EmploManagementApprovalDetailsScreenState
             ],
           ),
         ),
-        if (!isLast) Divider(color: borderColor.withOpacity(0.5), height: 1),
+        if (!isLast)
+          Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
       ],
     );
   }
@@ -533,7 +521,7 @@ class _EmploManagementApprovalDetailsScreenState
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -553,8 +541,8 @@ class _EmploManagementApprovalDetailsScreenState
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    secondaryColor.withOpacity(0.1),
-                    primaryColor.withOpacity(0.05),
+                    AppColor.secondaryColor.withOpacity(0.1),
+                    AppColor.primaryColor.withOpacity(0.05),
                   ],
                 ),
                 borderRadius: const BorderRadius.only(
@@ -567,10 +555,19 @@ class _EmploManagementApprovalDetailsScreenState
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [secondaryColor, primaryColor]),
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColor.secondaryColor,
+                          AppColor.primaryColor,
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.people_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.people_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -579,7 +576,7 @@ class _EmploManagementApprovalDetailsScreenState
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ],
@@ -613,13 +610,18 @@ class _EmploManagementApprovalDetailsScreenState
     );
   }
 
-  Widget _buildTeamMemberCard(String role, String name, String? photoUrl, IconData icon) {
+  Widget _buildTeamMemberCard(
+    String role,
+    String name,
+    String? photoUrl,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withOpacity(0.5)),
+        border: Border.all(color: AppColor.borderColor.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -629,20 +631,24 @@ class _EmploManagementApprovalDetailsScreenState
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [primaryColor.withOpacity(0.2), secondaryColor.withOpacity(0.2)],
+                colors: [
+                  AppColor.primaryColor.withOpacity(0.2),
+                  AppColor.secondaryColor.withOpacity(0.2),
+                ],
               ),
-              border: Border.all(color: borderColor),
+              border: Border.all(color: AppColor.borderColor),
             ),
             child: ClipOval(
-              child: photoUrl != null && photoUrl.isNotEmpty
-                  ? Image.network(
-                      photoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildSmallDefaultAvatar(name);
-                      },
-                    )
-                  : _buildSmallDefaultAvatar(name),
+              child:
+                  photoUrl != null && photoUrl.isNotEmpty
+                      ? Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildSmallDefaultAvatar(name);
+                        },
+                      )
+                      : _buildSmallDefaultAvatar(name),
             ),
           ),
           const SizedBox(width: 14),
@@ -656,7 +662,7 @@ class _EmploManagementApprovalDetailsScreenState
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     fontFamily: AppFonts.poppins,
-                    color: textSecondary,
+                    color: AppColor.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -666,7 +672,7 @@ class _EmploManagementApprovalDetailsScreenState
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: textPrimary,
+                    color: AppColor.textPrimary,
                   ),
                 ),
               ],
@@ -675,10 +681,10 @@ class _EmploManagementApprovalDetailsScreenState
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
+              color: AppColor.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18, color: primaryColor),
+            child: Icon(icon, size: 18, color: AppColor.primaryColor),
           ),
         ],
       ),
@@ -688,7 +694,9 @@ class _EmploManagementApprovalDetailsScreenState
   Widget _buildSmallDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
       ),
       child: Center(
         child: Text(
@@ -717,7 +725,7 @@ class _EmploManagementApprovalDetailsScreenState
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -738,7 +746,7 @@ class _EmploManagementApprovalDetailsScreenState
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   fontFamily: AppFonts.poppins,
-                  color: textPrimary,
+                  color: AppColor.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -818,122 +826,133 @@ class _EmploManagementApprovalDetailsScreenState
   void _showConfirmDialog(bool isApprove) {
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isApprove
-                      ? const Color(0xFFDCFCE7)
-                      : const Color(0xFFFEE2E2),
-                ),
-                child: Icon(
-                  isApprove ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                  size: 36,
-                  color: isApprove ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                isApprove ? "Approve Employee" : "Reject Employee",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: AppFonts.poppins,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                isApprove
-                    ? "Are you sure you want to approve ${widget.employee.name}?"
-                    : "Are you sure you want to reject ${widget.employee.name}?",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
+      builder:
+          (dialogContext) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: borderColor),
-                      ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: textSecondary,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        Navigator.pop(context);
-                        Get.snackbar(
-                          isApprove ? "Approved" : "Rejected",
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
                           isApprove
-                              ? "${widget.employee.name} has been approved"
-                              : "${widget.employee.name} has been rejected",
-                          backgroundColor: isApprove
+                              ? const Color(0xFFDCFCE7)
+                              : const Color(0xFFFEE2E2),
+                    ),
+                    child: Icon(
+                      isApprove
+                          ? Icons.check_circle_rounded
+                          : Icons.cancel_rounded,
+                      size: 36,
+                      color:
+                          isApprove
                               ? const Color(0xFF059669)
                               : const Color(0xFFDC2626),
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.BOTTOM,
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 12,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isApprove
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDC2626),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        isApprove ? "Approve" : "Reject",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    isApprove ? "Approve Employee" : "Reject Employee",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: AppFonts.poppins,
+                      color: AppColor.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    isApprove
+                        ? "Are you sure you want to approve ${widget.employee.name}?"
+                        : "Are you sure you want to reject ${widget.employee.name}?",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: AppFonts.poppins,
+                      color: AppColor.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: const BorderSide(color: AppColor.borderColor),
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                              color: AppColor.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            Navigator.pop(context);
+                            Get.snackbar(
+                              isApprove ? "Approved" : "Rejected",
+                              isApprove
+                                  ? "${widget.employee.name} has been approved"
+                                  : "${widget.employee.name} has been rejected",
+                              backgroundColor:
+                                  isApprove
+                                      ? const Color(0xFF059669)
+                                      : const Color(0xFFDC2626),
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.BOTTOM,
+                              margin: const EdgeInsets.all(16),
+                              borderRadius: 12,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isApprove
+                                    ? const Color(0xFF059669)
+                                    : const Color(0xFFDC2626),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            isApprove ? "Approve" : "Reject",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }

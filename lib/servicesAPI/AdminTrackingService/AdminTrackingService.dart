@@ -16,7 +16,7 @@ class AdminTrackingService {
   static const Duration _timeout = Duration(seconds: 30);
 
   // ═══════════════════════════════════════════════════════════════════════
-  // 1. GET ALL FILTERS (Employee List, Branch, Role)
+  // 1. GET ALL FILTERS (Employee List, Zone, Branch, Role)
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Fetch all employees from filters API
@@ -66,16 +66,17 @@ class AdminTrackingService {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // 2. GET LOCATION HISTORY (FIXED FOR 403 ERROR)
+  // 2. GET LOCATION HISTORY
   // ═══════════════════════════════════════════════════════════════════════
 
   /// Fetch location history for a specific employee
   Future<GetLocationHistoryModel?> getEmployeeLocationHistory({
     required String token,
-    required String userId, // this is employment_id
+    required String userId, // employment_id
     String? employeeId,
-    String? branch,
+    String? branch, // Can be comma-separated for multiple branches
     String? designation,
+    String? zone, // Can be comma-separated for multiple zones
     String? date,
     String? fromDate,
     String? toDate,
@@ -83,25 +84,34 @@ class AdminTrackingService {
     int perPage = 100,
   }) async {
     try {
-      // ✅ IMPORTANT: Backend needs ONLY employment_id
+      // Build query parameters
       final Map<String, String> queryParams = {
         'employment_id': userId,
         'page': page.toString(),
         'per_page': perPage.toString(),
       };
 
-      if (branch != null && branch.isNotEmpty) {
-        queryParams['branch'] = branch;
+      // Add optional filters
+      if (zone != null && zone.isNotEmpty) {
+        queryParams['zone'] = zone; // e.g., "South,West,North"
       }
+
+      if (branch != null && branch.isNotEmpty) {
+        queryParams['branch'] = branch; // e.g., "Branch A,Branch B"
+      }
+
       if (designation != null && designation.isNotEmpty) {
         queryParams['designation'] = designation;
       }
+
       if (date != null && date.isNotEmpty) {
         queryParams['date'] = date;
       }
+
       if (fromDate != null && fromDate.isNotEmpty) {
         queryParams['from_date'] = fromDate;
       }
+
       if (toDate != null && toDate.isNotEmpty) {
         queryParams['to_date'] = toDate;
       }
@@ -116,7 +126,8 @@ class AdminTrackingService {
         print("🔗 URL: $uri");
         print("📋 Filters:");
         print("   - Employment ID: $userId");
-        print("   - Branch: $branch");
+        print("   - Zone(s): $zone");
+        print("   - Branch(es): $branch");
         print("   - Designation: $designation");
         print("   - Date: $date");
       }
@@ -134,7 +145,6 @@ class AdminTrackingService {
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
-        print("📦 Body: ${response.body}");
       }
 
       if (response.statusCode == 200) {

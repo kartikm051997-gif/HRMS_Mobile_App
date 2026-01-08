@@ -7,7 +7,8 @@ import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/employee_tabview_provider.dart';
 import '../NewEmployeeScreens/New_Employee_Screen.dart';
-import '../activescreens/Active_screen.dart';
+import '../activeScreens/ActiveScreen.dart';
+import '../activescreens/ActiveScreen.dart' hide ActiveScreen;
 import '../AbscondScreens/abscond_screen.dart';
 import '../managementApproval/management_approval_screen.dart';
 import '../NoticePeriod/notice_period_screen.dart';
@@ -65,16 +66,13 @@ class _EmployeeManagementTabviewScreenState
             iconTheme: IconThemeData(color: AppColor.whiteColor),
             centerTitle: true,
             elevation: 0,
+
             // Remove backgroundColor
             // backgroundColor: AppColor.primaryColor2,
-
             flexibleSpace: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF8E0E6B),
-                    Color(0xFFD4145A),
-                  ],
+                  colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -114,14 +112,14 @@ class _EmployeeManagementTabviewScreenState
           ),
           body: TabBarView(
             controller: _tabController,
-            children: const [
-              ActiveScreen(),
-              ManagementApprovalScreen(),
-              AbscondScreen(),
-              NoticePeriodScreen(),
-              InActiveScreen(),
-              AllEmployeeScreen(),
-              NewEmployeeScreen(empId: "12345"),
+            children: [
+              const ActiveScreen(), // this is your filter + pagination screen
+              const ManagementApprovalScreen(),
+              const AbscondScreen(),
+              const NoticePeriodScreen(),
+              const InActiveScreen(),
+              const AllEmployeeScreen(),
+              const NewEmployeeScreen(empId: "12345"),
             ],
           ),
         );

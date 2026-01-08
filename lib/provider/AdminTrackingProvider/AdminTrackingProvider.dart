@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
-import '../../model/Employee_management/getAllFiltersModel.dart'; // ✅ YOUR MODEL
-import '../../model/UserTrackingModel/GetLocationHistoryModel.dart'; // ✅ YOUR MODEL
+import '../../model/Employee_management/getAllFiltersModel.dart';
+import '../../model/UserTrackingModel/GetLocationHistoryModel.dart';
 import '../../servicesAPI/AdminTrackingService/AdminTrackingService.dart';
 import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
@@ -21,18 +21,23 @@ class AdminTrackingProvider with ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════════════
 
   List<Employees> _employees = [];
-  List<Branches> _branches = [];
+  List<Branches> _branchesData = [];
+  List<Zones> _zonesData = [];
   List<Designations> _designations = [];
 
   bool _isLoadingFilters = false;
   String? _filterErrorMessage;
+
+  //filter for zone
+  List<Branches> _filteredBranches = [];
 
   // ═══════════════════════════════════════════════════════════════════════
   // FILTER VALUES (USER SELECTIONS)
   // ═══════════════════════════════════════════════════════════════════════
 
   String? _selectedEmployeeId;
-  String? _selectedBranch;
+  List<String> _selectedZones = [];
+  List<String> _selectedBranches = [];
   String? _selectedDesignation;
   DateTime? _selectedDate;
 
@@ -41,7 +46,8 @@ class AdminTrackingProvider with ChangeNotifier {
 
   void clearFilters() {
     _selectedEmployeeId = null;
-    _selectedBranch = null;
+    _selectedZones = [];
+    _selectedBranches = [];
     _selectedDesignation = null;
     _selectedDate = null;
 
@@ -66,7 +72,8 @@ class AdminTrackingProvider with ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════════════
 
   String? get selectedEmployeeId => _selectedEmployeeId;
-  String? get selectedBranch => _selectedBranch;
+  List<String> get selectedZones => _selectedZones;
+  List<String> get selectedBranches => _selectedBranches;
   String? get selectedDesignation => _selectedDesignation;
   DateTime? get selectedDate => _selectedDate;
   bool get isFilterExpanded => _isFilterExpanded;
@@ -74,15 +81,29 @@ class AdminTrackingProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoadingFilters => _isLoadingFilters;
   List<TrackingRecord> get trackingRecords => _trackingRecords;
-  List<String> get branchNames => _branches.map((b) => b.name ?? '').toList();
+
+  List<String> get zoneNames =>
+      _zonesData.map((z) => z.name ?? '').where((n) => n.isNotEmpty).toList();
+
+  List<String> get branchNames {
+    final source = _selectedZones.isEmpty ? _branchesData : _filteredBranches;
+
+    return source.map((b) => b.name ?? '').where((n) => n.isNotEmpty).toList();
+  }
+
   List<String> get roles =>
-      _designations.map((d) => d.designations ?? '').toList();
+      _designations
+          .map((d) => d.designations ?? '')
+          .where((r) => r.isNotEmpty)
+          .toList();
+
   String? get errorMessage => _errorMessage;
   String? get filterErrorMessage => _filterErrorMessage;
 
   bool get isFiltersValid =>
       _selectedEmployeeId != null &&
-      _selectedBranch != null &&
+      _selectedZones.isNotEmpty &&
+      _selectedBranches.isNotEmpty &&
       _selectedDesignation != null &&
       _selectedDate != null;
 
@@ -95,7 +116,7 @@ class AdminTrackingProvider with ChangeNotifier {
     await loadFilterData();
   }
 
-  /// Load all filter data (employees, branches, designations)
+  /// Load all filter data (employees, zones, branches, designations)
   Future<void> loadFilterData() async {
     try {
       _isLoadingFilters = true;
@@ -118,7 +139,8 @@ class AdminTrackingProvider with ChangeNotifier {
 
       if (filterData?.data != null) {
         _employees = filterData!.data!.employees ?? [];
-        _branches = filterData.data!.branches ?? [];
+        _branchesData = filterData.data!.branches ?? [];
+        _zonesData = filterData.data!.zones ?? [];
 
         // Extract designations from departments
         _designations = [];
@@ -133,7 +155,8 @@ class AdminTrackingProvider with ChangeNotifier {
         if (kDebugMode) {
           print("✅ Filter data loaded:");
           print("   - Employees: ${_employees.length}");
-          print("   - Branches: ${_branches.length}");
+          print("   - Zones: ${_zonesData.length}");
+          print("   - Branches: ${_branchesData.length}");
           print("   - Designations: ${_designations.length}");
         }
       } else {
@@ -154,16 +177,49 @@ class AdminTrackingProvider with ChangeNotifier {
 
   void setEmployeeId(String? value) {
     _selectedEmployeeId = value;
-
     if (kDebugMode && value != null) {
       print("📝 Selected Employee ID: $value");
+    }
+    notifyListeners();
+  }
+
+  void setZones(List<String> values) {
+    _selectedZones = values;
+
+    // 1️⃣ Convert selected zone NAMES → IDs
+    final selectedZoneIds =
+        _zonesData
+            .where((z) => values.contains(z.name))
+            .map((z) => z.id)
+            .whereType<String>()
+            .toList();
+
+    // 2️⃣ Filter branches using zoneId
+    _filteredBranches =
+        _branchesData.where((b) => selectedZoneIds.contains(b.zoneId)).toList();
+
+    // 3️⃣ Remove invalid selected branches
+    _selectedBranches =
+        _selectedBranches
+            .where((b) => _filteredBranches.any((fb) => fb.name == b))
+            .toList();
+
+    if (kDebugMode) {
+      print("🟣 Selected Zones: $values");
+      print("🟣 Zone IDs: $selectedZoneIds");
+      print(
+        "🟣 Filtered Branches: ${_filteredBranches.map((e) => e.name).toList()}",
+      );
     }
 
     notifyListeners();
   }
 
-  void setBranch(String? value) {
-    _selectedBranch = value;
+  void setBranches(List<String> values) {
+    _selectedBranches = values;
+    if (kDebugMode) {
+      print("📝 Selected Branches: ${values.join(', ')}");
+    }
     notifyListeners();
   }
 
@@ -209,7 +265,8 @@ class AdminTrackingProvider with ChangeNotifier {
         print("═══════════════════════════════════════");
         print("🔍 Performing search with filters:");
         print("   - Employee ID: $_selectedEmployeeId");
-        print("   - Branch: $_selectedBranch");
+        print("   - Zones: ${_selectedZones.join(', ')}");
+        print("   - Branches: ${_selectedBranches.join(', ')}");
         print("   - Designation: $_selectedDesignation");
         print(
           "   - Date: ${_selectedDate != null ? AdminTrackingService.formatDateForApi(_selectedDate!) : 'N/A'}",
@@ -223,17 +280,24 @@ class AdminTrackingProvider with ChangeNotifier {
         throw Exception('Please login again - Session expired');
       }
 
-      // ✅ Use employment_id as user_id for API call
+      // Fetch history for selected employee with filters
+      final DateTime dateToUse = _selectedDate ?? DateTime.now();
+      final String apiDate = AdminTrackingService.formatDateForApi(dateToUse);
+
+      // Always send safe string values
+      final String employeeIdToSend = _selectedEmployeeId ?? "";
+
       final historyData = await _adminService.getEmployeeLocationHistory(
         token: token,
-        userId: _selectedEmployeeId!, // Using employment_id
-        employeeId: _selectedEmployeeId,
-        branch: _selectedBranch,
-        designation: _selectedDesignation,
-        date:
-            _selectedDate != null
-                ? AdminTrackingService.formatDateForApi(_selectedDate!)
-                : null,
+
+        userId: employeeIdToSend,
+        employeeId: employeeIdToSend,
+
+        date: apiDate,
+
+        zone: _selectedZones.isNotEmpty ? _selectedZones.join(',') : "",
+        branch: _selectedBranches.isNotEmpty ? _selectedBranches.join(',') : "",
+        designation: _selectedDesignation ?? "",
       );
 
       // Convert API response to TrackingRecords
@@ -265,7 +329,7 @@ class AdminTrackingProvider with ChangeNotifier {
   // DATA CONVERSION (API Response → TrackingRecord)
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Convert API response to TrackingRecord list
+  /// Build sessions from locations (CHECK_IN to CHECK_OUT)
   List<TrackingRecord> _buildSessionsFromLocations(List<Locations> locations) {
     final List<TrackingRecord> sessions = [];
 
@@ -293,12 +357,13 @@ class AdminTrackingProvider with ChangeNotifier {
     return sessions;
   }
 
+  /// Convert API response to TrackingRecord list
   List<TrackingRecord> _convertApiResponseToRecords(
     GetLocationHistoryModel historyData,
   ) {
     final allLocations = historyData.data!.locations!;
 
-    // 1️⃣ Filter by selected date
+    // Filter by selected date
     final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate!);
 
     final filteredLocations =
@@ -313,7 +378,7 @@ class AdminTrackingProvider with ChangeNotifier {
       print("📍 Locations after date filter: ${filteredLocations.length}");
     }
 
-    // 2️⃣ Convert to sessions (CHECK_IN → CHECK_OUT)
+    // Convert to sessions
     return _buildSessionsFromLocations(filteredLocations);
   }
 
@@ -322,7 +387,6 @@ class AdminTrackingProvider with ChangeNotifier {
     final checkInLoc = locations.firstWhere(
       (l) => l.activityType == "CHECK_IN",
     );
-
     final checkOutLoc = locations.lastWhere(
       (l) => l.activityType == "CHECK_OUT",
     );
@@ -330,7 +394,7 @@ class AdminTrackingProvider with ChangeNotifier {
     final checkInTime = DateTime.parse(checkInLoc.capturedAt!);
     final checkOutTime = DateTime.parse(checkOutLoc.capturedAt!);
 
-    // 🔥 Correct tracking points with distance & wait time
+    // Create tracking points with distance & wait time
     final List<TrackingPoint> points = [];
     for (int i = 0; i < locations.length; i++) {
       final current = locations[i];
@@ -344,17 +408,14 @@ class AdminTrackingProvider with ChangeNotifier {
     }
 
     return TrackingRecord(
-      employeeId: checkInLoc.userId ?? "", // ✅ correct
+      employeeId: checkInLoc.userId ?? "",
       employeeName: checkInLoc.fullname ?? "Unknown",
       date: DateTime(checkInTime.year, checkInTime.month, checkInTime.day),
       checkIn: checkInTime,
       checkOut: checkOutTime,
       trackingPoints: points,
       totalDistance: distance,
-      totalDuration:
-          checkOutTime == null
-              ? Duration.zero
-              : checkOutTime.difference(checkInTime),
+      totalDuration: checkOutTime.difference(checkInTime),
     );
   }
 
@@ -384,7 +445,9 @@ class AdminTrackingProvider with ChangeNotifier {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════
   // FILTER SEARCH HELPERS
+  // ═══════════════════════════════════════════════════════════════════════
 
   List<EmployeeModel> getFilteredEmployees(String query) {
     final filtered =
@@ -420,19 +483,8 @@ class AdminTrackingProvider with ChangeNotifier {
   }
 
   // ═══════════════════════════════════════════════════════════════════════
-  // RESET
+  // HELPERS
   // ═══════════════════════════════════════════════════════════════════════
-
-  void resetFilters() {
-    _selectedEmployeeId = null;
-    _selectedBranch = null;
-    _selectedDesignation = null;
-    _selectedDate = DateTime.now();
-    _hasSearched = false;
-    _trackingRecords = [];
-    _errorMessage = null;
-    notifyListeners();
-  }
 
   List<EmployeeModel> get employees {
     return _employees
@@ -444,10 +496,22 @@ class AdminTrackingProvider with ChangeNotifier {
         )
         .toList();
   }
+
+  void resetFilters() {
+    _selectedEmployeeId = null;
+    _selectedZones = [];
+    _selectedBranches = [];
+    _selectedDesignation = null;
+    _selectedDate = DateTime.now();
+    _hasSearched = false;
+    _trackingRecords = [];
+    _errorMessage = null;
+    notifyListeners();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// MODELS (Keep existing TrackingRecord, TrackingPoint, EmployeeModel)
+// MODELS
 // ═══════════════════════════════════════════════════════════════════════
 
 class EmployeeModel {
@@ -460,10 +524,8 @@ class TrackingRecord {
   final String employeeId;
   final String employeeName;
   final DateTime date;
-
   final DateTime checkIn;
   final DateTime? checkOut;
-
   final List<TrackingPoint> trackingPoints;
   final double totalDistance;
   final Duration totalDuration;
@@ -479,9 +541,7 @@ class TrackingRecord {
     required this.totalDuration,
   });
 
-  // 👇 UI uses these getters
   String get checkInTime => DateFormat('hh:mm a').format(checkIn);
-
   String get checkOutTime =>
       checkOut == null
           ? 'Not checked out'
@@ -492,8 +552,8 @@ class TrackingPoint {
   final LatLng location;
   final String address;
   final String time;
-  final double distanceFromPrevious; // meters
-  final Duration? waitTime; // null for first point
+  final double distanceFromPrevious;
+  final Duration? waitTime;
 
   TrackingPoint({
     required this.location,

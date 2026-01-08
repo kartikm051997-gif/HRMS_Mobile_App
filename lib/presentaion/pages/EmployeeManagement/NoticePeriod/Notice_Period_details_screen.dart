@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/components/drawer/drawer.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
@@ -18,7 +19,8 @@ class NoticePeriodDetailsScreen extends StatefulWidget {
   });
 
   @override
-  State<NoticePeriodDetailsScreen> createState() => _NoticePeriodDetailsScreenState();
+  State<NoticePeriodDetailsScreen> createState() =>
+      _NoticePeriodDetailsScreenState();
 }
 
 class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
@@ -26,15 +28,6 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  // Modern gradient colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
 
   @override
   void initState() {
@@ -70,7 +63,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundColor,
       drawer: const TabletMobileDrawer(),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -108,7 +101,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
       floating: false,
       pinned: true,
       elevation: 0,
-      backgroundColor: primaryColor,
+      backgroundColor: AppColor.primaryColor,
       leading: IconButton(
         onPressed: () => Get.back(),
         icon: Container(
@@ -128,7 +121,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
         background: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [primaryColor, secondaryColor],
+              colors: [AppColor.primaryColor, AppColor.secondaryColor],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -170,7 +163,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
   Widget _buildEmployeeHeaderCard() {
     return Container(
       decoration: BoxDecoration(
-        color: cardColor,
+        color: AppColor.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -187,7 +180,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [primaryColor, secondaryColor],
+                colors: [AppColor.primaryColor, AppColor.secondaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -204,18 +197,25 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white.withOpacity(0.2),
-                    border: Border.all(color: Colors.white.withOpacity(0.4), width: 3),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.4),
+                      width: 3,
+                    ),
                   ),
                   child: ClipOval(
-                    child: widget.employee.photoUrl != null && widget.employee.photoUrl!.isNotEmpty
-                        ? Image.network(
-                            widget.employee.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _buildDefaultAvatar(widget.employee.name);
-                            },
-                          )
-                        : _buildDefaultAvatar(widget.employee.name),
+                    child:
+                        widget.employee.photoUrl != null &&
+                                widget.employee.photoUrl!.isNotEmpty
+                            ? Image.network(
+                              widget.employee.photoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return _buildDefaultAvatar(
+                                  widget.employee.name,
+                                );
+                              },
+                            )
+                            : _buildDefaultAvatar(widget.employee.name),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -231,7 +231,10 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -265,10 +268,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildStatusBadge(),
-                    _buildActionButton(),
-                  ],
+                  children: [_buildStatusBadge(), _buildActionButton()],
                 ),
                 const SizedBox(height: 20),
                 _buildViewProfileButton(),
@@ -283,7 +283,9 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
   Widget _buildDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
       ),
       child: Center(
         child: Text(
@@ -342,11 +344,13 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+            gradient: const LinearGradient(
+              colors: [AppColor.primaryColor, AppColor.secondaryColor],
+            ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.3),
+                color: AppColor.primaryColor.withOpacity(0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -387,17 +391,25 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (_, __, ___) => EmployeeDetailsScreen(
-                  empId: widget.employee.employeeId,
-                  empPhoto: widget.employee.photoUrl ?? "",
-                  empName: widget.employee.name,
-                  empDesignation: widget.employee.designation,
-                  empBranch: widget.employee.branch,
-                ),
+                pageBuilder:
+                    (_, __, ___) => EmployeeDetailsScreen(
+                      empId: widget.employee.employeeId,
+                      empPhoto: widget.employee.photoUrl ?? "",
+                      empName: widget.employee.name,
+                      empDesignation: widget.employee.designation,
+                      empBranch: widget.employee.branch,
+                    ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
-                    position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
-                        .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                    position: Tween<Offset>(
+                      begin: const Offset(1, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                     child: child,
                   );
                 },
@@ -409,11 +421,13 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+              gradient: const LinearGradient(
+                colors: [AppColor.primaryColor, AppColor.secondaryColor],
+              ),
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: primaryColor.withOpacity(0.3),
+                  color: AppColor.primaryColor.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -454,7 +468,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -472,7 +486,10 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [primaryColor.withOpacity(0.1), secondaryColor.withOpacity(0.05)],
+                  colors: [
+                    AppColor.primaryColor.withOpacity(0.1),
+                    AppColor.secondaryColor.withOpacity(0.05),
+                  ],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
@@ -484,10 +501,19 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [primaryColor, secondaryColor]),
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.business_center_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.business_center_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -496,7 +522,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ],
@@ -506,11 +532,32 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildDetailRow("Department", widget.employee.department, Icons.business_rounded),
-                  _buildDetailRow("Branch", widget.employee.branch, Icons.location_on_rounded),
-                  _buildDetailRow("Notice Period Start", widget.employee.doj, Icons.calendar_today_rounded),
-                  _buildDetailRow("Notice Period End", widget.employee.doj, Icons.event_rounded),
-                  _buildDetailRow("Payroll Category", widget.employee.payrollCategory, Icons.category_rounded, isLast: true),
+                  _buildDetailRow(
+                    "Department",
+                    widget.employee.department,
+                    Icons.business_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Branch",
+                    widget.employee.branch,
+                    Icons.location_on_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Notice Period Start",
+                    widget.employee.doj,
+                    Icons.calendar_today_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Notice Period End",
+                    widget.employee.doj,
+                    Icons.event_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Payroll Category",
+                    widget.employee.payrollCategory,
+                    Icons.category_rounded,
+                    isLast: true,
+                  ),
                 ],
               ),
             ),
@@ -520,7 +567,12 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, {bool isLast = false}) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool isLast = false,
+  }) {
     return Column(
       children: [
         Padding(
@@ -531,10 +583,10 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColor.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: primaryColor),
+                child: Icon(icon, size: 18, color: AppColor.primaryColor),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -547,7 +599,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppFonts.poppins,
-                        color: textSecondary,
+                        color: AppColor.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -557,7 +609,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         fontFamily: AppFonts.poppins,
-                        color: textPrimary,
+                        color: AppColor.textPrimary,
                       ),
                     ),
                   ],
@@ -566,7 +618,8 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
             ],
           ),
         ),
-        if (!isLast) Divider(color: borderColor.withOpacity(0.5), height: 1),
+        if (!isLast)
+          Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
       ],
     );
   }
@@ -584,7 +637,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -602,7 +655,10 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [secondaryColor.withOpacity(0.1), primaryColor.withOpacity(0.05)],
+                  colors: [
+                    AppColor.secondaryColor.withOpacity(0.1),
+                    AppColor.primaryColor.withOpacity(0.05),
+                  ],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
@@ -614,10 +670,19 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [secondaryColor, primaryColor]),
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColor.secondaryColor,
+                          AppColor.primaryColor,
+                        ],
+                      ),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.people_rounded, color: Colors.white, size: 20),
+                    child: const Icon(
+                      Icons.people_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   const Text(
@@ -626,7 +691,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: textPrimary,
+                      color: AppColor.textPrimary,
                     ),
                   ),
                 ],
@@ -658,13 +723,18 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
     );
   }
 
-  Widget _buildTeamMemberCard(String role, String name, String? photoUrl, IconData icon) {
+  Widget _buildTeamMemberCard(
+    String role,
+    String name,
+    String? photoUrl,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withOpacity(0.5)),
+        border: Border.all(color: AppColor.borderColor.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -674,20 +744,24 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [primaryColor.withOpacity(0.2), secondaryColor.withOpacity(0.2)],
+                colors: [
+                  AppColor.primaryColor.withOpacity(0.2),
+                  AppColor.secondaryColor.withOpacity(0.2),
+                ],
               ),
-              border: Border.all(color: borderColor),
+              border: Border.all(color: AppColor.borderColor),
             ),
             child: ClipOval(
-              child: photoUrl != null && photoUrl.isNotEmpty
-                  ? Image.network(
-                      photoUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildSmallDefaultAvatar(name);
-                      },
-                    )
-                  : _buildSmallDefaultAvatar(name),
+              child:
+                  photoUrl != null && photoUrl.isNotEmpty
+                      ? Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return _buildSmallDefaultAvatar(name);
+                        },
+                      )
+                      : _buildSmallDefaultAvatar(name),
             ),
           ),
           const SizedBox(width: 14),
@@ -701,7 +775,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     fontFamily: AppFonts.poppins,
-                    color: textSecondary,
+                    color: AppColor.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -711,7 +785,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: textPrimary,
+                    color: AppColor.textPrimary,
                   ),
                 ),
               ],
@@ -720,10 +794,10 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
+              color: AppColor.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 18, color: primaryColor),
+            child: Icon(icon, size: 18, color: AppColor.primaryColor),
           ),
         ],
       ),
@@ -733,7 +807,9 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
   Widget _buildSmallDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
       ),
       child: Center(
         child: Text(
@@ -756,137 +832,209 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
 
     showDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [primaryColor.withOpacity(0.2), secondaryColor.withOpacity(0.2)],
+      builder:
+          (dialogContext) => StatefulBuilder(
+            builder:
+                (context, setState) => Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColor.primaryColor.withOpacity(0.2),
+                                AppColor.secondaryColor.withOpacity(0.2),
+                              ],
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.edit_rounded,
+                            size: 36,
+                            color: AppColor.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Change Status",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: AppFonts.poppins,
+                            color: AppColor.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Column(
+                          children:
+                              ["InActive", "Abscond"].map((status) {
+                                return RadioListTile<String>(
+                                  title: Text(
+                                    status,
+                                    style: const TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  value: status,
+                                  groupValue: selectedStatus,
+                                  onChanged:
+                                      (value) => setState(
+                                        () => selectedStatus = value!,
+                                      ),
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                  activeColor: AppColor.primaryColor,
+                                );
+                              }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: dateController,
+                          readOnly: true,
+                          onTap: () async {
+                            final DateTime? picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate ?? DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                selectedDate = picked;
+                                dateController.text =
+                                    "${picked.day}/${picked.month}/${picked.year}";
+                              });
+                            }
+                          },
+                          decoration: InputDecoration(
+                            labelText: "Last Working Date",
+                            hintText: "Select Date",
+                            suffixIcon: const Icon(
+                              Icons.calendar_today,
+                              size: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColor.primaryColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => Navigator.pop(dialogContext),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  side: const BorderSide(
+                                    color: AppColor.borderColor,
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Cancel",
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    color: AppColor.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  if (selectedDate != null) {
+                                    final provider =
+                                        Provider.of<NoticePeriodProvider>(
+                                          context,
+                                          listen: false,
+                                        );
+                                    Navigator.pop(dialogContext);
+                                    provider
+                                        .updateEmployeeStatus(
+                                          widget.employee.employeeId,
+                                          selectedStatus,
+                                          selectedDate!,
+                                        )
+                                        .then((success) {
+                                          if (success) {
+                                            Get.back();
+                                            Get.snackbar(
+                                              "Success",
+                                              "Employee status updated to $selectedStatus",
+                                              backgroundColor: const Color(
+                                                0xFF059669,
+                                              ),
+                                              colorText: Colors.white,
+                                              snackPosition:
+                                                  SnackPosition.BOTTOM,
+                                              margin: const EdgeInsets.all(16),
+                                              borderRadius: 12,
+                                            );
+                                          } else {
+                                            Get.snackbar(
+                                              "Error",
+                                              "Failed to update employee status",
+                                              backgroundColor: const Color(
+                                                0xFFDC2626,
+                                              ),
+                                              colorText: Colors.white,
+                                              snackPosition:
+                                                  SnackPosition.BOTTOM,
+                                              margin: const EdgeInsets.all(16),
+                                              borderRadius: 12,
+                                            );
+                                          }
+                                        });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColor.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  "Update",
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  child: const Icon(Icons.edit_rounded, size: 36, color: primaryColor),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Change Status",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, fontFamily: AppFonts.poppins, color: textPrimary),
-                ),
-                const SizedBox(height: 20),
-                Column(
-                  children: ["InActive", "Abscond"].map((status) {
-                    return RadioListTile<String>(
-                      title: Text(status, style: const TextStyle(fontFamily: AppFonts.poppins, fontSize: 14)),
-                      value: status,
-                      groupValue: selectedStatus,
-                      onChanged: (value) => setState(() => selectedStatus = value!),
-                      contentPadding: EdgeInsets.zero,
-                      dense: true,
-                      activeColor: primaryColor,
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: dateController,
-                  readOnly: true,
-                  onTap: () async {
-                    final DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: selectedDate ?? DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        selectedDate = picked;
-                        dateController.text = "${picked.day}/${picked.month}/${picked.year}";
-                      });
-                    }
-                  },
-                  decoration: InputDecoration(
-                    labelText: "Last Working Date",
-                    hintText: "Select Date",
-                    suffixIcon: const Icon(Icons.calendar_today, size: 20),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: primaryColor),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          side: const BorderSide(color: borderColor),
-                        ),
-                        child: const Text("Cancel", style: TextStyle(fontFamily: AppFonts.poppins, color: textSecondary)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (selectedDate != null) {
-                            final provider = Provider.of<NoticePeriodProvider>(context, listen: false);
-                            Navigator.pop(dialogContext);
-                            provider.updateEmployeeStatus(widget.employee.employeeId, selectedStatus, selectedDate!).then((success) {
-                              if (success) {
-                                Get.back();
-                                Get.snackbar(
-                                  "Success",
-                                  "Employee status updated to $selectedStatus",
-                                  backgroundColor: const Color(0xFF059669),
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  margin: const EdgeInsets.all(16),
-                                  borderRadius: 12,
-                                );
-                              } else {
-                                Get.snackbar(
-                                  "Error",
-                                  "Failed to update employee status",
-                                  backgroundColor: const Color(0xFFDC2626),
-                                  colorText: Colors.white,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  margin: const EdgeInsets.all(16),
-                                  borderRadius: 12,
-                                );
-                              }
-                            });
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
-                        ),
-                        child: const Text("Update", style: TextStyle(fontFamily: AppFonts.poppins, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
-        ),
-      ),
     );
   }
 }

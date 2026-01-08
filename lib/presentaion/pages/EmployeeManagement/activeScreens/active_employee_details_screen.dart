@@ -1,9 +1,11 @@
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../model/Employee_management/ActiveUserListModel.dart' as models;
+import '../../../../model/Employee_management/ActiveUserListModel.dart'
+    as models;
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 import '../../../../apibaseScreen/Api_Base_Screens.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
@@ -11,10 +13,7 @@ import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen
 class EmployeeManagementDetailsScreen extends StatefulWidget {
   final models.Users user;
 
-  const EmployeeManagementDetailsScreen({
-    super.key,
-    required this.user,
-  });
+  const EmployeeManagementDetailsScreen({super.key, required this.user});
 
   @override
   State<EmployeeManagementDetailsScreen> createState() =>
@@ -24,23 +23,17 @@ class EmployeeManagementDetailsScreen extends StatefulWidget {
 class _EmployeeManagementDetailsScreenState
     extends State<EmployeeManagementDetailsScreen> {
   // Colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-  static const Color backgroundColor = Color(0xFFF8FAFC);
-  static const Color cardColor = Colors.white;
-  static const Color textPrimary = Color(0xFF1E293B);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color borderColor = Color(0xFFE2E8F0);
 
   @override
   Widget build(BuildContext context) {
     final activeProvider = Provider.of<ActiveProvider>(context);
     final bool isActive =
         (widget.user.status ?? "Active").toLowerCase() == 'active';
-    final employeeName = widget.user.fullname ?? widget.user.username ?? "Unknown";
+    final employeeName =
+        widget.user.fullname ?? widget.user.username ?? "Unknown";
 
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColor.backgroundColor,
       appBar: AppBar(
         title: const Text(
           "Employee Details",
@@ -51,11 +44,11 @@ class _EmployeeManagementDetailsScreenState
           ),
         ),
         centerTitle: true,
-        backgroundColor: primaryColor,
+        backgroundColor: AppColor.primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => Get.back(),
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         ),
       ),
@@ -69,7 +62,7 @@ class _EmployeeManagementDetailsScreenState
             // ═══════════════════════════════════════════════════════════
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: AppColor.cardColor,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -87,7 +80,10 @@ class _EmployeeManagementDetailsScreenState
                     padding: const EdgeInsets.all(24),
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [primaryColor, secondaryColor],
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -100,18 +96,37 @@ class _EmployeeManagementDetailsScreenState
                       children: [
                         // Avatar
                         Container(
-                          width: 90,
-                          height: 90,
+                          width: 50,
+                          height: 50,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white.withOpacity(0.2),
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.4),
-                              width: 3,
+                              color: Colors.white.withOpacity(0.3),
+                              width: 2,
                             ),
                           ),
                           child: ClipOval(
-                            child: _getUserAvatar(widget.user, employeeName),
+                            child: Builder(
+                              builder: (_) {
+                                final imageUrl = getAvatarUrl(
+                                  widget.user.avatar,
+                                );
+                                if (kDebugMode) {
+                                  print('FINAL AVATAR URL 👉 $imageUrl');
+                                }
+
+                                return imageUrl.isNotEmpty
+                                    ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (_, __, ___) =>
+                                              _defaultAvatar(employeeName),
+                                    )
+                                    : _defaultAvatar(employeeName);
+                              },
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -181,14 +196,16 @@ class _EmployeeManagementDetailsScreenState
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: isActive
-                                    ? const Color(0xFFECFDF5)
-                                    : const Color(0xFFFEF2F2),
+                                color:
+                                    isActive
+                                        ? const Color(0xFFECFDF5)
+                                        : const Color(0xFFFEF2F2),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isActive
-                                      ? const Color(0xFFBBF7D0)
-                                      : const Color(0xFFFECACA),
+                                  color:
+                                      isActive
+                                          ? const Color(0xFFBBF7D0)
+                                          : const Color(0xFFFECACA),
                                 ),
                               ),
                               child: Row(
@@ -199,9 +216,10 @@ class _EmployeeManagementDetailsScreenState
                                     height: 10,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isActive
-                                          ? const Color(0xFF059669)
-                                          : const Color(0xFFDC2626),
+                                      color:
+                                          isActive
+                                              ? const Color(0xFF059669)
+                                              : const Color(0xFFDC2626),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -211,9 +229,10 @@ class _EmployeeManagementDetailsScreenState
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                       fontFamily: AppFonts.poppins,
-                                      color: isActive
-                                          ? const Color(0xFF059669)
-                                          : const Color(0xFFDC2626),
+                                      color:
+                                          isActive
+                                              ? const Color(0xFF059669)
+                                              : const Color(0xFFDC2626),
                                     ),
                                   ),
                                 ],
@@ -222,12 +241,13 @@ class _EmployeeManagementDetailsScreenState
 
                             // Action Button
                             InkWell(
-                              onTap: () => _showStatusDialog(
-                                context,
-                                widget.user,
-                                activeProvider,
-                                isActive,
-                              ),
+                              onTap:
+                                  () => _showStatusDialog(
+                                    context,
+                                    widget.user,
+                                    activeProvider,
+                                    isActive,
+                                  ),
                               borderRadius: BorderRadius.circular(12),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -235,15 +255,16 @@ class _EmployeeManagementDetailsScreenState
                                   vertical: 12,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: isActive
-                                      ? const Color(0xFFDC2626)
-                                      : const Color(0xFF059669),
+                                  color:
+                                      isActive
+                                          ? const Color(0xFFDC2626)
+                                          : const Color(0xFF059669),
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
                                       color: (isActive
-                                          ? const Color(0xFFDC2626)
-                                          : const Color(0xFF059669))
+                                              ? const Color(0xFFDC2626)
+                                              : const Color(0xFF059669))
                                           .withOpacity(0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 4),
@@ -291,9 +312,10 @@ class _EmployeeManagementDetailsScreenState
                                   avatar.startsWith('https://')) {
                                 imageUrl = avatar;
                               } else {
-                                final cleanPath = avatar.startsWith('/')
-                                    ? avatar.substring(1)
-                                    : avatar;
+                                final cleanPath =
+                                    avatar.startsWith('/')
+                                        ? avatar.substring(1)
+                                        : avatar;
                                 imageUrl = '${ApiBase.baseUrl}$cleanPath';
                               }
                             }
@@ -301,17 +323,19 @@ class _EmployeeManagementDetailsScreenState
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => EmployeeDetailsScreen(
-                                  empId: widget.user.employmentId ??
-                                      widget.user.userId ??
-                                      "",
-                                  empPhoto: imageUrl ?? "",
-                                  empName: employeeName,
-                                  empDesignation:
-                                  widget.user.designation ?? "N/A",
-                                  empBranch:
-                                  widget.user.locationName ?? "N/A",
-                                ),
+                                builder:
+                                    (_) => EmployeeDetailsScreen(
+                                      empId:
+                                          widget.user.employmentId ??
+                                          widget.user.userId ??
+                                          "",
+                                      empPhoto: imageUrl ?? "",
+                                      empName: employeeName,
+                                      empDesignation:
+                                          widget.user.designation ?? "N/A",
+                                      empBranch:
+                                          widget.user.locationName ?? "N/A",
+                                    ),
                               ),
                             );
                           },
@@ -321,12 +345,15 @@ class _EmployeeManagementDetailsScreenState
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
-                                colors: [primaryColor, secondaryColor],
+                                colors: [
+                                  AppColor.primaryColor,
+                                  AppColor.secondaryColor,
+                                ],
                               ),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: primaryColor.withOpacity(0.3),
+                                  color: AppColor.primaryColor.withOpacity(0.3),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -367,7 +394,7 @@ class _EmployeeManagementDetailsScreenState
             // ═══════════════════════════════════════════════════════════
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: AppColor.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -387,8 +414,8 @@ class _EmployeeManagementDetailsScreenState
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          primaryColor.withOpacity(0.1),
-                          secondaryColor.withOpacity(0.05),
+                          AppColor.primaryColor.withOpacity(0.1),
+                          AppColor.secondaryColor.withOpacity(0.05),
                         ],
                       ),
                       borderRadius: const BorderRadius.only(
@@ -400,7 +427,7 @@ class _EmployeeManagementDetailsScreenState
                       children: [
                         Icon(
                           Icons.business_center_rounded,
-                          color: primaryColor,
+                          color: AppColor.primaryColor,
                           size: 20,
                         ),
                         SizedBox(width: 12),
@@ -410,7 +437,7 @@ class _EmployeeManagementDetailsScreenState
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: AppFonts.poppins,
-                            color: textPrimary,
+                            color: AppColor.textPrimary,
                           ),
                         ),
                       ],
@@ -487,7 +514,7 @@ class _EmployeeManagementDetailsScreenState
             // ═══════════════════════════════════════════════════════════
             Container(
               decoration: BoxDecoration(
-                color: cardColor,
+                color: AppColor.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -507,8 +534,8 @@ class _EmployeeManagementDetailsScreenState
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          secondaryColor.withOpacity(0.1),
-                          primaryColor.withOpacity(0.05),
+                          AppColor.secondaryColor.withOpacity(0.1),
+                          AppColor.primaryColor.withOpacity(0.05),
                         ],
                       ),
                       borderRadius: const BorderRadius.only(
@@ -520,7 +547,7 @@ class _EmployeeManagementDetailsScreenState
                       children: [
                         Icon(
                           Icons.people_rounded,
-                          color: secondaryColor,
+                          color: AppColor.secondaryColor,
                           size: 20,
                         ),
                         SizedBox(width: 12),
@@ -530,7 +557,7 @@ class _EmployeeManagementDetailsScreenState
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             fontFamily: AppFonts.poppins,
-                            color: textPrimary,
+                            color: AppColor.textPrimary,
                           ),
                         ),
                       ],
@@ -565,8 +592,12 @@ class _EmployeeManagementDetailsScreenState
   // HELPER METHODS
   // ═══════════════════════════════════════════════════════════════════════
 
-  Widget _detailRow(String label, String value, IconData icon,
-      {bool isLast = false}) {
+  Widget _detailRow(
+    String label,
+    String value,
+    IconData icon, {
+    bool isLast = false,
+  }) {
     return Column(
       children: [
         Padding(
@@ -577,10 +608,10 @@ class _EmployeeManagementDetailsScreenState
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
+                  color: AppColor.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, size: 18, color: primaryColor),
+                child: Icon(icon, size: 18, color: AppColor.primaryColor),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -593,7 +624,7 @@ class _EmployeeManagementDetailsScreenState
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         fontFamily: AppFonts.poppins,
-                        color: textSecondary,
+                        color: AppColor.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -603,7 +634,7 @@ class _EmployeeManagementDetailsScreenState
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         fontFamily: AppFonts.poppins,
-                        color: textPrimary,
+                        color: AppColor.textPrimary,
                       ),
                     ),
                   ],
@@ -612,7 +643,8 @@ class _EmployeeManagementDetailsScreenState
             ],
           ),
         ),
-        if (!isLast) Divider(color: borderColor.withOpacity(0.5), height: 1),
+        if (!isLast)
+          Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
       ],
     );
   }
@@ -623,7 +655,7 @@ class _EmployeeManagementDetailsScreenState
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor.withOpacity(0.5)),
+        border: Border.all(color: AppColor.borderColor.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -637,7 +669,7 @@ class _EmployeeManagementDetailsScreenState
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     fontFamily: AppFonts.poppins,
-                    color: textSecondary,
+                    color: AppColor.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -647,7 +679,7 @@ class _EmployeeManagementDetailsScreenState
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: textPrimary,
+                    color: AppColor.textPrimary,
                   ),
                 ),
               ],
@@ -658,212 +690,194 @@ class _EmployeeManagementDetailsScreenState
     );
   }
 
-  Widget _getUserAvatar(models.Users user, String name) {
-    final avatar = user.avatar;
-    String? imageUrl;
-
-    if (avatar != null &&
-        avatar.isNotEmpty &&
-        avatar != 'null' &&
-        avatar != 'none') {
-      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
-        imageUrl = avatar;
-      } else {
-        final cleanPath = avatar.startsWith('/') ? avatar.substring(1) : avatar;
-        imageUrl = '${ApiBase.baseUrl}$cleanPath';
-      }
-    }
-
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: imageUrl,
-        width: 90,
-        height: 90,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [primaryColor, secondaryColor],
-            ),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ),
-        ),
-        errorWidget: (context, url, error) => _getDefaultAvatar(name),
-      );
-    }
-
-    return _getDefaultAvatar(name);
-  }
-
-  Widget _getDefaultAvatar(String name) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : "E",
-          style: const TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showStatusDialog(
-      BuildContext context,
-      models.Users user,
-      ActiveProvider provider,
-      bool isActive,
-      ) {
+    BuildContext context,
+    models.Users user,
+    ActiveProvider provider,
+    bool isActive,
+  ) {
     final employeeId = user.employmentId ?? user.userId ?? "";
     final employeeName = user.fullname ?? user.username ?? "Unknown";
 
     showDialog(
       context: context,
-      builder: (dialogContext) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icon
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: isActive
-                        ? [
-                      const Color(0xFFFEE2E2),
-                      const Color(0xFFFECACA),
-                    ]
-                        : [
-                      const Color(0xFFDCFCE7),
-                      const Color(0xFFBBF7D0),
-                    ],
-                  ),
-                ),
-                child: Icon(
-                  isActive
-                      ? Icons.person_remove_rounded
-                      : Icons.person_add_rounded,
-                  size: 36,
-                  color: isActive
-                      ? const Color(0xFFDC2626)
-                      : const Color(0xFF059669),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Title
-              Text(
-                isActive ? "Deactivate Employee" : "Activate Employee",
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: AppFonts.poppins,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Message
-              Text(
-                isActive
-                    ? "Are you sure you want to deactivate $employeeName?"
-                    : "Are you sure you want to activate $employeeName?",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Buttons
-              Row(
+      builder:
+          (dialogContext) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(dialogContext),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        side: const BorderSide(color: borderColor),
-                      ),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: textSecondary,
-                        ),
+                  // Icon
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors:
+                            isActive
+                                ? [
+                                  const Color(0xFFFEE2E2),
+                                  const Color(0xFFFECACA),
+                                ]
+                                : [
+                                  const Color(0xFFDCFCE7),
+                                  const Color(0xFFBBF7D0),
+                                ],
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        provider.toggleEmployeeStatus(employeeId);
-                        Navigator.pop(dialogContext);
-                        Navigator.pop(context);
-
-                        Get.snackbar(
-                          isActive ? "Deactivated" : "Activated",
+                    child: Icon(
+                      isActive
+                          ? Icons.person_remove_rounded
+                          : Icons.person_add_rounded,
+                      size: 36,
+                      color:
                           isActive
-                              ? "$employeeName has been deactivated"
-                              : "$employeeName has been activated",
-                          backgroundColor: isActive
                               ? const Color(0xFFDC2626)
                               : const Color(0xFF059669),
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.BOTTOM,
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 12,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isActive
-                            ? const Color(0xFFDC2626)
-                            : const Color(0xFF059669),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        isActive ? "Deactivate" : "Activate",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
                     ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Title
+                  Text(
+                    isActive ? "Deactivate Employee" : "Activate Employee",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: AppFonts.poppins,
+                      color: AppColor.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Message
+                  Text(
+                    isActive
+                        ? "Are you sure you want to deactivate $employeeName?"
+                        : "Are you sure you want to activate $employeeName?",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontFamily: AppFonts.poppins,
+                      color: AppColor.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: const BorderSide(color: AppColor.borderColor),
+                          ),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                              color: AppColor.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            provider.toggleEmployeeStatus(employeeId);
+                            Navigator.pop(dialogContext);
+                            Navigator.pop(context);
+
+                            Get.snackbar(
+                              isActive ? "Deactivated" : "Activated",
+                              isActive
+                                  ? "$employeeName has been deactivated"
+                                  : "$employeeName has been activated",
+                              backgroundColor:
+                                  isActive
+                                      ? const Color(0xFFDC2626)
+                                      : const Color(0xFF059669),
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.BOTTOM,
+                              margin: const EdgeInsets.all(16),
+                              borderRadius: 12,
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isActive
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF059669),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            isActive ? "Deactivate" : "Activate",
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
+          ),
+    );
+  }
+
+  String getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
+    }
+
+    // If backend already sends full URL
+    if (avatar.startsWith('http')) {
+      // Replace localhost for real device access
+      return avatar.replaceFirst('http://localhost', 'http://192.168.0.100');
+    }
+
+    // Relative path case
+    return 'http://192.168.0.100/hrms/$avatar';
+  }
+
+  Widget _defaultAvatar(String employeeName) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          employeeName.isNotEmpty ? employeeName[0].toUpperCase() : 'E',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: AppFonts.poppins,
           ),
         ),
       ),
