@@ -20,10 +20,10 @@ class LoginProvider extends ChangeNotifier {
   LoginApiModel? _loginData;
   String? _errorMessage;
   bool _rememberMe = false;
+
   String get userRole {
     return _loginData?.user?.roleId?.toString() ?? "";
   }
-
 
   // Getters
   bool get isLoading => _isLoading;
@@ -60,6 +60,13 @@ class LoginProvider extends ChangeNotifier {
     _errorMessage = null;
 
     try {
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("🔐 LOGIN ATTEMPT");
+        print("Username: ${emailController.text.trim()}");
+        print("═══════════════════════════════════════");
+      }
+
       // Call auth service
       final loginModel = await _authService.login(
         username: emailController.text.trim(),
@@ -68,20 +75,72 @@ class LoginProvider extends ChangeNotifier {
 
       // Update state
       _loginData = loginModel;
+
+      // ✅ DEBUG: Print what we got from login
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("🎉 LOGIN SUCCESS - Checking Data");
+        print("═══════════════════════════════════════");
+        print("Token: ${loginModel.token?.substring(0, 30)}...");
+        print("Status: ${loginModel.status}");
+        print("Message: ${loginModel.message}");
+
+        if (loginModel.user != null) {
+          print("\n👤 USER DATA:");
+          final user = loginModel.user!;
+
+          // Print user model fields
+          print("  - userId: ${user.userId}");
+          print("  - roleId: ${user.roleId}");
+          print("  - username: ${user.username}");
+          print("  - fullname: ${user.fullname}");
+          print("  - email: ${user.email}");
+          print("  - avatar: ${user.avatar}");
+          print("  - designationId: ${user.designationsId}");
+          print("  - location: ${user.location}");
+          print("  - appLocation: ${user.appLocation}");
+          print("  - lastLogin: ${user.lastLogin}");
+          print("  - branch: ${user.branch}");
+
+          // Print raw JSON to see ALL fields
+          try {
+            print("\n📋 RAW USER JSON:");
+            final userJson = user.toJson();
+            userJson.forEach((key, value) {
+              print("  $key: $value");
+            });
+          } catch (e) {
+            print("  ⚠️ Could not print raw JSON: $e");
+          }
+        } else {
+          print("❌ USER DATA IS NULL!");
+        }
+        print("═══════════════════════════════════════");
+
+        // Verify what was saved
+        print("\n🔍 VERIFYING SAVED SESSION...");
+        await _authService.debugPrintSessionData();
+      }
+
       _clearFields();
 
       // Show success message
       _showSnackBar("Login Successful!", isError: false);
 
       // Navigate to home
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 500));
       Get.offAllNamed(AppRoutes.bottomNav);
     } catch (e) {
       // Handle error
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       _showSnackBar(_errorMessage!, isError: true);
 
-      if (kDebugMode) print("❌ LoginProvider: Login failed - $_errorMessage");
+      if (kDebugMode) {
+        print("═══════════════════════════════════════");
+        print("❌ LOGIN FAILED");
+        print("Error: $_errorMessage");
+        print("═══════════════════════════════════════");
+      }
     } finally {
       _setLoading(false);
     }
@@ -94,6 +153,8 @@ class LoginProvider extends ChangeNotifier {
   /// Perform logout
   Future<void> logout() async {
     try {
+      if (kDebugMode) print("🚪 Logging out...");
+
       // Clear session via service
       await _authService.clearSession();
 
@@ -124,12 +185,15 @@ class LoginProvider extends ChangeNotifier {
   /// Returns true if valid session exists, false otherwise
   Future<bool> initializeSession() async {
     try {
+      if (kDebugMode) print("🔄 Initializing session...");
+
       // Check if session is valid
       final isValid = await _authService.isSessionValid();
 
       if (!isValid) {
         _loginData = null;
         notifyListeners();
+        if (kDebugMode) print("❌ No valid session found");
         return false;
       }
 
@@ -140,7 +204,11 @@ class LoginProvider extends ChangeNotifier {
         _loginData = loginModel;
         notifyListeners();
 
-        if (kDebugMode) print("✅ LoginProvider: Session restored");
+        if (kDebugMode) {
+          print("✅ LoginProvider: Session restored");
+          print("   User: ${loginModel.user?.username}");
+          print("   Role: ${loginModel.user?.roleId}");
+        }
         return true;
       }
 
@@ -163,6 +231,16 @@ class LoginProvider extends ChangeNotifier {
   /// Get employee ID
   Future<String?> getEmployeeId() async {
     return await _authService.getEmployeeId();
+  }
+
+  /// Get user ID
+  Future<String?> getUserId() async {
+    return await _authService.getUserId();
+  }
+
+  /// Get role ID
+  Future<String?> getRoleId() async {
+    return await _authService.getRoleId();
   }
 
   /// Validate input fields
@@ -214,6 +292,20 @@ class LoginProvider extends ChangeNotifier {
   /// Debug: Print session data
   Future<void> debugPrintSession() async {
     await _authService.debugPrintSessionData();
+  }
+
+  /// Debug: Test all getters
+  Future<void> debugTestGetters() async {
+    if (!kDebugMode) return;
+
+    print("═══════════════════════════════════════");
+    print("🧪 TESTING ALL GETTERS");
+    print("═══════════════════════════════════════");
+    print("Token: ${await getAuthToken()}");
+    print("User ID: ${await getUserId()}");
+    print("Role ID: ${await getRoleId()}");
+    print("Employee ID: ${await getEmployeeId()}");
+    print("═══════════════════════════════════════");
   }
 
   // ═══════════════════════════════════════════════════════════════════════

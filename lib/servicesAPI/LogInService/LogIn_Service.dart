@@ -52,6 +52,8 @@ class AuthService {
   static const String _keyEmployeeId = 'employeeId';
   static const String _keyLoggedInEmpId = 'logged_in_emp_id';
   static const String _keyAuthToken = 'authToken';
+  static const String _keyUserId = 'user_id';  // ✅ Added
+  static const String _keyRoleId = 'role_id';  // ✅ Added
 
   // ═══════════════════════════════════════════════════════════════════════
   // LOGIN API
@@ -160,10 +162,8 @@ class AuthService {
       await prefs.setBool(_keyIsLoggedIn, true);
       await prefs.setInt(_keyLoginTime, DateTime.now().millisecondsSinceEpoch);
 
-      // ✅ IMPROVED: Extract token from multiple possible locations
+      // ✅ Extract and save token
       String token = _extractToken(userData);
-
-      // Save token
       if (token.isNotEmpty) {
         await prefs.setString(_keyAuthToken, token);
         if (kDebugMode) {
@@ -175,8 +175,6 @@ class AuthService {
         if (kDebugMode) {
           print("⚠️ WARNING: No token found in login response!");
           print("📦 Available keys in response: ${userData.keys.toList()}");
-
-          // Check nested data
           if (userData['data'] != null) {
             print("📦 Keys in 'data': ${(userData['data'] as Map).keys.toList()}");
           }
@@ -186,19 +184,39 @@ class AuthService {
         }
       }
 
-      // Extract and save employee ID
+      // ✅ Extract and save user_id
       final userId = _extractUserId(userData);
       if (userId.isNotEmpty) {
         await prefs.setString(_keyEmployeeId, userId);
         await prefs.setString(_keyLoggedInEmpId, userId);
-        if (kDebugMode) print("✅ Employee ID saved: $userId");
+        await prefs.setString(_keyUserId, userId);  // ✅ Save to user_id key
+        if (kDebugMode) print("✅ User ID saved: $userId");
       } else {
-        if (kDebugMode) print("⚠️ Warning: No employee ID found");
+        if (kDebugMode) print("⚠️ Warning: No user ID found");
+      }
+
+      // ✅ Extract and save role_id
+      final roleId = _extractRoleId(userData);
+      if (roleId.isNotEmpty) {
+        await prefs.setString(_keyRoleId, roleId);
+        if (kDebugMode) print("✅ Role ID saved: $roleId");
+      } else {
+        // Default to "1" if not found
+        await prefs.setString(_keyRoleId, "1");
+        if (kDebugMode) print("⚠️ Role ID not found, defaulting to '1'");
       }
 
       if (kDebugMode) {
         print("═══════════════════════════════════════");
         print("✅ Session saved successfully");
+        print("═══════════════════════════════════════");
+
+        // Verify what was saved
+        print("\n🔍 Verifying saved data:");
+        print("  Token: ${prefs.getString(_keyAuthToken)?.substring(0, 30)}...");
+        print("  User ID: ${prefs.getString(_keyUserId)}");
+        print("  Role ID: ${prefs.getString(_keyRoleId)}");
+        print("  Employee ID: ${prefs.getString(_keyEmployeeId)}");
         print("═══════════════════════════════════════");
       }
     } catch (e) {
@@ -232,7 +250,8 @@ class AuthService {
 
       if (kDebugMode) {
         print("✅ Session loaded successfully");
-        print("🆔 User ID: ${await getEmployeeId()}");
+        print("🆔 User ID: ${await getUserId()}");
+        print("🎭 Role ID: ${await getRoleId()}");
       }
       return loginModel;
     } catch (e) {
@@ -289,6 +308,8 @@ class AuthService {
       await prefs.remove(_keyEmployeeId);
       await prefs.remove(_keyLoggedInEmpId);
       await prefs.remove(_keyAuthToken);
+      await prefs.remove(_keyUserId);  // ✅ Added
+      await prefs.remove(_keyRoleId);  // ✅ Added
 
       if (kDebugMode) {
         print("═══════════════════════════════════════");
@@ -328,11 +349,94 @@ class AuthService {
     }
   }
 
+  /// Get user ID (✅ IMPROVED)
+  Future<String?> getUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Try to get from saved user_id key first
+      String? userId = prefs.getString(_keyUserId);
+
+      if (userId != null && userId.isNotEmpty) {
+        if (kDebugMode) print("👤 User ID retrieved: $userId");
+        return userId;
+      }
+
+      // Fallback: try employee_id
+      userId = prefs.getString(_keyEmployeeId);
+      if (userId != null && userId.isNotEmpty) {
+        if (kDebugMode) print("👤 User ID from employee_id: $userId");
+        return userId;
+      }
+
+      // Last resort: try to extract from userData
+      final userData = prefs.getString(_keyUserData);
+      if (userData != null) {
+        final decoded = jsonDecode(userData) as Map<String, dynamic>;
+        userId = _extractUserId(decoded);
+        if (userId.isNotEmpty) {
+          // Save it for next time
+          await prefs.setString(_keyUserId, userId);
+          if (kDebugMode) print("👤 User ID extracted and saved: $userId");
+          return userId;
+        }
+      }
+
+      if (kDebugMode) print("❌ User ID not found!");
+      return null;
+    } catch (e) {
+      if (kDebugMode) print("❌ Error getting user ID: $e");
+      return null;
+    }
+  }
+
+  /// Get role ID (✅ IMPROVED)
+  Future<String?> getRoleId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Try to get from saved role_id key first
+      String? roleId = prefs.getString(_keyRoleId);
+
+      if (roleId != null && roleId.isNotEmpty) {
+        if (kDebugMode) print("🎭 Role ID retrieved: $roleId");
+        return roleId;
+      }
+
+      // Last resort: try to extract from userData
+      final userData = prefs.getString(_keyUserData);
+      if (userData != null) {
+        final decoded = jsonDecode(userData) as Map<String, dynamic>;
+        roleId = _extractRoleId(decoded);
+        if (roleId.isNotEmpty) {
+          // Save it for next time
+          await prefs.setString(_keyRoleId, roleId);
+          if (kDebugMode) print("🎭 Role ID extracted and saved: $roleId");
+          return roleId;
+        }
+      }
+
+      // Default to admin role
+      if (kDebugMode) print("⚠️ Role ID not found, defaulting to '1'");
+      return "1";
+    } catch (e) {
+      if (kDebugMode) print("❌ Error getting role ID: $e");
+      return "1";
+    }
+  }
+
   /// Get employee ID
   Future<String?> getEmployeeId() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_keyEmployeeId);
+      final empId = prefs.getString(_keyEmployeeId);
+
+      // If not found, try user_id as fallback
+      if (empId == null || empId.isEmpty) {
+        return await getUserId();
+      }
+
+      return empId;
     } catch (e) {
       if (kDebugMode) print("❌ Error getting employee ID: $e");
       return null;
@@ -431,52 +535,67 @@ class AuthService {
     return '';
   }
 
-  /// Extract user ID from login response
+  /// Extract user ID from login response (✅ IMPROVED)
   String _extractUserId(Map<String, dynamic> userData) {
     // Try multiple possible locations for user ID
 
     // 1. user.user_id
     if (userData['user'] != null && userData['user'] is Map) {
       final user = userData['user'] as Map;
-      if (user['user_id'] != null) {
+
+      if (user['user_id'] != null && user['user_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: user.user_id");
         return user['user_id'].toString();
       }
-      if (user['id'] != null) {
+      if (user['id'] != null && user['id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: user.id");
         return user['id'].toString();
       }
-      if (user['employee_id'] != null) {
+      if (user['employee_id'] != null && user['employee_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: user.employee_id");
         return user['employee_id'].toString();
       }
-      if (user['employment_id'] != null) {
+      if (user['employment_id'] != null && user['employment_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: user.employment_id");
         return user['employment_id'].toString();
       }
     }
 
     // 2. Direct fields
-    if (userData['user_id'] != null) {
+    if (userData['user_id'] != null && userData['user_id'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 User ID found in: userData.user_id");
       return userData['user_id'].toString();
     }
 
-    if (userData['userId'] != null) {
+    if (userData['userId'] != null && userData['userId'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 User ID found in: userData.userId");
       return userData['userId'].toString();
     }
 
-    if (userData['employee_id'] != null) {
+    if (userData['employee_id'] != null && userData['employee_id'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 User ID found in: userData.employee_id");
       return userData['employee_id'].toString();
     }
 
-    if (userData['employment_id'] != null) {
+    if (userData['employment_id'] != null && userData['employment_id'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 User ID found in: userData.employment_id");
       return userData['employment_id'].toString();
     }
 
     // 3. data.user_id
     if (userData['data'] != null && userData['data'] is Map) {
       final data = userData['data'] as Map;
-      if (data['user_id'] != null) {
+      if (data['user_id'] != null && data['user_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: data.user_id");
         return data['user_id'].toString();
       }
-      if (data['employee_id'] != null) {
+      if (data['employee_id'] != null && data['employee_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: data.employee_id");
         return data['employee_id'].toString();
+      }
+      if (data['id'] != null && data['id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 User ID found in: data.id");
+        return data['id'].toString();
       }
     }
 
@@ -484,39 +603,102 @@ class AuthService {
     return '';
   }
 
-  /// Debug: Print all session data
+  /// Extract role ID from login response (✅ NEW METHOD)
+  String _extractRoleId(Map<String, dynamic> userData) {
+    // Try multiple possible locations for role ID
+
+    // 1. user.role_id
+    if (userData['user'] != null && userData['user'] is Map) {
+      final user = userData['user'] as Map;
+
+      if (user['role_id'] != null && user['role_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Role ID found in: user.role_id");
+        return user['role_id'].toString();
+      }
+      if (user['roleId'] != null && user['roleId'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Role ID found in: user.roleId");
+        return user['roleId'].toString();
+      }
+      if (user['role'] != null && user['role'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Role ID found in: user.role");
+        return user['role'].toString();
+      }
+    }
+
+    // 2. Direct fields
+    if (userData['role_id'] != null && userData['role_id'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Role ID found in: userData.role_id");
+      return userData['role_id'].toString();
+    }
+
+    if (userData['roleId'] != null && userData['roleId'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Role ID found in: userData.roleId");
+      return userData['roleId'].toString();
+    }
+
+    if (userData['role'] != null && userData['role'].toString().isNotEmpty) {
+      if (kDebugMode) print("🔍 Role ID found in: userData.role");
+      return userData['role'].toString();
+    }
+
+    // 3. data.role_id
+    if (userData['data'] != null && userData['data'] is Map) {
+      final data = userData['data'] as Map;
+      if (data['role_id'] != null && data['role_id'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Role ID found in: data.role_id");
+        return data['role_id'].toString();
+      }
+      if (data['role'] != null && data['role'].toString().isNotEmpty) {
+        if (kDebugMode) print("🔍 Role ID found in: data.role");
+        return data['role'].toString();
+      }
+    }
+
+    if (kDebugMode) print("⚠️ Role ID not found in any expected location");
+    return '';
+  }
+
+  /// Debug: Print all session data (✅ IMPROVED)
   Future<void> debugPrintSessionData() async {
     if (!kDebugMode) return;
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(_keyAuthToken);
-      final userData = prefs.getString(_keyUserData);
 
       print("═══════════════════════════════════════");
       print("📝 COMPLETE SESSION DATA:");
       print("═══════════════════════════════════════");
       print("✅ isLoggedIn: ${prefs.getBool(_keyIsLoggedIn)}");
       print("⏰ loginTime: ${prefs.getInt(_keyLoginTime)}");
+      print("🆔 user_id: ${prefs.getString(_keyUserId) ?? 'NOT SET ❌'}");
+      print("🎭 role_id: ${prefs.getString(_keyRoleId) ?? 'NOT SET ❌'}");
       print("🆔 employeeId: ${prefs.getString(_keyEmployeeId)}");
       print("🆔 logged_in_emp_id: ${prefs.getString(_keyLoggedInEmpId)}");
 
+      final token = prefs.getString(_keyAuthToken);
       if (token != null && token.isNotEmpty) {
         print("🔑 authToken: ${token.substring(0, min(50, token.length))}...");
         print("📏 Token length: ${token.length} chars");
       } else {
-        print("🔑 authToken: NOT FOUND");
+        print("🔑 authToken: NOT FOUND ❌");
       }
 
+      final userData = prefs.getString(_keyUserData);
       if (userData != null && userData.isNotEmpty) {
         print("📦 userData (first 200 chars): ${userData.substring(0, min(200, userData.length))}...");
       } else {
-        print("📦 userData: NOT FOUND");
+        print("📦 userData: NOT FOUND ❌");
       }
 
       print("═══════════════════════════════════════");
       print("🔧 All SharedPreferences Keys:");
       print(prefs.getKeys().toList());
+      print("═══════════════════════════════════════");
+
+      print("\n🧪 Testing getters:");
+      print("getUserId(): ${await getUserId()}");
+      print("getRoleId(): ${await getRoleId()}");
+      print("getEmployeeId(): ${await getEmployeeId()}");
       print("═══════════════════════════════════════");
     } catch (e) {
       print("❌ Error printing debug data: $e");
@@ -526,9 +708,6 @@ class AuthService {
   /// Validate token format (basic check)
   bool isValidTokenFormat(String? token) {
     if (token == null || token.isEmpty) return false;
-
-    // Basic validation: token should be at least 20 characters
-    // and contain alphanumeric characters
     return token.length >= 20 && RegExp(r'^[a-zA-Z0-9._-]+$').hasMatch(token);
   }
 

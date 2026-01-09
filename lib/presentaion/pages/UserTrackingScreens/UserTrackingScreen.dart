@@ -45,6 +45,7 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
   Set<Marker> _markers = {};
   Set<Polyline> _polyLines = {};
   bool _showFilter = true;
+  bool _isDisposed = false;
 
   int _lastRoutePointsCount = 0;
   int _lastCheckpointsCount = 0;
@@ -78,12 +79,13 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     }
 
     // ✅ NEW: Update API status from provider
-    if (mounted) {
+    if (!_isDisposed && mounted) {
       setState(() {
         _isApiConnected = provider.isApiConnected;
         _lastApiSyncTime = provider.lastApiSyncTime;
       });
     }
+
   }
 
   @override
@@ -118,17 +120,17 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
     try {
       final isConnected = await TrackingApiService.testConnection();
 
-      if (mounted) {
-        setState(() {
-          _isApiConnected = isConnected;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _isApiConnected = isConnected;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isApiConnected = false;
-        });
-      }
+      if (_isDisposed || !mounted) return;
+
+      setState(() {
+        _isApiConnected = false;
+      });
     }
   }
 
@@ -136,15 +138,17 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
   Future<void> _manualSyncWithApi() async {
     if (_isSyncing) return;
 
-    setState(() {
-      _isSyncing = true;
-    });
+    if (!_isDisposed && mounted) {
+      setState(() {
+        _isSyncing = true;
+      });
+    }
 
     try {
       final provider = context.read<UserTrackingProvider>();
       await provider.manualSyncWithApi();
 
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         _showSnackBar(
           '✓ Synced successfully with server',
           backgroundColor: Colors.green,
@@ -152,14 +156,14 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
         _checkApiStatus();
       }
     } catch (e) {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         _showSnackBar(
           'Sync failed: ${e.toString()}',
           backgroundColor: Colors.orange,
         );
       }
     } finally {
-      if (mounted) {
+      if (!_isDisposed && mounted) {
         setState(() {
           _isSyncing = false;
         });
@@ -1265,9 +1269,10 @@ class _UserTrackingScreenState extends State<UserTrackingScreen>
 
   @override
   void dispose() {
+    _isDisposed = true; // 🔥 important
+    _apiStatusTimer?.cancel();
     context.read<UserTrackingProvider>().removeListener(_onProviderChanged);
     WidgetsBinding.instance.removeObserver(this);
-    _apiStatusTimer?.cancel(); // ✅ NEW
     _mapController?.dispose();
     super.dispose();
   }

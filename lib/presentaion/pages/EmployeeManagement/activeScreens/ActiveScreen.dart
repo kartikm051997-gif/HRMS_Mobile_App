@@ -199,7 +199,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                   const Spacer(),
                                   Text(
-                                    "Employee Monthly",
+                                    "Total Monthly CTC of Employees",
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -277,7 +277,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                   const Spacer(),
                                   Text(
-                                    "F11 Monthly",
+                                    "Total Monthly CTC F11 Employees",
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -355,7 +355,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                   const Spacer(),
                                   Text(
-                                    "Professional Fee",
+                                    "Total Monthly Professional Fee",
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -433,7 +433,7 @@ class _ActiveScreenState extends State<ActiveScreen>
                                   ),
                                   const Spacer(),
                                   Text(
-                                    "Student Monthly",
+                                    "Total Monthly Student CTC",
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
@@ -971,41 +971,43 @@ class _ActiveScreenState extends State<ActiveScreen>
                 activeProvider.initialLoadDone)
               SliverFillRemaining(
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF1F5F9),
-                          shape: BoxShape.circle,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.person_search_rounded,
+                            size: 48,
+                            color: AppColor.textSecondary,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.person_search_rounded,
-                          size: 48,
-                          color: AppColor.textSecondary,
+                        const SizedBox(height: 20),
+                        const Text(
+                          "No employees found",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                            color: AppColor.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "No employees found",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: AppColor.textPrimary,
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Try adjusting your filters",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: AppFonts.poppins,
+                            color: AppColor.textSecondary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Try adjusting your filters",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontFamily: AppFonts.poppins,
-                          color: AppColor.textSecondary,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),

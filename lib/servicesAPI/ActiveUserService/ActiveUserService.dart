@@ -5,6 +5,26 @@ import '../../model/Employee_management/ActiveUserListModel.dart';
 import '../../apibaseScreen/Api_Base_Screens.dart';
 
 class ActiveUserService {
+  static const Duration _timeout = Duration(seconds: 30);
+
+  /// Clean response body by removing leading asterisks or non-JSON characters
+  String _cleanResponseBody(String rawBody) {
+    String cleaned = rawBody.trim();
+
+    // Remove any leading asterisks or special characters before JSON starts
+    while (cleaned.isNotEmpty &&
+        !cleaned.startsWith('{') &&
+        !cleaned.startsWith('[')) {
+      cleaned = cleaned.substring(1);
+    }
+
+    if (kDebugMode && rawBody != cleaned) {
+      print("⚠️ Cleaned response body (removed ${rawBody.length - cleaned.length} leading characters)");
+    }
+
+    return cleaned;
+  }
+
   /// Fetch active users with Bearer token
   Future<ActiveUserList?> getActiveUsers({
     required String token, // 👈 Bearer token
@@ -51,41 +71,57 @@ class ActiveUserService {
 
       final response = await http
           .get(
-            uri,
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token', // ✅ Bearer token
-            },
-          )
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token', // ✅ Bearer token
+        },
+      )
           .timeout(
-            const Duration(seconds: 30),
-            onTimeout: () {
-              throw Exception('Request timeout');
-            },
-          );
+        _timeout,
+        onTimeout: () {
+          throw Exception('Request timeout');
+        },
+      );
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
+        print("📦 Raw Response (first 100 chars): ${response.body.substring(0, response.body.length > 100 ? 100 : response.body.length)}");
       }
 
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(response.body);
+        // 🔥 CLEAN THE RESPONSE BODY BEFORE PARSING
+        final cleanedBody = _cleanResponseBody(response.body);
+
+        final jsonResponse = jsonDecode(cleanedBody);
+
         if (kDebugMode) {
-          print("📦 Response received successfully");
+          print("✅ Response parsed successfully");
+
+          // Log summary data if available
+          if (jsonResponse['data'] != null && jsonResponse['data']['users'] != null) {
+            print("📊 Users count: ${jsonResponse['data']['users'].length}");
+          }
         }
+
         return ActiveUserList.fromJson(jsonResponse);
+      } else if (response.statusCode == 401) {
+        if (kDebugMode) {
+          print('❌ Unauthorized - Token may be invalid or expired');
+        }
+        throw Exception('UNAUTHORIZED');
       } else {
         if (kDebugMode) {
           print('❌ API Error ${response.statusCode}: ${response.body}');
         }
-        return null;
+        throw Exception('API Error: ${response.statusCode}');
       }
     } catch (e) {
       if (kDebugMode) {
         print('❌ Exception in ActiveUserService: $e');
       }
-      return null;
+      rethrow; // ⚠️ Changed from return null to rethrow
     }
   }
 }

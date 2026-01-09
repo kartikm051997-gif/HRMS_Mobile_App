@@ -12,7 +12,7 @@ import '../../model/UserTrackingModel/GetLocationHistoryModel.dart';
 import '../../model/UserTrackingModel/SaveLoactionModel.dart';
 
 class TrackingApiService {
-  static const String baseUrl = "http://192.168.0.100/hrms/tracking/";
+  static const String baseUrl = "https://app.draravindsivf.com/hrms/tracking/";
   static const String saveLocationEndpoint = "${baseUrl}save_location";
   static const String getLocationHistoryEndpoint =
       "${baseUrl}get_location_history";

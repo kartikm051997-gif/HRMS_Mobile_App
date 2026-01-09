@@ -280,6 +280,23 @@ class AdminTrackingProvider with ChangeNotifier {
         throw Exception('Please login again - Session expired');
       }
 
+      // 🔥 GET LOGGED-IN USER INFO
+      final loggedInUserId = await _authService.getUserId();
+      final loggedInRoleId = await _authService.getRoleId();
+
+      if (kDebugMode) {
+        print("👤 Logged-in User ID: $loggedInUserId");
+        print("👤 Logged-in Role ID: $loggedInRoleId");
+      }
+
+      if (loggedInUserId == null || loggedInUserId.isEmpty) {
+        throw Exception('User ID not found. Please login again.');
+      }
+
+      if (loggedInRoleId == null || loggedInRoleId.isEmpty) {
+        throw Exception('Role ID not found. Please login again.');
+      }
+
       // Fetch history for selected employee with filters
       final DateTime dateToUse = _selectedDate ?? DateTime.now();
       final String apiDate = AdminTrackingService.formatDateForApi(dateToUse);
@@ -289,15 +306,13 @@ class AdminTrackingProvider with ChangeNotifier {
 
       final historyData = await _adminService.getEmployeeLocationHistory(
         token: token,
-
-        userId: employeeIdToSend,
-        employeeId: employeeIdToSend,
-
-        date: apiDate,
-
+        userId: loggedInUserId, // Logged-in admin ID
+        roleId: loggedInRoleId, // Admin role ID
+        employeeId: employeeIdToSend, // Employee being tracked
+        fromDate: apiDate, // ✅ REQUIRED
+        toDate: apiDate, // ✅ REQUIRED
         zone: _selectedZones.isNotEmpty ? _selectedZones.join(',') : "",
         branch: _selectedBranches.isNotEmpty ? _selectedBranches.join(',') : "",
-        designation: _selectedDesignation ?? "",
       );
 
       // Convert API response to TrackingRecords

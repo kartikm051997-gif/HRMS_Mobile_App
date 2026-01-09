@@ -39,6 +39,7 @@ class LoginApiModel {
 }
 
 class User {
+  String? id;                 // ✅ ADD THIS
   String? userId;
   String? username;
   String? email;
@@ -49,9 +50,10 @@ class User {
   String? appLocation;
   String? roleId;
   String? lastLogin;
-  String? branch; // Keep for backward compatibility
+  String? branch;
 
   User({
+    this.id,
     this.userId,
     this.username,
     this.email,
@@ -66,7 +68,8 @@ class User {
   });
 
   User.fromJson(Map<String, dynamic> json) {
-    userId = json['user_id'];
+    id = json['id']?.toString();              // ✅ VERY IMPORTANT
+    userId = json['user_id']?.toString();
     username = json['username'];
     email = json['email'];
     fullname = json['fullname'];
@@ -74,24 +77,25 @@ class User {
     designationsId = json['designations_id'];
     location = json['location'];
     appLocation = json['app_location'];
-    roleId = json['role_id'];
+    roleId = json['role_id']?.toString();
     lastLogin = json['last_login'];
-    branch = json['branch']; // Keep for backward compatibility
+    branch = json['branch'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_id'] = this.userId;
-    data['username'] = this.username;
-    data['email'] = this.email;
-    data['fullname'] = this.fullname;
-    data['avatar'] = this.avatar;
-    data['designations_id'] = this.designationsId;
-    data['location'] = this.location;
-    data['app_location'] = this.appLocation;
-    data['role_id'] = this.roleId;
-    data['last_login'] = this.lastLogin;
-    data['branch'] = this.branch;
+    final Map<String, dynamic> data = {};
+    data['id'] = id;                          // ✅ ADD THIS
+    data['user_id'] = userId;
+    data['username'] = username;
+    data['email'] = email;
+    data['fullname'] = fullname;
+    data['avatar'] = avatar;
+    data['designations_id'] = designationsId;
+    data['location'] = location;
+    data['app_location'] = appLocation;
+    data['role_id'] = roleId;
+    data['last_login'] = lastLogin;
+    data['branch'] = branch;
     return data;
   }
 }
