@@ -72,7 +72,9 @@ class LocationService {
       _lastLng = position.longitude;
 
       if (kDebugMode) {
-        print('📍 Initial position: ${position.latitude}, ${position.longitude}');
+        print(
+          '📍 Initial position: ${position.latitude}, ${position.longitude}',
+        );
       }
     } catch (e) {
       if (kDebugMode) print('❌ Initial position error: $e');
@@ -89,7 +91,7 @@ class LocationService {
     _positionStream = Geolocator.getPositionStream(
       locationSettings: locationSettings,
     ).listen(
-          (Position position) async {
+      (Position position) async {
         // ✅ Check if actually moved 20+ meters (matching distanceFilter)
         if (_lastLat != null && _lastLng != null) {
           final distance = Geolocator.distanceBetween(
@@ -102,9 +104,11 @@ class LocationService {
           // ✅ Use same threshold as distanceFilter (20m)
           if (distance < 20.0) {
             if (kDebugMode && _locationUpdateCount % 20 == 0) {
-              print(
-                '⏭️ Foreground: Ignoring GPS drift (${distance.toStringAsFixed(1)}m)',
-              );
+              if (kDebugMode) {
+                print(
+                  '⏭️ Foreground: Ignoring GPS drift (${distance.toStringAsFixed(1)}m)',
+                );
+              }
             }
             return;
           }
@@ -120,8 +124,10 @@ class LocationService {
             print('📡 Foreground: Location update #$_locationUpdateCount');
           }
           if (kDebugMode) {
-            print('   Position: ${position.latitude.toStringAsFixed(6)}, '
-              '${position.longitude.toStringAsFixed(6)}');
+            print(
+              '   Position: ${position.latitude.toStringAsFixed(6)}, '
+              '${position.longitude.toStringAsFixed(6)}',
+            );
           }
         }
 
@@ -160,7 +166,9 @@ class LocationService {
       _currentLocation = location;
 
       if (kDebugMode) {
-        print('📍 Got location once: ${position.latitude}, ${position.longitude}');
+        print(
+          '📍 Got location once: ${position.latitude}, ${position.longitude}',
+        );
       }
 
       return location;
@@ -233,7 +241,9 @@ class LocationService {
       _lastLng = position.longitude;
 
       if (kDebugMode) {
-        print('🔄 Location refreshed: ${position.latitude}, ${position.longitude}');
+        print(
+          '🔄 Location refreshed: ${position.latitude}, ${position.longitude}',
+        );
       }
     } catch (e) {
       if (kDebugMode) print('❌ Refresh error: $e');

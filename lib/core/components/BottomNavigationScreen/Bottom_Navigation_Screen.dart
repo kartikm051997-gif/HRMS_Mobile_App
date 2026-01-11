@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../presentaion/pages/UserTrackingScreens/Tracking_History_TabView_Screen.dart';
@@ -20,6 +21,9 @@ class BottomNavScreen extends StatefulWidget {
 class _BottomNavScreenState extends State<BottomNavScreen> {
   int _selectedIndex = 0;
   late LoginProvider loginProvider;
+
+  // ✅ Add GlobalKey for Scaffold to access drawer
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -62,6 +66,19 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     loginProvider = Provider.of<LoginProvider>(context, listen: false);
   }
 
+  // ✅ Handle back button press
+  Future<bool> _onWillPop() async {
+    // If on home screen (index 0), open drawer instead of closing app
+    if (_selectedIndex == 0) {
+      _scaffoldKey.currentState?.openDrawer();
+      return false; // Don't exit app
+    } else {
+      // If on other screens, go back to home
+      setState(() => _selectedIndex = 0);
+      return false; // Don't exit app
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = loginProvider.loginData?.user;
@@ -73,105 +90,312 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       UserProfileScreen(),
     ];
 
-    return Builder(
-      builder: (rootContext) {
-        return Scaffold(
-          body: screens[_selectedIndex],
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Builder(
+        builder: (rootContext) {
+          return Scaffold(
+            key: _scaffoldKey, // ✅ Add scaffold key
 
-          // ---------------- FAB -----------------
-          floatingActionButton: Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFE91E63), Color(0xFFFF4081)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFE91E63).withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                  spreadRadius: 2,
+            // ✅ Add Drawer
+            drawer: _buildDrawer(context, user),
+
+            body: screens[_selectedIndex],
+
+            // ---------------- FAB -----------------
+            floatingActionButton: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE91E63), Color(0xFFFF4081)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(rootContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Add button pressed'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(30),
-                child: const Icon(Icons.add, color: Colors.white, size: 32),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE91E63).withOpacity(0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(rootContext).showSnackBar(
+                      const SnackBar(
+                        content: Text('Add button pressed'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(30),
+                  child: const Icon(Icons.add, color: Colors.white, size: 32),
+                ),
               ),
             ),
+
+            floatingActionButtonLocation:
+            FloatingActionButtonLocation.centerDocked,
+
+            // ---------------- Bottom Navigation -----------------
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: BottomAppBar(
+                color: Colors.white,
+                elevation: 0,
+                notchMargin: 8,
+                shape: const CircularNotchedRectangle(),
+                child: SizedBox(
+                  height: 65,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildNavItem(
+                          icon: Icons.home_rounded,
+                          label: 'Home',
+                          index: 0,
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildNavItem(
+                          icon: (Icons.list_rounded),
+                          label: 'Deliverables',
+                          index: 1,
+                        ),
+                      ),
+
+                      const SizedBox(width: 40), // ⭐ Space for FAB
+
+                      Expanded(
+                        child: _buildNavItem(
+                          icon: (Icons.people_rounded),
+                          label: 'Employees',
+                          index: 2,
+                        ),
+                      ),
+                      Expanded(child: _buildProfileNavItem(user: user, index: 3)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ✅ Build Drawer Widget
+  Widget _buildDrawer(BuildContext context, dynamic user) {
+    return Drawer(
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-
-          floatingActionButtonLocation:
-              FloatingActionButtonLocation.centerDocked,
-
-          // ---------------- Bottom Navigation -----------------
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: BottomAppBar(
-              color: Colors.white,
-              elevation: 0,
-              notchMargin: 8,
-              shape: const CircularNotchedRectangle(),
-              child: SizedBox(
-                height: 65,
-                child: Row(
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Drawer Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _buildNavItem(
-                        icon: Icons.home_rounded,
-                        label: 'Home',
-                        index: 0,
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.white,
+                      backgroundImage:
+                      (user?.avatar != null && user!.avatar!.isNotEmpty)
+                          ? NetworkImage(
+                        "https://app.draravindsivf.com/hrms/${user.avatar}",
+                      )
+                          : null,
+                      child:
+                      (user?.avatar == null || user!.avatar!.isEmpty)
+                          ? Text(
+                        user?.fullname != null &&
+                            user!.fullname!.isNotEmpty
+                            ? user.fullname![0].toUpperCase()
+                            : "U",
+                        style: const TextStyle(
+                          color: Color(0xFF8E0E6B),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      )
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      user?.fullname ?? "User",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: AppFonts.poppins,
                       ),
                     ),
-                    Expanded(
-                      child: _buildNavItem(
-                        icon: (Icons.list_rounded),
-                        label: 'Deliverables',
-                        index: 1,
+                    const SizedBox(height: 4),
+                    Text(
+                      user?.email ?? "",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 14,
+                        fontFamily: AppFonts.poppins,
                       ),
                     ),
-
-                    const SizedBox(width: 40), // ⭐ Space for FAB
-
-                    Expanded(
-                      child: _buildNavItem(
-                        icon: (Icons.people_rounded),
-                        label: 'Employees',
-                        index: 2,
-                      ),
-                    ),
-                    Expanded(child: _buildProfileNavItem(user: user, index: 3)),
                   ],
                 ),
               ),
-            ),
+              const Divider(color: Colors.white24, thickness: 1),
+
+              // Drawer Menu Items
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _buildDrawerItem(
+                      icon: Icons.home_rounded,
+                      title: 'Home',
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() => _selectedIndex = 0);
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.list_rounded,
+                      title: 'Deliverables',
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() => _selectedIndex = 1);
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.people_rounded,
+                      title: 'Employees',
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() => _selectedIndex = 2);
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.person_rounded,
+                      title: 'Profile',
+                      onTap: () {
+                        Navigator.pop(context);
+                        setState(() => _selectedIndex = 3);
+                      },
+                    ),
+                    const Divider(color: Colors.white24, thickness: 1),
+                    _buildDrawerItem(
+                      icon: Icons.settings_rounded,
+                      title: 'Settings',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Navigate to settings
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.help_rounded,
+                      title: 'Help & Support',
+                      onTap: () {
+                        Navigator.pop(context);
+                        // Navigate to help
+                      },
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.logout_rounded,
+                      title: 'Logout',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        // Show logout confirmation
+                        final shouldLogout = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Logout'),
+                            content: const Text('Are you sure you want to logout?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Logout'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (shouldLogout == true && mounted) {
+                          // Perform logout
+                          await loginProvider.logout();
+                          if (mounted) {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // App Version
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Version 1.0.0',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  // ✅ Drawer Item Widget
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontFamily: AppFonts.poppins,
+        ),
+      ),
+      onTap: onTap,
+      hoverColor: Colors.white.withOpacity(0.1),
     );
   }
 
@@ -203,9 +427,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   child: Icon(
                     icon,
                     color:
-                        isSelected
-                            ? const Color(0xFF8E0E6B)
-                            : Colors.grey.shade400,
+                    isSelected
+                        ? const Color(0xFF8E0E6B)
+                        : Colors.grey.shade400,
                     size: 26,
                   ),
                 );
@@ -218,7 +442,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color:
-                    isSelected ? const Color(0xFF8E0E6B) : Colors.grey.shade500,
+                isSelected ? const Color(0xFF8E0E6B) : Colors.grey.shade500,
                 fontFamily: AppFonts.poppins,
               ),
               child: Text(label),
@@ -239,7 +463,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOutCubic,
-        // padding: const EdgeInsets.symmetric(vertical: 6),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -256,9 +479,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color:
-                              isSelected
-                                  ? const Color(0xFF8E0E6B)
-                                  : Colors.grey.shade300,
+                          isSelected
+                              ? const Color(0xFF8E0E6B)
+                              : Colors.grey.shade300,
                           width: 2,
                         ),
                       ),
@@ -266,29 +489,29 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                         radius: 14,
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage:
-                            (user?.avatar != null && user!.avatar!.isNotEmpty)
-                                ? NetworkImage(
-                                  "https://app.draravindsivf.com/hrms/${user.avatar}",
-                                )
-                                : null,
+                        (user?.avatar != null && user!.avatar!.isNotEmpty)
+                            ? NetworkImage(
+                          "https://app.draravindsivf.com/hrms/${user.avatar}",
+                        )
+                            : null,
                         child:
-                            (user?.avatar == null || user!.avatar!.isEmpty)
-                                ? Text(
-                                  user?.fullname != null &&
-                                          user!.fullname!.isNotEmpty
-                                      ? user.fullname![0].toUpperCase()
-                                      : "U",
-                                  style: TextStyle(
-                                    color:
-                                        isSelected
-                                            ? const Color(0xFF8E0E6B)
-                                            : Colors.black87,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                )
-                                : null,
+                        (user?.avatar == null || user!.avatar!.isEmpty)
+                            ? Text(
+                          user?.fullname != null &&
+                              user!.fullname!.isNotEmpty
+                              ? user.fullname![0].toUpperCase()
+                              : "U",
+                          style: TextStyle(
+                            color:
+                            isSelected
+                                ? const Color(0xFF8E0E6B)
+                                : Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        )
+                            : null,
                       ),
                     ),
                   );
@@ -301,9 +524,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color:
-                      isSelected
-                          ? const Color(0xFF8E0E6B)
-                          : Colors.grey.shade500,
+                  isSelected
+                      ? const Color(0xFF8E0E6B)
+                      : Colors.grey.shade500,
                   fontFamily: AppFonts.poppins,
                 ),
                 child: const Text('Profile'),

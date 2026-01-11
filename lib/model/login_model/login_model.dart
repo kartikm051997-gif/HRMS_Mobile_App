@@ -2,25 +2,14 @@ class LoginApiModel {
   String? status;
   String? message;
   String? token;
-  String? userId;
-  String? role;
   User? user;
 
-  LoginApiModel({
-    this.status,
-    this.message,
-    this.token,
-    this.userId,
-    this.role,
-    this.user,
-  });
+  LoginApiModel({this.status, this.message, this.token, this.user});
 
   LoginApiModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
     token = json['token'];
-    userId = json['user_id'];
-    role = json['role'];
     user = json['user'] != null ? new User.fromJson(json['user']) : null;
   }
 
@@ -29,8 +18,6 @@ class LoginApiModel {
     data['status'] = this.status;
     data['message'] = this.message;
     data['token'] = this.token;
-    data['user_id'] = this.userId;
-    data['role'] = this.role;
     if (this.user != null) {
       data['user'] = this.user!.toJson();
     }
@@ -39,21 +26,21 @@ class LoginApiModel {
 }
 
 class User {
-  String? id;                 // ✅ ADD THIS
   String? userId;
   String? username;
   String? email;
   String? fullname;
   String? avatar;
-  String? designationsId;
+  String? designationsId;   // ✅ FIXED
   String? location;
-  String? appLocation;
+  String? locationName;
+  String? zoneId;
+  String? zoneName;
+  String? appLocation;     // ✅ FIXED
   String? roleId;
   String? lastLogin;
-  String? branch;
 
   User({
-    this.id,
     this.userId,
     this.username,
     this.email,
@@ -61,41 +48,45 @@ class User {
     this.avatar,
     this.designationsId,
     this.location,
+    this.locationName,
+    this.zoneId,
+    this.zoneName,
     this.appLocation,
     this.roleId,
     this.lastLogin,
-    this.branch,
   });
 
   User.fromJson(Map<String, dynamic> json) {
-    id = json['id']?.toString();              // ✅ VERY IMPORTANT
-    userId = json['user_id']?.toString();
+    userId = json['user_id'];
     username = json['username'];
     email = json['email'];
     fullname = json['fullname'];
     avatar = json['avatar'];
-    designationsId = json['designations_id'];
+    designationsId = json['designations_id'];   // now safe
     location = json['location'];
-    appLocation = json['app_location'];
-    roleId = json['role_id']?.toString();
+    locationName = json['location_name'];
+    zoneId = json['zone_id'];
+    zoneName = json['zone_name'];
+    appLocation = json['app_location'];        // now safe
+    roleId = json['role_id'];
     lastLogin = json['last_login'];
-    branch = json['branch'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {};
-    data['id'] = id;                          // ✅ ADD THIS
-    data['user_id'] = userId;
-    data['username'] = username;
-    data['email'] = email;
-    data['fullname'] = fullname;
-    data['avatar'] = avatar;
-    data['designations_id'] = designationsId;
-    data['location'] = location;
-    data['app_location'] = appLocation;
-    data['role_id'] = roleId;
-    data['last_login'] = lastLogin;
-    data['branch'] = branch;
-    return data;
+    return {
+      'user_id': userId,
+      'username': username,
+      'email': email,
+      'fullname': fullname,
+      'avatar': avatar,
+      'designations_id': designationsId,
+      'location': location,
+      'location_name': locationName,
+      'zone_id': zoneId,
+      'zone_name': zoneName,
+      'app_location': appLocation,
+      'role_id': roleId,
+      'last_login': lastLogin,
+    };
   }
 }

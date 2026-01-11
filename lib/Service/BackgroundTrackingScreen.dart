@@ -10,6 +10,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
+import '../apibaseScreen/Api_Base_Screens.dart';
+
 class BackgroundTrackingService {
   static final BackgroundTrackingService _instance =
       BackgroundTrackingService._internal();
@@ -20,8 +22,6 @@ class BackgroundTrackingService {
       FlutterLocalNotificationsPlugin();
 
   // ✅ API Configuration
-  static const String apiBaseUrl = "http://192.168.0.100/hrms/tracking/";
-  static const String saveLocationEndpoint = "${apiBaseUrl}save_location";
 
   // ================= INITIALIZE =================
   Future<void> initializeService() async {
@@ -267,7 +267,7 @@ class BackgroundTrackingService {
 
         if (kDebugMode) {
           print('📤 Background API Sync:');
-          print('   Endpoint: $saveLocationEndpoint');
+          print('   Endpoint: ${ApiBase.saveLocation}');
           print('   Points to sync: ${routePoints.length}');
           print('   Location: ${pos.latitude}, ${pos.longitude}');
           print('   Address: $address');
@@ -276,7 +276,8 @@ class BackgroundTrackingService {
         // ✅ Make API call
         final response = await http
             .post(
-              Uri.parse(saveLocationEndpoint),
+              Uri.parse(ApiBase.saveLocation),
+
               headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",

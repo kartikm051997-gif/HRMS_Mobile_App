@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
@@ -14,32 +15,19 @@ class ActiveScreen extends StatefulWidget {
   State<ActiveScreen> createState() => _ActiveScreenState();
 }
 
-class _ActiveScreenState extends State<ActiveScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
+class _ActiveScreenState extends State<ActiveScreen> {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-    _animationController.forward();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ActiveProvider>(context, listen: false).initializeEmployees();
     });
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  ImageProvider? _getAvatarImage(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') return null;
+    if (avatar.startsWith('http')) return NetworkImage(avatar);
+    return NetworkImage('https://app.draravindsivf.com/hrms/$avatar');
   }
 
   @override
@@ -48,925 +36,503 @@ class _ActiveScreenState extends State<ActiveScreen>
 
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
+      body: CustomScrollView(
+        slivers: [
+          // ════════════════════════════════════════════════════════════
+          // LOADING STATE - SHOW ALL SHIMMER
+          // ════════════════════════════════════════════════════════════
+          if (activeProvider.isLoading && !activeProvider.initialLoadDone)
             SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      children: [
-                        // Grand Total - Featured Card
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFB91C7F), Color(0xFF9B1568)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFB91C7F).withOpacity(0.3),
-                                blurRadius: 15,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.25),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    "G",
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700,
-                                      color: Colors.white,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Grand Total",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "₹${activeProvider.grandTotalCTC.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.white,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ],
-                          ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Page Info Shimmer
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 20),
-
-                        // Grid of smaller cards
-                        GridView.count(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          childAspectRatio: 0.85,
+                        child: Column(
                           children: [
-                            // Employee Monthly CTC
                             Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF4A90E2),
-                                          Color(0xFF357ABD),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(
-                                            0xFF4A90E2,
-                                          ).withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.people,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    "Total Monthly CTC of Employees",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                      height: 1.3,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ShaderMask(
-                                    shaderCallback:
-                                        (bounds) => const LinearGradient(
-                                          colors: [
-                                            Color(0xFF4A90E2),
-                                            Color(0xFF357ABD),
-                                          ],
-                                        ).createShader(bounds),
-                                    child: Text(
-                                      "₹${activeProvider.totalEmployeeCTC.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        letterSpacing: -0.5,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              height: 16,
+                              width: 150,
+                              color: Colors.white,
                             ),
-
-                            // F11 Monthly CTC
+                            SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFFF9800),
-                                          Color(0xFFF57C00),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(
-                                            0xFFFF9800,
-                                          ).withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.business_center,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    "Total Monthly CTC F11 Employees",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                      height: 1.3,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ShaderMask(
-                                    shaderCallback:
-                                        (bounds) => const LinearGradient(
-                                          colors: [
-                                            Color(0xFFFF9800),
-                                            Color(0xFFF57C00),
-                                          ],
-                                        ).createShader(bounds),
-                                    child: Text(
-                                      "₹${activeProvider.totalF11CTC.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        letterSpacing: -0.5,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Professional Fee
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF66BB6A),
-                                          Color(0xFF43A047),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(
-                                            0xFF66BB6A,
-                                          ).withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.card_giftcard,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    "Total Monthly Professional Fee",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                      height: 1.3,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ShaderMask(
-                                    shaderCallback:
-                                        (bounds) => const LinearGradient(
-                                          colors: [
-                                            Color(0xFF66BB6A),
-                                            Color(0xFF43A047),
-                                          ],
-                                        ).createShader(bounds),
-                                    child: Text(
-                                      "₹${activeProvider.totalProfessionalFee.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        letterSpacing: -0.5,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Student Monthly CTC
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.04),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFF9C27B0),
-                                          Color(0xFF7B1FA2),
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(
-                                            0xFF9C27B0,
-                                          ).withOpacity(0.3),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.school,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    "Total Monthly Student CTC",
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                      height: 1.3,
-                                      fontFamily: AppFonts.poppins,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ShaderMask(
-                                    shaderCallback:
-                                        (bounds) => const LinearGradient(
-                                          colors: [
-                                            Color(0xFF9C27B0),
-                                            Color(0xFF7B1FA2),
-                                          ],
-                                        ).createShader(bounds),
-                                    child: Text(
-                                      "₹${activeProvider.totalStudentCTC.toString()}",
-                                      style: const TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w800,
-                                        color: Colors.white,
-                                        letterSpacing: -0.5,
-                                        fontFamily: AppFonts.poppins,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              height: 14,
+                              width: 250,
+                              color: Colors.white,
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                    SizedBox(height: 16),
 
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColor.cardColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                    // Grand Total Card Shimmer
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      ],
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 100,
+                                  height: 16,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 8),
+                                Container(
+                                  width: 150,
+                                  height: 20,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Filter Toggle and Page Size Row
-                          Row(
-                            children: [
-                              // Filter Toggle Button
-                              Expanded(
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: activeProvider.toggleFilters,
+                    SizedBox(height: 16),
+
+                    // Grid Cards Shimmer
+                    GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.2,
+                      children: List.generate(4, (index) {
+                        return Shimmer.fromColors(
+                          baseColor: Colors.grey.shade300,
+                          highlightColor: Colors.grey.shade100,
+                          child: Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
                                     borderRadius: BorderRadius.circular(12),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 14,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        gradient:
-                                            activeProvider.showFilters
-                                                ? const LinearGradient(
-                                                  colors: [
-                                                    AppColor.primaryColor,
-                                                    AppColor.secondaryColor,
-                                                  ],
-                                                )
-                                                : null,
-                                        color:
-                                            activeProvider.showFilters
-                                                ? null
-                                                : const Color(0xFFF1F5F9),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color:
-                                              activeProvider.showFilters
-                                                  ? Colors.transparent
-                                                  : AppColor.borderColor,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.tune_rounded,
-                                            size: 20,
-                                            color:
-                                                activeProvider.showFilters
-                                                    ? Colors.white
-                                                    : AppColor.textSecondary,
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Text(
-                                            "Filters",
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w600,
-                                              fontFamily: AppFonts.poppins,
-                                              color:
-                                                  activeProvider.showFilters
-                                                      ? Colors.white
-                                                      : AppColor.textSecondary,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Icon(
-                                            Icons.keyboard_arrow_down_rounded,
-                                            color:
-                                                activeProvider.showFilters
-                                                    ? Colors.white
-                                                    : AppColor.textSecondary,
-                                          ),
-                                        ],
-                                      ),
+                                  ),
+                                ),
+                                Spacer(),
+                                Container(
+                                  width: 80,
+                                  height: 12,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 8),
+                                Container(
+                                  width: 100,
+                                  height: 18,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    SizedBox(height: 20),
+
+                    // Employee List Shimmer (using your CustomCardShimmer style)
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return Shimmer.fromColors(
+                          baseColor: Colors.grey.shade300,
+                          highlightColor: Colors.grey.shade100,
+                          child: Container(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              children: [
+                                // Left bar
+                                Container(
+                                  width: 5,
+                                  height: 90,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(14),
+                                      bottomLeft: Radius.circular(14),
                                     ),
                                   ),
                                 ),
-                              ),
-
-                              // Page Size Dropdown
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Summary Section
-
-                          // Search Field
-                          Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColor.borderColor),
-                            ),
-                            child: TextField(
-                              controller: activeProvider.searchController,
-                              onChanged:
-                                  (value) =>
-                                      activeProvider.onSearchChanged(value),
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontFamily: AppFonts.poppins,
-                                color: AppColor.textPrimary,
-                              ),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.transparent,
-                                hintText: "Search employees by name, ID...",
-                                hintStyle: TextStyle(
-                                  fontSize: 14,
-                                  fontFamily: AppFonts.poppins,
-                                  color: AppColor.textSecondary.withOpacity(
-                                    0.7,
+                                SizedBox(width: 12),
+                                // Avatar
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
                                   ),
                                 ),
-                                prefixIcon: const Icon(
-                                  Icons.search_rounded,
-                                  color: AppColor.textSecondary,
-                                  size: 22,
+                                SizedBox(width: 12),
+                                // Details
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 150,
+                                          height: 16,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(height: 8),
+                                        Container(
+                                          width: 100,
+                                          height: 14,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Container(
+                                          width: 120,
+                                          height: 12,
+                                          color: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                suffixIcon:
-                                    activeProvider
-                                            .searchController
-                                            .text
-                                            .isNotEmpty
-                                        ? IconButton(
-                                          onPressed:
-                                              () =>
-                                                  activeProvider.clearSearch(),
-                                          icon: const Icon(
-                                            Icons.close_rounded,
-                                            color: AppColor.textSecondary,
-                                            size: 18,
-                                          ),
-                                        )
-                                        : null,
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
+                                SizedBox(width: 12),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // ════════════════════════════════════════════════════════════
+          // ACTUAL CONTENT (When Data Loaded)
+          // ════════════════════════════════════════════════════════════
+          if (!activeProvider.isLoading || activeProvider.initialLoadDone) ...[
+            // SUMMARY CARDS SECTION
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Page info
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Page ${activeProvider.currentPage} of ${activeProvider.totalPages}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Overall Total: ₹${activeProvider.grandTotalCTC} | Page Total: ₹${activeProvider.currentPageGrandTotal}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              fontFamily: AppFonts.poppins,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    SizedBox(height: 16),
 
-            // ═══════════════════════════════════════════════════════════
-            // FILTER SECTION
-            // ═══════════════════════════════════════════════════════════
-            if (activeProvider.showFilters)
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // ══════════════════════════════════════════════
-                      // LOADING FILTERS STATE
-                      // ══════════════════════════════════════════════
-                      if (activeProvider.isLoadingFilters)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Text("Loading filter options..."),
-                            ],
-                          ),
-                        )
-                      // ══════════════════════════════════════════════
-                      // FILTERS LOADED - SHOW DROPDOWNS
-                      // ══════════════════════════════════════════════
-                      else ...[
-                        // Company and Zone Row
-                        Column(
-                          children: [
-                            // ================= COMPANY =================
-                            CustomSearchDropdownWithSearch(
-                              labelText: "Company",
-                              isMandatory: true,
-                              items: activeProvider.company,
-                              selectedValue: activeProvider.selectedCompany,
-                              onChanged: activeProvider.setSelectedCompany,
-                              hintText: "Select Company",
-                            ),
+                    // Grand Total Card
+                    _buildSummaryCard(
+                      title: "Grand Total",
+                      value: "₹${activeProvider.currentPageGrandTotal}",
+                      color1: Color(0xFFB91C7F),
+                      color2: Color(0xFF9B1568),
+                      icon: Icons.monetization_on,
+                    ),
+                    SizedBox(height: 16),
 
-                            const SizedBox(height: 12),
-
-                            // ================= ZONE =================
-                            MultiSelectDropdown(
-                              label: "Zone",
-                              items: activeProvider.zone,
-                              selectedItems: activeProvider.selectedZones,
-                              onChanged: (values) {
-                                activeProvider.setZones(values);
-                              },
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ================= BRANCH =================
-                            MultiSelectDropdown(
-                              label: "Branch",
-                              items:
-                                  activeProvider
-                                      .branch, // already filtered by selected zones
-                              selectedItems: activeProvider.selectedBranches,
-                              onChanged: (values) {
-                                activeProvider.setBranches(values);
-                              },
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ================= DESIGNATION =================
-                            CustomSearchDropdownWithSearch(
-                              labelText: "Designation",
-                              isMandatory: true,
-                              items: activeProvider.designation,
-                              selectedValue: activeProvider.selectedDesignation,
-                              onChanged: activeProvider.setSelectedDesignation,
-                              hintText: "Select Designation",
-                            ),
-
-                            const SizedBox(height: 12),
-
-                            // ================= CTC RANGE (OPTIONAL) =================
-                            CustomSearchDropdownWithSearch(
-                              labelText: "CTC Range",
-                              isMandatory: false,
-                              items: activeProvider.ctc,
-                              selectedValue: activeProvider.selectedCTC,
-                              onChanged: activeProvider.setSelectedCTC,
-                              hintText: "Select CTC Range",
-                            ),
-                          ],
-                        ),
-
-                        SizedBox(height: 15),
-                        // Action Buttons
-                        Row(
-                          children: [
-                            // ================= CLEAR BUTTON =================
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => activeProvider.clearAllFilters(),
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: AppColor.borderColor,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Center(
-                                    child: Text(
-                                      "Clear",
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        fontFamily: AppFonts.poppins,
-                                        color: AppColor.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            // ================= APPLY FILTER BUTTON =================
-                            Expanded(
-                              flex: 2,
-                              child: InkWell(
-                                onTap:
-                                    activeProvider.areAllFiltersSelected &&
-                                            !activeProvider.isLoading
-                                        ? () => activeProvider.searchEmployees()
-                                        : null,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 14,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient:
-                                        activeProvider.areAllFiltersSelected &&
-                                                !activeProvider.isLoading
-                                            ? const LinearGradient(
-                                              colors: [
-                                                AppColor.primaryColor,
-                                                AppColor.secondaryColor,
-                                              ],
-                                            )
-                                            : null,
-                                    color:
-                                        activeProvider.areAllFiltersSelected
-                                            ? (activeProvider.isLoading
-                                                ? AppColor.borderColor
-                                                : null)
-                                            : AppColor.borderColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Center(
-                                    child:
-                                        activeProvider.isLoading
-                                            // ================= LOADER =================
-                                            ? const SizedBox(
-                                              height: 22,
-                                              width: 22,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2.5,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                            // ================= NORMAL CONTENT =================
-                                            : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.search_rounded,
-                                                  size: 18,
-                                                  color:
-                                                      activeProvider
-                                                              .areAllFiltersSelected
-                                                          ? Colors.white
-                                                          : AppColor
-                                                              .textSecondary,
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  activeProvider
-                                                          .areAllFiltersSelected
-                                                      ? "Apply Filters"
-                                                      : "Select All Filters",
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontFamily:
-                                                        AppFonts.poppins,
-                                                    color:
-                                                        activeProvider
-                                                                .areAllFiltersSelected
-                                                            ? Colors.white
-                                                            : AppColor
-                                                                .textSecondary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-            // ═══════════════════════════════════════════════════════════
-            // RESULTS SECTION
-            // ═══════════════════════════════════════════════════════════
-
-            // Loading State
-            if (activeProvider.isLoading && !activeProvider.initialLoadDone)
-              SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: CircularProgressIndicator(
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColor.primaryColor,
-                          ),
-                          strokeWidth: 3,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Loading employees...",
-                        style: TextStyle(
-                          color: AppColor.textSecondary,
-                          fontSize: 15,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // Error State
-            if (activeProvider.errorMessage != null &&
-                !activeProvider.initialLoadDone &&
-                !activeProvider.isLoading)
-              SliverFillRemaining(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    // Grid Cards
+                    GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1.2,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.error_outline_rounded,
-                            size: 48,
-                            color: Colors.red,
-                          ),
+                        _buildGridCard(
+                          "Total Monthly CTC of Employees",
+                          "₹${activeProvider.currentPageEmployeeCTC}",
+                          Color(0xFF4A90E2),
+                          Icons.people,
                         ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          "Failed to Load Employees",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: AppFonts.poppins,
-                            color: AppColor.textPrimary,
-                          ),
-                          textAlign: TextAlign.center,
+                        _buildGridCard(
+                          "Total Monthly CTC F11 Employees",
+                          "₹${activeProvider.currentPageF11CTC}",
+                          Color(0xFFFF9800),
+                          Icons.business_center,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          activeProvider.errorMessage ?? "Unknown error",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontFamily: AppFonts.poppins,
-                            color: AppColor.textSecondary,
-                            height: 1.5,
-                          ),
-                          textAlign: TextAlign.center,
+                        _buildGridCard(
+                          "Total Monthly Professional Fee",
+                          "₹${activeProvider.currentPageProfessionalFee}",
+                          Color(0xFF66BB6A),
+                          Icons.card_giftcard,
                         ),
-                        const SizedBox(height: 24),
-                        ElevatedButton.icon(
-                          onPressed: () => activeProvider.fetchActiveUsers(),
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text("Retry"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                        _buildGridCard(
+                          "Total Monthly Student CTC",
+                          "₹${activeProvider.currentPageStudentCTC}",
+                          Color(0xFF9C27B0),
+                          Icons.school,
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+
+            // FILTER & SEARCH SECTION
+            SliverToBoxAdapter(
+              child: Container(
+                padding: EdgeInsets.all(16),
+                color: Colors.white,
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: activeProvider.toggleFilters,
+                      child: Container(
+                        padding: EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color:
+                              activeProvider.showFilters
+                                  ? AppColor.primaryColor
+                                  : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              color:
+                                  activeProvider.showFilters
+                                      ? Colors.white
+                                      : Colors.black,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Filters",
+                              style: TextStyle(
+                                color:
+                                    activeProvider.showFilters
+                                        ? Colors.white
+                                        : Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Spacer(),
+                            Icon(
+                              activeProvider.showFilters
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color:
+                                  activeProvider.showFilters
+                                      ? Colors.white
+                                      : Colors.black,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: activeProvider.searchController,
+                      onChanged: activeProvider.onSearchChanged,
+                      decoration: InputDecoration(
+                        hintStyle: TextStyle(fontFamily: AppFonts.poppins),
+                        hintText: "Search by name, ID...",
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon:
+                            activeProvider.searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(Icons.clear),
+                                  onPressed: activeProvider.clearSearch,
+                                )
+                                : null,
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // FILTERS DROPDOWN
+            if (activeProvider.showFilters)
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      if (activeProvider.isLoadingFilters)
+                        Center(child: CircularProgressIndicator())
+                      else ...[
+                        CustomSearchDropdownWithSearch(
+                          labelText: "Company",
+                          isMandatory: true,
+                          items: activeProvider.company,
+                          selectedValue: activeProvider.selectedCompany,
+                          onChanged: activeProvider.setSelectedCompany,
+                          hintText: "Select Company",
+                        ),
+                        SizedBox(height: 12),
+                        MultiSelectDropdown(
+                          label: "Zone",
+                          items: activeProvider.zone,
+                          selectedItems: activeProvider.selectedZones,
+                          onChanged: activeProvider.setZones,
+                        ),
+                        SizedBox(height: 12),
+                        MultiSelectDropdown(
+                          label: "Branch",
+                          items: activeProvider.branch,
+                          selectedItems: activeProvider.selectedBranches,
+                          onChanged: activeProvider.setBranches,
+                        ),
+                        SizedBox(height: 12),
+                        CustomSearchDropdownWithSearch(
+                          labelText: "Designation",
+                          isMandatory: true,
+                          items: activeProvider.designation,
+                          selectedValue: activeProvider.selectedDesignation,
+                          onChanged: activeProvider.setSelectedDesignation,
+                          hintText: "Select Designation",
+                        ),
+                        SizedBox(height: 12),
+                        CustomSearchDropdownWithSearch(
+                          labelText: "CTC Range",
+                          isMandatory: false,
+                          items: activeProvider.ctc,
+                          selectedValue: activeProvider.selectedCTC,
+                          onChanged: activeProvider.setSelectedCTC,
+                          hintText: "Select CTC Range",
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: activeProvider.clearAllFilters,
+                                child: Text(
+                                  "Clear",
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: ElevatedButton(
+                                onPressed:
+                                    activeProvider.areAllFiltersSelected
+                                        ? activeProvider.searchEmployees
+                                        : null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColor.primaryColor,
+                                  disabledBackgroundColor: AppColor.primaryColor
+                                      .withOpacity(0.4),
+                                ),
+                                child:
+                                    activeProvider.isLoading
+                                        ? SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : Text(
+                                          "Apply Filters",
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.poppins,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                activeProvider
+                                                        .areAllFiltersSelected
+                                                    ? Colors.white
+                                                    : Colors
+                                                        .white70, // slightly faded when disabled
+                                          ),
+                                        ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ),
 
-            // Empty State
-            if (activeProvider.filteredEmployees.isEmpty &&
+            // EMPTY STATE
+            if (activeProvider.paginatedEmployees.isEmpty &&
                 !activeProvider.isLoading &&
                 activeProvider.initialLoadDone)
               SliverFillRemaining(
@@ -975,36 +541,11 @@ class _ActiveScreenState extends State<ActiveScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF1F5F9),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.person_search_rounded,
-                            size: 48,
-                            color: AppColor.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
+                        Icon(Icons.person_search, size: 48, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
                           "No employees found",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: AppFonts.poppins,
-                            color: AppColor.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Try adjusting your filters",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontFamily: AppFonts.poppins,
-                            color: AppColor.textSecondary,
-                          ),
+                          style: TextStyle(fontFamily: AppFonts.poppins),
                         ),
                       ],
                     ),
@@ -1012,380 +553,368 @@ class _ActiveScreenState extends State<ActiveScreen>
                 ),
               ),
 
-            // Employee List
-            if (activeProvider.filteredEmployees.isNotEmpty &&
-                !activeProvider.isLoading)
+            // ERROR STATE
+            if (activeProvider.errorMessage != null &&
+                !activeProvider.initialLoadDone)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, size: 48, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(activeProvider.errorMessage ?? "Error"),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: activeProvider.fetchActiveUsers,
+                        child: Text("Retry"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // EMPLOYEE LIST
+            if (activeProvider.paginatedEmployees.isNotEmpty)
               SliverPadding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
-                    // Results Header
                     if (index == 0) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        AppColor.primaryColor,
-                                        AppColor.secondaryColor,
-                                      ],
-                                    ),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    "${activeProvider.filteredEmployees.length}",
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      fontFamily: AppFonts.poppins,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  "Employees Found",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    fontFamily: AppFonts.poppins,
-                                    color: AppColor.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        padding: EdgeInsets.only(bottom: 16),
+                        child: Text(
+                          "${activeProvider.filteredEmployees.length} Employees Found",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                          ),
                         ),
                       );
                     }
+                    final user = activeProvider.paginatedEmployees[index - 1];
+                    return _buildEmployeeCard(context, user);
+                  }, childCount: activeProvider.paginatedEmployees.length + 1),
+                ),
+              ),
 
-                    // Employee Card
-                    final user = activeProvider.filteredEmployees[index - 1];
-                    final employeeId = user.employmentId ?? user.userId ?? "";
-                    final employeeName =
-                        user.fullname ?? user.username ?? "Unknown";
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: AppColor.cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+            // PAGINATION
+            if (activeProvider.paginatedEmployees.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed:
+                            activeProvider.currentPage > 1
+                                ? activeProvider.previousPage
+                                : null,
+                        icon: Icon(Icons.chevron_left),
                       ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => EmployeeManagementDetailsScreen(
-                                    user: user,
-                                  ),
+                      ...List.generate(
+                        activeProvider.totalPages > 5
+                            ? 5
+                            : activeProvider.totalPages,
+                        (index) {
+                          int pageNum;
+                          if (activeProvider.totalPages <= 5) {
+                            pageNum = index + 1;
+                          } else {
+                            if (activeProvider.currentPage <= 3) {
+                              pageNum = index + 1;
+                            } else if (activeProvider.currentPage >=
+                                activeProvider.totalPages - 2) {
+                              pageNum = activeProvider.totalPages - 4 + index;
+                            } else {
+                              pageNum = activeProvider.currentPage - 2 + index;
+                            }
+                          }
+                          return InkWell(
+                            onTap: () => activeProvider.goToPage(pageNum),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 4),
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color:
+                                    activeProvider.currentPage == pageNum
+                                        ? AppColor.primaryColor
+                                        : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "$pageNum",
+                                style: TextStyle(
+                                  color:
+                                      activeProvider.currentPage == pageNum
+                                          ? Colors.white
+                                          : Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
                             ),
                           );
                         },
-                        child: Column(
-                          children: [
-                            // Header
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: const BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColor.primaryColor,
-                                    AppColor.secondaryColor,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(16),
-                                  topRight: Radius.circular(16),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  // Avatar
-                                  Container(
-                                    width: 50,
-                                    height: 50,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white.withOpacity(0.2),
-                                      border: Border.all(
-                                        color: Colors.white.withOpacity(0.3),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: ClipOval(
-                                      child: Builder(
-                                        builder: (_) {
-                                          final imageUrl = getAvatarUrl(
-                                            user.avatar,
-                                          );
-                                          print(
-                                            'FINAL AVATAR URL 👉 $imageUrl',
-                                          );
-
-                                          return imageUrl.isNotEmpty
-                                              ? Image.network(
-                                                imageUrl,
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (_, __, ___) =>
-                                                        _defaultAvatar(
-                                                          employeeName,
-                                                        ),
-                                              )
-                                              : _defaultAvatar(employeeName);
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-
-                                  // Name and ID
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          employeeName,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            fontFamily: AppFonts.poppins,
-                                            color: Colors.white,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 3,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.white.withOpacity(
-                                              0.2,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            "ID: $employeeId",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                              fontFamily: AppFonts.poppins,
-                                              color: Colors.white.withOpacity(
-                                                0.9,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  // Arrow
-                                  const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // Bottom Info
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  // Designation
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: AppColor.primaryColor
-                                                .withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.work_outline_rounded,
-                                            size: 16,
-                                            color: AppColor.primaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "DESIGNATION",
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontFamily: AppFonts.poppins,
-                                                  color: AppColor.textSecondary
-                                                      .withOpacity(0.7),
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                user.designation ?? "N/A",
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontFamily: AppFonts.poppins,
-                                                  color: AppColor.textPrimary,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    height: 40,
-                                    width: 1,
-                                    color: AppColor.borderColor,
-                                  ),
-                                  const SizedBox(width: 16),
-
-                                  // Branch
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: AppColor.secondaryColor
-                                                .withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: const Icon(
-                                            Icons.location_on_outlined,
-                                            size: 16,
-                                            color: AppColor.secondaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "BRANCH",
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontFamily: AppFonts.poppins,
-                                                  color: AppColor.textSecondary
-                                                      .withOpacity(0.7),
-                                                  letterSpacing: 0.5,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Text(
-                                                user.locationName ?? "N/A",
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontFamily: AppFonts.poppins,
-                                                  color: AppColor.textPrimary,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    );
-                  }, childCount: activeProvider.filteredEmployees.length + 1),
+                      IconButton(
+                        onPressed:
+                            activeProvider.currentPage <
+                                    activeProvider.totalPages
+                                ? activeProvider.nextPage
+                                : null,
+                        icon: Icon(Icons.chevron_right),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],
-        ),
+        ],
       ),
     );
   }
 
-  String getAvatarUrl(String? avatar) {
-    if (avatar == null || avatar.isEmpty || avatar == 'null') {
-      return '';
-    }
-
-    // If backend already sends full URL
-    if (avatar.startsWith('http')) {
-      // Replace localhost for real device access
-      return avatar.replaceFirst('http://localhost', 'http://192.168.0.100');
-    }
-
-    // Relative path case
-    return 'http://192.168.0.100/hrms/$avatar';
+  Widget _buildSummaryCard({
+    required String title,
+    required String value,
+    required Color color1,
+    required Color color2,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20), // smoother
+        gradient: LinearGradient(colors: [color1, color2]),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 14,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.85),
+                  fontSize: 13,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                value,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _defaultAvatar(String employeeName) {
+  Widget _buildGridCard(
+    String title,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColor.primaryColor, AppColor.secondaryColor],
-        ),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
-      child: Center(
-        child: Text(
-          employeeName.isNotEmpty ? employeeName[0].toUpperCase() : 'E',
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          Spacer(),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
+          SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.poppins,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmployeeCard(BuildContext context, user) {
+    final employeeId = user.employmentId ?? user.userId ?? "";
+    final employeeName = user.fullname ?? user.username ?? "Unknown";
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EmployeeManagementDetailsScreen(user: user),
+              ),
+            );
+          },
+          child: Row(
+            children: [
+              const SizedBox(width: 12),
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: AppColor.primaryColor.withOpacity(0.1),
+                backgroundImage: _getAvatarImage(user.avatar),
+                child:
+                    _getAvatarImage(user.avatar) == null
+                        ? Text(
+                          employeeName.isNotEmpty
+                              ? employeeName[0].toUpperCase()
+                              : 'E',
+                          style: TextStyle(
+                            color: AppColor.primaryColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        )
+                        : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        employeeName,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                          color: AppColor.whiteColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "ID: $employeeId",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColor.whiteColor,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        (user.designation != null &&
+                                user.designation!.trim().isNotEmpty)
+                            ? user.designation!
+                            : "Unknown Designation",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColor.whiteColor,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+
+                      if (user.locationName != null &&
+                          user.locationName!.trim().isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                size: 14,
+                                color: Colors.grey[500],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                user.locationName!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColor.whiteColor,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Icon(Icons.chevron_right, color: Colors.grey[400]),
+              ),
+            ],
           ),
         ),
       ),

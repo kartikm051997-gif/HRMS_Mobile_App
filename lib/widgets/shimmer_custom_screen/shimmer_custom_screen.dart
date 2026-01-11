@@ -9,6 +9,8 @@ class CustomCardShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
       itemCount: itemCount,
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
@@ -44,35 +46,19 @@ class CustomCardShimmer extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Name shimmer
-                        Container(
-                          height: 16,
-                          width: 150,
-                          color: Colors.white,
-                        ),
+                        Container(height: 16, width: 150, color: Colors.white),
                         const SizedBox(height: 8),
 
                         // Designation shimmer
-                        Container(
-                          height: 14,
-                          width: 120,
-                          color: Colors.white,
-                        ),
+                        Container(height: 14, width: 120, color: Colors.white),
                         const SizedBox(height: 8),
 
                         // Location shimmer
-                        Container(
-                          height: 14,
-                          width: 100,
-                          color: Colors.white,
-                        ),
+                        Container(height: 14, width: 100, color: Colors.white),
                         const SizedBox(height: 8),
 
                         // Task shimmer
-                        Container(
-                          height: 14,
-                          width: 80,
-                          color: Colors.white,
-                        ),
+                        Container(height: 14, width: 80, color: Colors.white),
                       ],
                     ),
                   ),

@@ -18,7 +18,7 @@ class UserProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final loginProvider = Provider.of<LoginProvider>(context);
     final user = loginProvider.loginData?.user;
-    final userId = loginProvider.loginData?.userId;
+    final userId = loginProvider.loginData?.user?.userId;
 
     return Scaffold(
       drawer: const TabletMobileDrawer(),
@@ -110,7 +110,7 @@ class UserProfileScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      user?.branch ?? "Branch Unknown",
+                      user?.locationName ?? "Branch Unknown",
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.white70,

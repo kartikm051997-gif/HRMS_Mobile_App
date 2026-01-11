@@ -8,13 +8,13 @@ class GetLocationHistoryModel {
   GetLocationHistoryModel.fromJson(Map<String, dynamic> json) {
     status = json['status'];
     message = json['message'];
-    data = json['data'] != null ? new Data.fromJson(json['data']) : null;
+    data = json['data'] != null ? Data.fromJson(json['data']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['status'] = this.status;
-    data['message'] = this.message;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['status'] = status;
+    data['message'] = message;
     if (this.data != null) {
       data['data'] = this.data!.toJson();
     }
@@ -26,36 +26,42 @@ class Data {
   List<Locations>? locations;
   Pagination? pagination;
   FiltersApplied? filtersApplied;
+  UserInfo? userInfo;
 
-  Data({this.locations, this.pagination, this.filtersApplied});
+  Data({this.locations, this.pagination, this.filtersApplied, this.userInfo});
 
   Data.fromJson(Map<String, dynamic> json) {
     if (json['locations'] != null) {
       locations = <Locations>[];
       json['locations'].forEach((v) {
-        locations!.add(new Locations.fromJson(v));
+        locations!.add(Locations.fromJson(v));
       });
     }
     pagination =
         json['pagination'] != null
-            ? new Pagination.fromJson(json['pagination'])
+            ? Pagination.fromJson(json['pagination'])
             : null;
     filtersApplied =
         json['filters_applied'] != null
-            ? new FiltersApplied.fromJson(json['filters_applied'])
+            ? FiltersApplied.fromJson(json['filters_applied'])
             : null;
+    userInfo =
+        json['user_info'] != null ? UserInfo.fromJson(json['user_info']) : null;
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    if (this.locations != null) {
-      data['locations'] = this.locations!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    if (locations != null) {
+      data['locations'] = locations!.map((v) => v.toJson()).toList();
     }
-    if (this.pagination != null) {
-      data['pagination'] = this.pagination!.toJson();
+    if (pagination != null) {
+      data['pagination'] = pagination!.toJson();
     }
-    if (this.filtersApplied != null) {
-      data['filters_applied'] = this.filtersApplied!.toJson();
+    if (filtersApplied != null) {
+      data['filters_applied'] = filtersApplied!.toJson();
+    }
+    if (userInfo != null) {
+      data['user_info'] = userInfo!.toJson();
     }
     return data;
   }
@@ -85,6 +91,11 @@ class Locations {
   String? networkType;
   String? createdAt;
   String? updatedAt;
+  String? userRoleId;
+  String? mobile;
+  String? designations;
+  String? branchName;
+  String? zoneName;
 
   Locations({
     this.id,
@@ -110,6 +121,11 @@ class Locations {
     this.networkType,
     this.createdAt,
     this.updatedAt,
+    this.userRoleId,
+    this.mobile,
+    this.designations,
+    this.branchName,
+    this.zoneName,
   });
 
   Locations.fromJson(Map<String, dynamic> json) {
@@ -136,33 +152,43 @@ class Locations {
     networkType = json['network_type'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
+    userRoleId = json['user_role_id'];
+    mobile = json['mobile'];
+    designations = json['designations'];
+    branchName = json['branch_name'];
+    zoneName = json['zone_name'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['user_id'] = this.userId;
-    data['role_id'] = this.roleId;
-    data['username'] = this.username;
-    data['email'] = this.email;
-    data['fullname'] = this.fullname;
-    data['avatar'] = this.avatar;
-    data['designations_id'] = this.designationsId;
-    data['zone_id'] = this.zoneId;
-    data['branch_id'] = this.branchId;
-    data['activity_type'] = this.activityType;
-    data['latitude'] = this.latitude;
-    data['longitude'] = this.longitude;
-    data['accuracy'] = this.accuracy;
-    data['captured_at'] = this.capturedAt;
-    data['device_time'] = this.deviceTime;
-    data['remarks'] = this.remarks;
-    data['location_address'] = this.locationAddress;
-    data['device_id'] = this.deviceId;
-    data['battery_level'] = this.batteryLevel;
-    data['network_type'] = this.networkType;
-    data['created_at'] = this.createdAt;
-    data['updated_at'] = this.updatedAt;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['user_id'] = userId;
+    data['role_id'] = roleId;
+    data['username'] = username;
+    data['email'] = email;
+    data['fullname'] = fullname;
+    data['avatar'] = avatar;
+    data['designations_id'] = designationsId;
+    data['zone_id'] = zoneId;
+    data['branch_id'] = branchId;
+    data['activity_type'] = activityType;
+    data['latitude'] = latitude;
+    data['longitude'] = longitude;
+    data['accuracy'] = accuracy;
+    data['captured_at'] = capturedAt;
+    data['device_time'] = deviceTime;
+    data['remarks'] = remarks;
+    data['location_address'] = locationAddress;
+    data['device_id'] = deviceId;
+    data['battery_level'] = batteryLevel;
+    data['network_type'] = networkType;
+    data['created_at'] = createdAt;
+    data['updated_at'] = updatedAt;
+    data['user_role_id'] = userRoleId;
+    data['mobile'] = mobile;
+    data['designations'] = designations;
+    data['branch_name'] = branchName;
+    data['zone_name'] = zoneName;
     return data;
   }
 }
@@ -188,11 +214,11 @@ class Pagination {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['current_page'] = this.currentPage;
-    data['per_page'] = this.perPage;
-    data['total_records'] = this.totalRecords;
-    data['total_pages'] = this.totalPages;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['current_page'] = currentPage;
+    data['per_page'] = perPage;
+    data['total_records'] = totalRecords;
+    data['total_pages'] = totalPages;
     return data;
   }
 }
@@ -202,22 +228,65 @@ class FiltersApplied {
   String? activityType;
   String? fromDate;
   String? toDate;
+  String? zoneId;
+  String? branchId;
+  String? designationsId;
+  String? searchEmpId;
 
-  FiltersApplied({this.userId, this.activityType, this.fromDate, this.toDate});
+  FiltersApplied({
+    this.userId,
+    this.activityType,
+    this.fromDate,
+    this.toDate,
+    this.zoneId,
+    this.branchId,
+    this.designationsId,
+    this.searchEmpId,
+  });
 
   FiltersApplied.fromJson(Map<String, dynamic> json) {
     userId = json['user_id'];
     activityType = json['activity_type'];
     fromDate = json['from_date'];
     toDate = json['to_date'];
+    zoneId = json['zone_id'];
+    branchId = json['branch_id'];
+    designationsId = json['designations_id'];
+    searchEmpId = json['search_emp_id'];
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['user_id'] = this.userId;
-    data['activity_type'] = this.activityType;
-    data['from_date'] = this.fromDate;
-    data['to_date'] = this.toDate;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['user_id'] = userId;
+    data['activity_type'] = activityType;
+    data['from_date'] = fromDate;
+    data['to_date'] = toDate;
+    data['zone_id'] = zoneId;
+    data['branch_id'] = branchId;
+    data['designations_id'] = designationsId;
+    data['search_emp_id'] = searchEmpId;
+    return data;
+  }
+}
+
+class UserInfo {
+  String? loggedInUserId;
+  String? roleId;
+  bool? isAdmin;
+
+  UserInfo({this.loggedInUserId, this.roleId, this.isAdmin});
+
+  UserInfo.fromJson(Map<String, dynamic> json) {
+    loggedInUserId = json['logged_in_user_id'];
+    roleId = json['role_id'];
+    isAdmin = json['is_admin'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['logged_in_user_id'] = loggedInUserId;
+    data['role_id'] = roleId;
+    data['is_admin'] = isAdmin;
     return data;
   }
 }

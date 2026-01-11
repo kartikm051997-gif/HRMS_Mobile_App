@@ -161,7 +161,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             ),
 
             // Footer
-            _buildFooter(),
+            // _buildFooter(),
           ],
         ),
       ),
@@ -325,6 +325,16 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
+
+                    Text(
+                      user?.locationName ?? "Branch Unknown",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                        fontFamily: AppFonts.poppins,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -379,7 +389,9 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             child: InkWell(
               onTap: () {
                 Navigator.of(context).pop();
-                Get.offNamed(route);
+                // Get.offNamed(route);
+                Get.toNamed(route);
+
               },
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
@@ -574,7 +586,9 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
         child: InkWell(
           onTap: () {
             Navigator.of(context).pop();
-            Get.offNamed(route);
+            // Get.offNamed(route);
+            Get.toNamed(route);
+
           },
           borderRadius: BorderRadius.circular(8),
           child: AnimatedContainer(
@@ -806,216 +820,216 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
     });
   }
 
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            // App Version
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "HRMS Mobile",
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                  Text(
-                    "Version 1.0.0",
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: subtextColor,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+  // Widget _buildFooter() {
+  //   return Container(
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.05),
+  //           blurRadius: 10,
+  //           offset: const Offset(0, -5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: SafeArea(
+  //       top: false,
+  //       child: Row(
+  //         children: [
+  //           // App Version
+  //           Expanded(
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 Text(
+  //                   "HRMS Mobile",
+  //                   style: TextStyle(
+  //                     fontSize: 13,
+  //                     fontWeight: FontWeight.w600,
+  //                     color: textColor,
+  //                     fontFamily: AppFonts.poppins,
+  //                   ),
+  //                 ),
+  //                 Text(
+  //                   "Version 1.0.0",
+  //                   style: TextStyle(
+  //                     fontSize: 11,
+  //                     color: subtextColor,
+  //                     fontFamily: AppFonts.poppins,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //
+  //           // Logout Button
+  //           // Material(
+  //           //   color: Colors.transparent,
+  //           //   child: InkWell(
+  //           //     onTap: () {
+  //           //       // Handle logout
+  //           //       _showLogoutDialog();
+  //           //     },
+  //           //     borderRadius: BorderRadius.circular(12),
+  //           //     child: Container(
+  //           //       padding: const EdgeInsets.symmetric(
+  //           //         horizontal: 16,
+  //           //         vertical: 10,
+  //           //       ),
+  //           //       decoration: BoxDecoration(
+  //           //         gradient: const LinearGradient(
+  //           //           colors: [primaryColor, secondaryColor],
+  //           //         ),
+  //           //         borderRadius: BorderRadius.circular(12),
+  //           //         boxShadow: [
+  //           //           BoxShadow(
+  //           //             color: primaryColor.withOpacity(0.3),
+  //           //             blurRadius: 8,
+  //           //             offset: const Offset(0, 4),
+  //           //           ),
+  //           //         ],
+  //           //       ),
+  //           //       child: const Row(
+  //           //         mainAxisSize: MainAxisSize.min,
+  //           //         children: [
+  //           //           Icon(Icons.logout_rounded, color: Colors.white, size: 18),
+  //           //           SizedBox(width: 8),
+  //           //           Text(
+  //           //             "Logout",
+  //           //             style: TextStyle(
+  //           //               fontSize: 13,
+  //           //               fontWeight: FontWeight.w600,
+  //           //               color: Colors.white,
+  //           //               fontFamily: AppFonts.poppins,
+  //           //             ),
+  //           //           ),
+  //           //         ],
+  //           //       ),
+  //           //     ),
+  //           //   ),
+  //           // ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-            // Logout Button
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Handle logout
-                  _showLogoutDialog();
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.logout_rounded, color: Colors.white, size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        "Logout",
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.logout_rounded,
-                    color: Colors.red,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Text(
-                  "Logout",
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            content: const Text(
-              "Are you sure you want to logout?",
-              style: TextStyle(
-                fontFamily: AppFonts.poppins,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            actions: [
-              // Cancel button
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "Cancel",
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    color: subtextColor,
-                  ),
-                ),
-              ),
-
-              // Logout button
-              ElevatedButton(
-                onPressed: () async {
-                  // Close the dialog
-                  Navigator.pop(context);
-
-                  final prefs = await SharedPreferences.getInstance();
-
-                  // Get the user's token (assuming you have it saved after login)
-                  String token = prefs.getString('token') ?? '';
-
-                  try {
-                    // Call the logout API
-                    final logoutResponse = await ApiService.logoutUser(token);
-
-                    // If the logout response is successful
-                    if (logoutResponse.status == "success") {
-                      // Clear session data and login information
-                      final loginProvider = Provider.of<LoginProvider>(
-                        context,
-                        listen: false,
-                      );
-                      loginProvider.logout();
-
-                      // Clear session and preferences
-                      await prefs.remove('userData');
-                      await prefs.remove('isLoggedIn');
-                      await prefs.remove('loginTime');
-                      await prefs.remove('employeeId');
-                      await prefs.remove('logged_in_emp_id');
-
-                      // Navigate to the login screen
-                      Get.offAllNamed(AppRoutes.loginScreen);
-                    } else {
-                      // Handle unsuccessful logout
-                      debugPrint('Logout failed: ${logoutResponse.message}');
-                      // Optionally show a failure message
-                    }
-                  } catch (e) {
-                    debugPrint('Error logging out: $e');
-                    // Optionally show an error message
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: const Text(
-                  "Logout",
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
+  // void _showLogoutDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder:
+  //         (context) => AlertDialog(
+  //           shape: RoundedRectangleBorder(
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           title: Row(
+  //             children: [
+  //               Container(
+  //                 padding: const EdgeInsets.all(10),
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.red.withOpacity(0.1),
+  //                   borderRadius: BorderRadius.circular(12),
+  //                 ),
+  //                 child: const Icon(
+  //                   Icons.logout_rounded,
+  //                   color: Colors.red,
+  //                   size: 24,
+  //                 ),
+  //               ),
+  //               const SizedBox(width: 14),
+  //               const Text(
+  //                 "Logout",
+  //                 style: TextStyle(
+  //                   fontFamily: AppFonts.poppins,
+  //                   fontWeight: FontWeight.w600,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           content: const Text(
+  //             "Are you sure you want to logout?",
+  //             style: TextStyle(
+  //               fontFamily: AppFonts.poppins,
+  //               color: Color(0xFF64748B),
+  //             ),
+  //           ),
+  //           actions: [
+  //             // Cancel button
+  //             TextButton(
+  //               onPressed: () => Navigator.pop(context),
+  //               child: Text(
+  //                 "Cancel",
+  //                 style: TextStyle(
+  //                   fontFamily: AppFonts.poppins,
+  //                   color: subtextColor,
+  //                 ),
+  //               ),
+  //             ),
+  //
+  //             // Logout button
+  //             // ElevatedButton(
+  //             //   onPressed: () async {
+  //             //     // Close the dialog
+  //             //     Navigator.pop(context);
+  //             //
+  //             //     final prefs = await SharedPreferences.getInstance();
+  //             //
+  //             //     // Get the user's token (assuming you have it saved after login)
+  //             //     String token = prefs.getString('token') ?? '';
+  //             //
+  //             //     try {
+  //             //       // Call the logout API
+  //             //       final logoutResponse = await ApiService.logoutUser(token);
+  //             //
+  //             //       // If the logout response is successful
+  //             //       if (logoutResponse.status == "success") {
+  //             //         // Clear session data and login information
+  //             //         final loginProvider = Provider.of<LoginProvider>(
+  //             //           context,
+  //             //           listen: false,
+  //             //         );
+  //             //         loginProvider.logout();
+  //             //
+  //             //         // Clear session and preferences
+  //             //         await prefs.remove('userData');
+  //             //         await prefs.remove('isLoggedIn');
+  //             //         await prefs.remove('loginTime');
+  //             //         await prefs.remove('employeeId');
+  //             //         await prefs.remove('logged_in_emp_id');
+  //             //
+  //             //         // Navigate to the login screen
+  //             //         Get.offAllNamed(AppRoutes.loginScreen);
+  //             //       } else {
+  //             //         // Handle unsuccessful logout
+  //             //         debugPrint('Logout failed: ${logoutResponse.message}');
+  //             //         // Optionally show a failure message
+  //             //       }
+  //             //     } catch (e) {
+  //             //       debugPrint('Error logging out: $e');
+  //             //       // Optionally show an error message
+  //             //     }
+  //             //   },
+  //             //   style: ElevatedButton.styleFrom(
+  //             //     backgroundColor: Colors.red,
+  //             //     foregroundColor: Colors.white,
+  //             //     shape: RoundedRectangleBorder(
+  //             //       borderRadius: BorderRadius.circular(10),
+  //             //     ),
+  //             //   ),
+  //             //   child: const Text(
+  //             //     "Logout",
+  //             //     style: TextStyle(
+  //             //       fontFamily: AppFonts.poppins,
+  //             //       fontWeight: FontWeight.w600,
+  //             //     ),
+  //             //   ),
+  //             // ),
+  //           ],
+  //         ),
+  //   );
+  // }
 
   // Helper methods to check active routes
   bool _isAnyPayrollRouteActive(String currentRoute) {

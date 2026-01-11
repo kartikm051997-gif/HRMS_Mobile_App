@@ -14,7 +14,7 @@ import '../../servicesAPI/LogInService/LogIn_Service.dart';
 class AdminTrackingProvider with ChangeNotifier {
   // Services
   final AdminTrackingService _adminService = AdminTrackingService();
-  final AuthService _authService = AuthService();
+  final LoginService _authService = LoginService();
 
   // ═══════════════════════════════════════════════════════════════════════
   // FILTER DATA (FROM API)
@@ -51,11 +51,14 @@ class AdminTrackingProvider with ChangeNotifier {
     _selectedDesignation = null;
     _selectedDate = null;
 
-    _trackingRecords.clear();
+    // Don't clear tracking records, reload default data instead
     _hasSearched = false;
     _isFilterExpanded = false;
 
     notifyListeners();
+
+    // Reload default data after clearing
+    loadDefaultTrackingData();
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -111,9 +114,11 @@ class AdminTrackingProvider with ChangeNotifier {
   // INITIALIZATION
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Initialize - Load filter data from API
+  /// Initialize - Load filter data from API and default tracking data
   Future<void> initialize() async {
     await loadFilterData();
+    // After filters are loaded, load default tracking data
+    await loadDefaultTrackingData();
   }
 
   /// Load all filter data (employees, zones, branches, designations)
@@ -256,7 +261,7 @@ class AdminTrackingProvider with ChangeNotifier {
     }
 
     _isLoading = true;
-    _hasSearched = false;
+    _hasSearched = true;
     _errorMessage = null;
     notifyListeners();
 
@@ -297,6 +302,30 @@ class AdminTrackingProvider with ChangeNotifier {
         throw Exception('Role ID not found. Please login again.');
       }
 
+      // 🔥 CONVERT ZONE NAMES TO IDS
+      final selectedZoneIds =
+          _zonesData
+              .where((z) => _selectedZones.contains(z.name))
+              .map((z) => z.id)
+              .whereType<String>()
+              .toList();
+
+      // 🔥 CONVERT BRANCH NAMES TO IDS
+      final selectedBranchIds =
+          _branchesData
+              .where((b) => _selectedBranches.contains(b.name))
+              .map((b) => b.id)
+              .whereType<String>()
+              .toList();
+
+      if (kDebugMode) {
+        print("🔄 Converted Filters:");
+        print("   - Zone Names: ${_selectedZones.join(', ')}");
+        print("   - Zone IDs: ${selectedZoneIds.join(', ')}");
+        print("   - Branch Names: ${_selectedBranches.join(', ')}");
+        print("   - Branch IDs: ${selectedBranchIds.join(', ')}");
+      }
+
       // Fetch history for selected employee with filters
       final DateTime dateToUse = _selectedDate ?? DateTime.now();
       final String apiDate = AdminTrackingService.formatDateForApi(dateToUse);
@@ -311,14 +340,20 @@ class AdminTrackingProvider with ChangeNotifier {
         employeeId: employeeIdToSend, // Employee being tracked
         fromDate: apiDate, // ✅ REQUIRED
         toDate: apiDate, // ✅ REQUIRED
-        zone: _selectedZones.isNotEmpty ? _selectedZones.join(',') : "",
-        branch: _selectedBranches.isNotEmpty ? _selectedBranches.join(',') : "",
+        zone:
+            selectedZoneIds.isNotEmpty
+                ? selectedZoneIds.join(',')
+                : null, // 🔥 SEND IDs
+        branch:
+            selectedBranchIds.isNotEmpty
+                ? selectedBranchIds.join(',')
+                : null, // 🔥 SEND IDs
       );
 
       // Convert API response to TrackingRecords
       if (historyData?.data?.locations != null &&
           historyData!.data!.locations!.isNotEmpty) {
-        _trackingRecords = _convertApiResponseToRecords(historyData);
+        _trackingRecords = _convertApiResponseToRecords(historyData, dateToUse);
 
         if (kDebugMode) {
           print("✅ Search completed successfully");
@@ -334,6 +369,75 @@ class AdminTrackingProvider with ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
       if (kDebugMode) print("❌ Search failed: $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Load default tracking data for today (all employees)
+  Future<void> loadDefaultTrackingData() async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      if (kDebugMode) print("🔄 Loading default tracking data...");
+
+      // Get auth token
+      final token = await _authService.getAuthToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('Please login again - Session expired');
+      }
+
+      // Get logged-in user info
+      final loggedInUserId = await _authService.getUserId();
+      final loggedInRoleId = await _authService.getRoleId();
+
+      if (loggedInUserId == null || loggedInRoleId == null) {
+        throw Exception('User session not found');
+      }
+
+      // Fetch today's data for all employees (no filters)
+      final today = DateTime.now();
+      final apiDate = AdminTrackingService.formatDateForApi(today);
+
+      if (kDebugMode) {
+        print("📅 Fetching data for date: $apiDate");
+        print("👤 Admin User ID: $loggedInUserId");
+        print("👤 Admin Role ID: $loggedInRoleId");
+      }
+
+      final historyData = await _adminService.getEmployeeLocationHistory(
+        token: token,
+        userId: loggedInUserId,
+        roleId: loggedInRoleId,
+        fromDate: apiDate,
+        toDate: apiDate,
+        employeeId: null, // No employee filter
+        zone: null, // No zone filter
+        branch: null, // No branch filter
+      );
+
+      if (historyData?.data?.locations != null &&
+          historyData!.data!.locations!.isNotEmpty) {
+        // Group by employee and create tracking records
+        _trackingRecords = _convertApiResponseToRecords(historyData, today);
+
+        if (kDebugMode) {
+          print("✅ Default data loaded: ${_trackingRecords.length} sessions");
+          print("📊 Total locations: ${historyData.data!.locations!.length}");
+        }
+      } else {
+        _trackingRecords = [];
+        if (kDebugMode) print("ℹ️ No tracking data available for today");
+      }
+
+      _hasSearched = true; // Show the data
+    } catch (e) {
+      _errorMessage = "Error loading default data: ${e.toString()}";
+      _hasSearched = true; // Still show the UI
+      if (kDebugMode) print("❌ Load default data failed: $e");
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -358,15 +462,28 @@ class AdminTrackingProvider with ChangeNotifier {
 
     for (final loc in locations) {
       if (loc.activityType == "CHECK_IN") {
-        currentSession = [];
-        currentSession.add(loc);
+        // If there's an incomplete session, close it first
+        if (currentSession.isNotEmpty) {
+          sessions.add(_createTrackingRecordFromLocations(currentSession));
+        }
+        currentSession = [loc];
       } else if (loc.activityType == "CHECK_OUT") {
         currentSession.add(loc);
-        sessions.add(_createTrackingRecordFromLocations(currentSession));
+        if (currentSession.isNotEmpty) {
+          sessions.add(_createTrackingRecordFromLocations(currentSession));
+        }
         currentSession = [];
       } else {
-        currentSession.add(loc);
+        // ON_DUTY, BREAK, etc.
+        if (currentSession.isNotEmpty) {
+          currentSession.add(loc);
+        }
       }
+    }
+
+    // Handle incomplete session
+    if (currentSession.isNotEmpty) {
+      sessions.add(_createTrackingRecordFromLocations(currentSession));
     }
 
     return sessions;
@@ -375,35 +492,93 @@ class AdminTrackingProvider with ChangeNotifier {
   /// Convert API response to TrackingRecord list
   List<TrackingRecord> _convertApiResponseToRecords(
     GetLocationHistoryModel historyData,
+    DateTime? filterDate,
   ) {
     final allLocations = historyData.data!.locations!;
 
-    // Filter by selected date
-    final selectedDay = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-
-    final filteredLocations =
-        allLocations.where((loc) {
-          if (loc.capturedAt == null) return false;
-          final locDay = loc.capturedAt!.split(" ").first;
-          return locDay == selectedDay;
-        }).toList();
-
-    if (kDebugMode) {
-      print("📅 Selected Date: $selectedDay");
-      print("📍 Locations after date filter: ${filteredLocations.length}");
+    if (allLocations.isEmpty) {
+      if (kDebugMode) print("⚠️ No locations in API response");
+      return [];
     }
 
-    // Convert to sessions
-    return _buildSessionsFromLocations(filteredLocations);
+    if (kDebugMode) {
+      print("📍 Total locations from API: ${allLocations.length}");
+    }
+
+    // Filter by date if provided
+    List<Locations> filteredLocations;
+    if (filterDate != null) {
+      final selectedDay = DateFormat('yyyy-MM-dd').format(filterDate);
+      filteredLocations =
+          allLocations.where((loc) {
+            if (loc.capturedAt == null) return false;
+            final locDay = loc.capturedAt!.split(" ").first;
+            return locDay == selectedDay;
+          }).toList();
+
+      if (kDebugMode) {
+        print("📅 Filtering by date: $selectedDay");
+        print("📍 Locations after date filter: ${filteredLocations.length}");
+      }
+    } else {
+      filteredLocations = allLocations;
+      if (kDebugMode) {
+        print("📅 No date filter applied, using all locations");
+      }
+    }
+
+    if (filteredLocations.isEmpty) {
+      if (kDebugMode) print("⚠️ No locations after filtering");
+      return [];
+    }
+
+    // Group by employee (user_id)
+    Map<String, List<Locations>> groupedByEmployee = {};
+    for (var loc in filteredLocations) {
+      final userId = loc.userId ?? 'unknown';
+      groupedByEmployee.putIfAbsent(userId, () => []);
+      groupedByEmployee[userId]!.add(loc);
+    }
+
+    if (kDebugMode) {
+      print("👥 Employees with tracking data: ${groupedByEmployee.length}");
+      groupedByEmployee.forEach((userId, locs) {
+        print("   - User $userId: ${locs.length} locations");
+      });
+    }
+
+    // Build sessions for each employee
+    List<TrackingRecord> allSessions = [];
+    groupedByEmployee.forEach((userId, locations) {
+      final sessions = _buildSessionsFromLocations(locations);
+      if (kDebugMode && sessions.isNotEmpty) {
+        print("✅ User $userId: ${sessions.length} sessions created");
+      }
+      allSessions.addAll(sessions);
+    });
+
+    if (kDebugMode) {
+      print("📊 Total sessions created: ${allSessions.length}");
+    }
+
+    return allSessions;
   }
 
   /// Create a single TrackingRecord from locations
   TrackingRecord _createTrackingRecordFromLocations(List<Locations> locations) {
+    if (locations.isEmpty) {
+      throw Exception("Cannot create tracking record from empty locations");
+    }
+
+    // Find check-in and check-out
     final checkInLoc = locations.firstWhere(
       (l) => l.activityType == "CHECK_IN",
+      orElse: () => locations.first,
     );
+
     final checkOutLoc = locations.lastWhere(
       (l) => l.activityType == "CHECK_OUT",
+      orElse: () => locations.last,
     );
 
     final checkInTime = DateTime.parse(checkInLoc.capturedAt!);
@@ -427,7 +602,7 @@ class AdminTrackingProvider with ChangeNotifier {
       employeeName: checkInLoc.fullname ?? "Unknown",
       date: DateTime(checkInTime.year, checkInTime.month, checkInTime.day),
       checkIn: checkInTime,
-      checkOut: checkOutTime,
+      checkOut: checkOutLoc.activityType == "CHECK_OUT" ? checkOutTime : null,
       trackingPoints: points,
       totalDistance: distance,
       totalDuration: checkOutTime.difference(checkInTime),
@@ -517,7 +692,7 @@ class AdminTrackingProvider with ChangeNotifier {
     _selectedZones = [];
     _selectedBranches = [];
     _selectedDesignation = null;
-    _selectedDate = DateTime.now();
+    _selectedDate = null;
     _hasSearched = false;
     _trackingRecords = [];
     _errorMessage = null;

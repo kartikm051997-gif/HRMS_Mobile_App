@@ -113,20 +113,22 @@ class _UserTrackingTabViewScreenState extends State<UserTrackingTabViewScreen>
             ),
             labelPadding: EdgeInsets.zero,
             // ✅ OPTIONAL: Add icons to tabs
-            tabs: menuItems.map((item) => Tab(
-              icon: Icon(item['icon'], size: 20),
-              text: item['title'],
-              iconMargin: const EdgeInsets.only(bottom: 4),
-            )).toList(),
+            tabs:
+                menuItems
+                    .map(
+                      (item) => Tab(
+                        icon: Icon(item['icon'], size: 20),
+                        text: item['title'],
+                        iconMargin: const EdgeInsets.only(bottom: 4),
+                      ),
+                    )
+                    .toList(),
           ),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const [
-          UserTrackingScreen(),
-          TrackingHistoryScreen(),
-        ],
+        children: const [UserTrackingScreen(), TrackingHistoryScreen()],
       ),
     );
   }

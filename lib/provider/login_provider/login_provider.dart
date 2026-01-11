@@ -9,7 +9,7 @@ import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 /// Login Provider - Manages login state and UI logic
 class LoginProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final LoginService _authService = LoginService();
 
   // Text controllers
   final emailController = TextEditingController();
@@ -100,7 +100,7 @@ class LoginProvider extends ChangeNotifier {
           print("  - location: ${user.location}");
           print("  - appLocation: ${user.appLocation}");
           print("  - lastLogin: ${user.lastLogin}");
-          print("  - branch: ${user.branch}");
+          print("  - branch: ${user.location}");
 
           // Print raw JSON to see ALL fields
           try {

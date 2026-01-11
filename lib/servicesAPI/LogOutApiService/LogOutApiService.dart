@@ -15,7 +15,7 @@ class ApiService {
     }
 
     final response = await http.post(
-      Uri.parse(ApiBase.logoutEndpoint),  // Use the endpoint from ApiBase
+      Uri.parse(ApiBase.logoutEndpoint), // Use the endpoint from ApiBase
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',

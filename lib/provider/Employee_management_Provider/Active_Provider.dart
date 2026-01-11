@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../model/Employee_management/ActiveUserListModel.dart' as models;
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/ActiveUserService/ActiveUserFilterService.dart';
@@ -9,7 +10,7 @@ import '../../servicesAPI/LogInService/LogIn_Service.dart';
 class ActiveProvider extends ChangeNotifier {
   // Services
   final ActiveUserService _activeUserService = ActiveUserService();
-  final AuthService _authService = AuthService();
+  final LoginService _authService = LoginService();
   final FilterService _filterService = FilterService();
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -19,9 +20,7 @@ class ActiveProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
 
-  int currentPage = 0;
-
-  bool _isLoading = false;
+  bool _isLoading = true;
   bool get isLoading => _isLoading;
 
   bool _isLoadingFilters = false;
@@ -33,18 +32,19 @@ class ActiveProvider extends ChangeNotifier {
   bool _hasAppliedFilters = false;
   bool get hasAppliedFilters => _hasAppliedFilters;
 
+  // ✅ TOKEN EXPIRATION FLAG
+  bool _isTokenExpired = false;
+  bool get isTokenExpired => _isTokenExpired;
+
   // API response data
   models.ActiveUserList? _activeUserListResponse;
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // Filter raw data from API
-
   // ═══════════════════════════════════════════════════════════════════════
   // FILTER DATA STRUCTURES
   // ═══════════════════════════════════════════════════════════════════════
 
-  // Store filter data as List<Map<String, String>> with 'id' and 'name'
   List<Map<String, String>> _companyList = [];
   List<Map<String, String>> _zoneList = [];
   List<Map<String, String>> _branchList = [];
@@ -58,7 +58,6 @@ class ActiveProvider extends ChangeNotifier {
     if (_selectedZoneIds.isEmpty) {
       return _branchList.map((e) => e['name']!).toList();
     }
-
     return _branchList
         .where((b) => _selectedZoneIds.contains(b['zone_id']))
         .map((e) => e['name']!)
@@ -70,7 +69,7 @@ class ActiveProvider extends ChangeNotifier {
   List<String> get ctc => _ctcList.map((e) => e['name']!).toList();
 
   // ═══════════════════════════════════════════════════════════════════════
-  // SELECTED VALUES (Store both display name and ID)
+  // SELECTED VALUES
   // ═══════════════════════════════════════════════════════════════════════
 
   String? _selectedCompany;
@@ -82,38 +81,6 @@ class ActiveProvider extends ChangeNotifier {
   List<String> _selectedBranchIds = [];
   List<String> _selectedBranchNames = [];
 
-  void toggleZone(String zoneName) {
-    final zone = _zoneList.firstWhere((z) => z['name'] == zoneName);
-
-    if (_selectedZoneIds.contains(zone['id'])) {
-      _selectedZoneIds.remove(zone['id']);
-      _selectedZoneNames.remove(zone['name']);
-    } else {
-      _selectedZoneIds.add(zone['id']!);
-      _selectedZoneNames.add(zone['name']!);
-    }
-
-    // Reset branches when zone changes
-    _selectedBranchIds.clear();
-    _selectedBranchNames.clear();
-
-    notifyListeners();
-  }
-
-  void toggleBranch(String branchName) {
-    final branch = _branchList.firstWhere((b) => b['name'] == branchName);
-
-    if (_selectedBranchIds.contains(branch['id'])) {
-      _selectedBranchIds.remove(branch['id']);
-      _selectedBranchNames.remove(branch['name']);
-    } else {
-      _selectedBranchIds.add(branch['id']!);
-      _selectedBranchNames.add(branch['name']!);
-    }
-
-    notifyListeners();
-  }
-
   String? _selectedDesignation;
   String? _selectedDesignationId;
 
@@ -124,11 +91,9 @@ class ActiveProvider extends ChangeNotifier {
   String? get selectedCompany => _selectedCompany;
   List<String> get selectedZones => _selectedZoneNames;
   List<String> get selectedBranches => _selectedBranchNames;
-
   String? get selectedDesignation => _selectedDesignation;
   String? get selectedCTC => _selectedCTC;
 
-  /// Check if all required filters are selected
   bool get areAllFiltersSelected {
     return _selectedCompanyId != null &&
         _selectedZoneIds.isNotEmpty &&
@@ -149,6 +114,58 @@ class ActiveProvider extends ChangeNotifier {
   final TextEditingController fojToController = TextEditingController();
 
   // ═══════════════════════════════════════════════════════════════════════
+  // PAGINATION
+  // ═══════════════════════════════════════════════════════════════════════
+
+  int _currentPage = 1;
+  final int _itemsPerPage = 10;
+
+  int get currentPage => _currentPage;
+  int get itemsPerPage => _itemsPerPage;
+
+  int get totalPages {
+    if (_filteredEmployees.isEmpty) return 0;
+    return (_filteredEmployees.length / _itemsPerPage).ceil();
+  }
+
+  List<models.Users> get paginatedEmployees {
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage;
+
+    if (startIndex >= _filteredEmployees.length) {
+      return [];
+    }
+
+    return _filteredEmployees.sublist(
+      startIndex,
+      endIndex > _filteredEmployees.length
+          ? _filteredEmployees.length
+          : endIndex,
+    );
+  }
+
+  void nextPage() {
+    if (_currentPage < totalPages) {
+      _currentPage++;
+      notifyListeners();
+    }
+  }
+
+  void previousPage() {
+    if (_currentPage > 1) {
+      _currentPage--;
+      notifyListeners();
+    }
+  }
+
+  void goToPage(int page) {
+    if (page >= 1 && page <= totalPages) {
+      _currentPage = page;
+      notifyListeners();
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
   // SUMMARY DATA
   // ═══════════════════════════════════════════════════════════════════════
 
@@ -164,36 +181,104 @@ class ActiveProvider extends ChangeNotifier {
   // INITIALIZATION
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Initialize - Load filters first, then default employee data
   void initializeEmployees() {
     if (_initialLoadDone) return;
 
-    if (kDebugMode) print("🚀 ActiveProvider: Initializing...");
+    _isLoading = true; // 🔥 START SHIMMER
+    _initialLoadDone = false;
+    notifyListeners();
 
-    // Load filters first
+    if (kDebugMode) print("🚀 ActiveProvider: Initializing...");
     loadAllFilters();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // PAGE-SPECIFIC SUMMARY DATA
+  // ═══════════════════════════════════════════════════════════════════════
+
+  /// Calculate summary for current page employees only
+  Map<String, int> get currentPageSummary {
+    int pageGrandTotal = 0;
+    int pageEmployeeCTC = 0;
+    int pageF11CTC = 0;
+    int pageProfessionalFee = 0;
+    int pageStudentCTC = 0;
+
+    for (var employee in paginatedEmployees) {
+      // Parse monthly CTC
+      final monthlyCtc = _parseIntFromString(employee.monthlyCtc) ?? 0;
+
+      // Add to appropriate category based on payroll category
+      final payrollCategory = (employee.payrollCategory ?? '').toLowerCase();
+
+      if (payrollCategory.contains('employee')) {
+        pageEmployeeCTC += monthlyCtc;
+      } else if (payrollCategory.contains('f11') ||
+          payrollCategory.contains('f-11')) {
+        pageF11CTC += monthlyCtc;
+      } else if (payrollCategory.contains('professional')) {
+        pageProfessionalFee += monthlyCtc;
+      } else if (payrollCategory.contains('student')) {
+        pageStudentCTC += monthlyCtc;
+      }
+
+      // Add to grand total
+      pageGrandTotal += monthlyCtc;
+    }
+
+    return {
+      'grandTotal': pageGrandTotal,
+      'employeeCTC': pageEmployeeCTC,
+      'f11CTC': pageF11CTC,
+      'professionalFee': pageProfessionalFee,
+      'studentCTC': pageStudentCTC,
+    };
+  }
+
+  // Helper getters for easy access
+  int get currentPageGrandTotal => currentPageSummary['grandTotal'] ?? 0;
+  int get currentPageEmployeeCTC => currentPageSummary['employeeCTC'] ?? 0;
+  int get currentPageF11CTC => currentPageSummary['f11CTC'] ?? 0;
+  int get currentPageProfessionalFee =>
+      currentPageSummary['professionalFee'] ?? 0;
+  int get currentPageStudentCTC => currentPageSummary['studentCTC'] ?? 0;
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // HELPER: CLEAR AUTH SESSION
+  // ═══════════════════════════════════════════════════════════════════════
+
+  Future<void> _clearAuthSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_id');
+      await prefs.remove('role_id');
+      await prefs.remove('logged_in_emp_id');
+      await prefs.remove('employeeId');
+      if (kDebugMode) print("✅ Auth session cleared");
+    } catch (e) {
+      if (kDebugMode) print("❌ Error clearing session: $e");
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════
   // LOAD FILTERS FROM API
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Load all filters from API
   Future<void> loadAllFilters() async {
     try {
       _isLoadingFilters = true;
       _errorMessage = null;
+      _isTokenExpired = false;
       notifyListeners();
 
       if (kDebugMode) print("🔄 ActiveProvider: Loading filters...");
 
-      // Get auth token
       final token = await _authService.getAuthToken();
       if (token == null || token.isEmpty) {
         throw Exception('Authentication token not found. Please login again.');
       }
 
-      // Fetch filters from API
       final filtersData = await _filterService.getAllFilters(token: token);
 
       if (filtersData == null || filtersData.data == null) {
@@ -211,25 +296,31 @@ class ActiveProvider extends ChangeNotifier {
         print("📊 CTC Ranges: ${_ctcList.length}");
       }
 
-      // After filters loaded, fetch default employee data
       await fetchActiveUsers();
-
       _initialLoadDone = true;
     } catch (e) {
-      _errorMessage = "Error loading filters: ${e.toString()}";
+      // ✅ HANDLE TOKEN EXPIRATION
+      if (e.toString().contains('TOKEN_EXPIRED') ||
+          e.toString().contains('UNAUTHORIZED')) {
+        _isTokenExpired = true;
+        _errorMessage = "Your session has expired. Please login again.";
+        await _clearAuthSession(); // ✅ Clear session
+      } else {
+        _errorMessage = "Error loading filters: ${e.toString()}";
+      }
+
       if (kDebugMode) print("❌ ActiveProvider: $_errorMessage");
       _initialLoadDone = true;
     } finally {
       _isLoadingFilters = false;
+      _isLoading = false; // 🔥 STOP shimmer only here
       notifyListeners();
     }
   }
 
-  /// Process filter data from API response
   void _processFilterData(GetAllFilters filters) {
     final data = filters.data!;
 
-    // Process Companies
     _companyList =
         data.companies
             ?.map((c) => {'id': c.cmpid ?? '', 'name': c.cmpname ?? ''})
@@ -237,7 +328,6 @@ class ActiveProvider extends ChangeNotifier {
             .toList() ??
         [];
 
-    // Process Zones
     _zoneList =
         data.zones
             ?.map((z) => {'id': z.id ?? '', 'name': z.name ?? ''})
@@ -245,7 +335,6 @@ class ActiveProvider extends ChangeNotifier {
             .toList() ??
         [];
 
-    // Process Branches (with zone_id for filtering)
     _branchList =
         data.branches
             ?.map(
@@ -259,7 +348,6 @@ class ActiveProvider extends ChangeNotifier {
             .toList() ??
         [];
 
-    // Process Designations (flatten from departments)
     _designationList = [];
     if (data.departments != null) {
       for (var dept in data.departments!) {
@@ -277,28 +365,18 @@ class ActiveProvider extends ChangeNotifier {
       }
     }
 
-    // Process CTC Ranges
     _ctcList =
         data.ctcRanges
             ?.map((c) => {'id': c.value ?? '', 'name': c.label ?? ''})
             .where((c) => c['id']!.isNotEmpty && c['name']!.isNotEmpty)
             .toList() ??
         [];
-
-    if (kDebugMode) {
-      print("📊 Processed ${_companyList.length} companies");
-      print("📊 Processed ${_zoneList.length} zones");
-      print("📊 Processed ${_branchList.length} branches");
-      print("📊 Processed ${_designationList.length} designations");
-      print("📊 Processed ${_ctcList.length} CTC ranges");
-    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════
   // FETCH ACTIVE USERS
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Fetch active users from API
   Future<void> fetchActiveUsers({
     String? cmpid,
     String? zoneId,
@@ -317,9 +395,9 @@ class ActiveProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _errorMessage = null;
+      _isTokenExpired = false; // ✅ Reset token expired flag
       notifyListeners();
 
-      // Get bearer token
       final token = await _authService.getAuthToken();
       if (token == null || token.isEmpty) {
         _errorMessage = "Authentication token not found. Please login again.";
@@ -331,7 +409,6 @@ class ActiveProvider extends ChangeNotifier {
 
       if (kDebugMode) print("🔄 ActiveProvider: Fetching active users...");
 
-      // Call API
       final models.ActiveUserList? response = await _activeUserService
           .getActiveUsers(
             token: token,
@@ -350,12 +427,9 @@ class ActiveProvider extends ChangeNotifier {
 
       if (response != null && response.status == 'success') {
         _activeUserListResponse = response;
-
-        // Update employee list
         _allEmployees = response.data?.users ?? [];
         _filteredEmployees = List.from(_allEmployees);
 
-        // Update summary data
         if (response.data?.summary != null) {
           final summary = response.data!.summary!;
           grandTotalCTC = _parseIntFromString(summary.grandTotal) ?? 0;
@@ -369,7 +443,6 @@ class ActiveProvider extends ChangeNotifier {
             print("✅ Summary - Grand Total: $grandTotalCTC");
           }
         } else {
-          // Reset if no summary
           grandTotalCTC = 0;
           totalEmployeeCTC = 0;
           totalF11CTC = 0;
@@ -387,7 +460,21 @@ class ActiveProvider extends ChangeNotifier {
         if (kDebugMode) print("❌ ActiveProvider: $_errorMessage");
       }
     } catch (e) {
-      _errorMessage = "Error loading employees: ${e.toString()}";
+      // ✅ HANDLE TOKEN EXPIRATION
+      if (e.toString().contains('TOKEN_EXPIRED') ||
+          e.toString().contains('UNAUTHORIZED')) {
+        _isTokenExpired = true;
+        _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) print("❌ ActiveProvider: Token expired");
+        await _clearAuthSession(); // ✅ Clear session
+      } else if (e.toString().contains('REQUEST_TIMEOUT')) {
+        _errorMessage =
+            "Request timed out. Please check your internet connection.";
+      } else {
+        _errorMessage =
+            "Error loading employees: ${e.toString().replaceAll('Exception: ', '')}";
+      }
+
       if (kDebugMode) print("❌ ActiveProvider: Exception - $e");
     } finally {
       _isLoading = false;
@@ -395,7 +482,6 @@ class ActiveProvider extends ChangeNotifier {
     }
   }
 
-  /// Helper to parse integers from strings
   int? _parseIntFromString(String? value) {
     if (value == null || value.isEmpty) return null;
     try {
@@ -426,29 +512,24 @@ class ActiveProvider extends ChangeNotifier {
 
   void setZones(List<String> zoneNames) {
     _selectedZoneNames = zoneNames;
-
     _selectedZoneIds =
         _zoneList
             .where((z) => zoneNames.contains(z['name']))
             .map((z) => z['id']!)
             .toList();
 
-    // Clear branch when zone changes
     _selectedBranchNames.clear();
     _selectedBranchIds.clear();
-
     notifyListeners();
   }
 
   void setBranches(List<String> branchNames) {
     _selectedBranchNames = branchNames;
-
     _selectedBranchIds =
         _branchList
             .where((b) => branchNames.contains(b['name']))
             .map((b) => b['id']!)
             .toList();
-
     notifyListeners();
   }
 
@@ -484,12 +565,13 @@ class ActiveProvider extends ChangeNotifier {
   // SEARCH & ACTIONS
   // ═══════════════════════════════════════════════════════════════════════
 
-  /// Search employees with filters
   void searchEmployees() {
     if (!areAllFiltersSelected) {
       if (kDebugMode) print("⚠️ Not all required filters selected");
       return;
     }
+
+    _currentPage = 1; // ✅ Reset to first page
 
     fetchActiveUsers(
       cmpid: _selectedCompanyId,
@@ -504,9 +586,10 @@ class ActiveProvider extends ChangeNotifier {
     );
   }
 
-  /// Client-side search filtering
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+
+    _currentPage = 1; // ✅ Reset to first page when searching
 
     if (query.isEmpty) {
       _filteredEmployees = List.from(_allEmployees);
@@ -530,33 +613,27 @@ class ActiveProvider extends ChangeNotifier {
   void clearSearch() {
     searchController.clear();
     _filteredEmployees = List.from(_allEmployees);
+    _currentPage = 1;
     notifyListeners();
   }
 
-  /// Clear all filters
   void clearAllFilters() {
     _selectedCompany = null;
     _selectedCompanyId = null;
-
     _selectedZoneIds.clear();
     _selectedZoneNames.clear();
-
     _selectedBranchIds.clear();
     _selectedBranchNames.clear();
-
     _selectedDesignation = null;
     _selectedDesignationId = null;
-
     _selectedCTC = null;
     _selectedCTCId = null;
-
     dojFromController.clear();
     fojToController.clear();
     searchController.clear();
-
     _errorMessage = null;
+    _currentPage = 1;
     notifyListeners();
-
     fetchActiveUsers();
   }
 
@@ -569,7 +646,6 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Toggle employee status
   Future<void> toggleEmployeeStatus(String employeeId) async {
     try {
       final userIndex = _allEmployees.indexWhere(

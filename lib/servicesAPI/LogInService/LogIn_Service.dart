@@ -30,13 +30,110 @@ class TimeoutException implements Exception {
 }
 
 /// Auth service - Handles all authentication API calls and session management
-class AuthService {
+class LoginService {
   // Singleton pattern
-  static final AuthService _instance = AuthService._internal();
-  factory AuthService() => _instance;
+  static final LoginService _instance = LoginService._internal();
+  factory LoginService() => _instance;
+  DateTime? _lastTokenRefresh;
 
-  AuthService._internal() {
+  LoginService._internal() {
     HttpOverrides.global = MyHttpOverrides();
+  }
+
+  Future<String?> getValidToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString(_keyAuthToken);
+
+      if (token == null || token.isEmpty) {
+        return null;
+      }
+
+      // Check if 5 minutes passed since last refresh
+      if (_lastTokenRefresh == null ||
+          DateTime.now().difference(_lastTokenRefresh!) >
+              Duration(minutes: 5)) {
+        if (kDebugMode) print("🔄 Refreshing token...");
+        final newToken = await refreshToken(token);
+
+        if (newToken != null) {
+          token = newToken;
+          _lastTokenRefresh = DateTime.now();
+        }
+      }
+
+      return token;
+    } catch (e) {
+      return await getAuthToken(); // If refresh fails, use old token
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // METHOD 2: Call API to refresh the token
+  // ═══════════════════════════════════════════════════════════════════════
+  Future<String?> refreshToken(String oldToken) async {
+    try {
+      if (kDebugMode) print("🔄 Calling refresh token API...");
+
+      final response = await http
+          .post(
+            Uri.parse(ApiBase.refreshToken), // You need to add this URL
+            headers: {
+              'Authorization': 'Bearer $oldToken',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        // Get new token from response (adjust based on your API)
+        String? newToken = data['token'] ?? data['data']?['token'];
+
+        if (newToken != null) {
+          // Save new token
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(_keyAuthToken, newToken);
+
+          if (kDebugMode) print("✅ New token saved!");
+          return newToken;
+        }
+      } else if (response.statusCode == 401) {
+        // Token is completely dead - user must login again
+        if (kDebugMode) print("❌ Token expired - need to login again");
+        return null;
+      }
+
+      return oldToken; // If anything fails, return old token
+    } catch (e) {
+      if (kDebugMode) print("❌ Error refreshing token: $e");
+      return oldToken;
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // METHOD 3: Update clearSession to reset refresh tracker
+  // ═══════════════════════════════════════════════════════════════════════
+  Future<void> clearSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.remove(_keyIsLoggedIn);
+      await prefs.remove(_keyLoginTime);
+      await prefs.remove(_keyUserData);
+      await prefs.remove(_keyEmployeeId);
+      await prefs.remove(_keyLoggedInEmpId);
+      await prefs.remove(_keyAuthToken);
+      await prefs.remove(_keyUserId);
+      await prefs.remove(_keyRoleId);
+
+      _lastTokenRefresh = null; // ✅ Reset this
+
+      if (kDebugMode) print("✅ Session cleared");
+    } catch (e) {
+      if (kDebugMode) print("❌ Error clearing session: $e");
+    }
   }
 
   // API timeout duration
@@ -52,8 +149,10 @@ class AuthService {
   static const String _keyEmployeeId = 'employeeId';
   static const String _keyLoggedInEmpId = 'logged_in_emp_id';
   static const String _keyAuthToken = 'authToken';
-  static const String _keyUserId = 'user_id';  // ✅ Added
-  static const String _keyRoleId = 'role_id';  // ✅ Added
+  static const String _keyUserId = 'user_id'; // ✅ Added
+  static const String _keyRoleId = 'role_id';
+
+  // ✅ Added
 
   // ═══════════════════════════════════════════════════════════════════════
   // LOGIN API
@@ -74,20 +173,20 @@ class AuthService {
 
       final response = await http
           .post(
-        Uri.parse(ApiBase.loginEndpoint),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'user_name': username.trim(),
-          'password': password.trim(),
-        }),
-      )
+            Uri.parse(ApiBase.loginEndpoint),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'user_name': username.trim(),
+              'password': password.trim(),
+            }),
+          )
           .timeout(
-        _apiTimeout,
-        onTimeout: () => throw TimeoutException('Connection timeout'),
-      );
+            _apiTimeout,
+            onTimeout: () => throw TimeoutException('Connection timeout'),
+          );
 
       if (kDebugMode) {
         print("✅ Response Status: ${response.statusCode}");
@@ -115,9 +214,9 @@ class AuthService {
       } else {
         // Handle HTTP errors
         final bodyText =
-        response.body.isNotEmpty && response.body.length > 160
-            ? "${response.body.substring(0, 160)}..."
-            : response.body;
+            response.body.isNotEmpty && response.body.length > 160
+                ? "${response.body.substring(0, 160)}..."
+                : response.body;
 
         if (kDebugMode) {
           print("❌ Login failed. Status: ${response.statusCode}");
@@ -168,7 +267,9 @@ class AuthService {
         await prefs.setString(_keyAuthToken, token);
         if (kDebugMode) {
           print("✅ Token saved successfully");
-          print("🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...");
+          print(
+            "🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...",
+          );
           print("📏 Token length: ${token.length} characters");
         }
       } else {
@@ -176,10 +277,14 @@ class AuthService {
           print("⚠️ WARNING: No token found in login response!");
           print("📦 Available keys in response: ${userData.keys.toList()}");
           if (userData['data'] != null) {
-            print("📦 Keys in 'data': ${(userData['data'] as Map).keys.toList()}");
+            print(
+              "📦 Keys in 'data': ${(userData['data'] as Map).keys.toList()}",
+            );
           }
           if (userData['user'] != null) {
-            print("📦 Keys in 'user': ${(userData['user'] as Map).keys.toList()}");
+            print(
+              "📦 Keys in 'user': ${(userData['user'] as Map).keys.toList()}",
+            );
           }
         }
       }
@@ -189,7 +294,7 @@ class AuthService {
       if (userId.isNotEmpty) {
         await prefs.setString(_keyEmployeeId, userId);
         await prefs.setString(_keyLoggedInEmpId, userId);
-        await prefs.setString(_keyUserId, userId);  // ✅ Save to user_id key
+        await prefs.setString(_keyUserId, userId); // ✅ Save to user_id key
         if (kDebugMode) print("✅ User ID saved: $userId");
       } else {
         if (kDebugMode) print("⚠️ Warning: No user ID found");
@@ -213,7 +318,9 @@ class AuthService {
 
         // Verify what was saved
         print("\n🔍 Verifying saved data:");
-        print("  Token: ${prefs.getString(_keyAuthToken)?.substring(0, 30)}...");
+        print(
+          "  Token: ${prefs.getString(_keyAuthToken)?.substring(0, 30)}...",
+        );
         print("  User ID: ${prefs.getString(_keyUserId)}");
         print("  Role ID: ${prefs.getString(_keyRoleId)}");
         print("  Employee ID: ${prefs.getString(_keyEmployeeId)}");
@@ -279,7 +386,9 @@ class AuthService {
       if (minutesSinceLogin >= _sessionExpiryMinutes) {
         if (kDebugMode) {
           print("❌ Session expired");
-          print("⏰ Session was ${minutesSinceLogin} minutes old (max: $_sessionExpiryMinutes)");
+          print(
+            "⏰ Session was ${minutesSinceLogin} minutes old (max: $_sessionExpiryMinutes)",
+          );
         }
         await clearSession();
         return false;
@@ -287,7 +396,9 @@ class AuthService {
 
       if (kDebugMode) {
         print("✅ Session is valid");
-        print("⏰ Session age: $minutesSinceLogin minutes (expires in ${_sessionExpiryMinutes - minutesSinceLogin} min)");
+        print(
+          "⏰ Session age: $minutesSinceLogin minutes (expires in ${_sessionExpiryMinutes - minutesSinceLogin} min)",
+        );
       }
       return true;
     } catch (e) {
@@ -297,30 +408,6 @@ class AuthService {
   }
 
   /// Clear all session data
-  Future<void> clearSession() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      // Remove all session keys
-      await prefs.remove(_keyIsLoggedIn);
-      await prefs.remove(_keyLoginTime);
-      await prefs.remove(_keyUserData);
-      await prefs.remove(_keyEmployeeId);
-      await prefs.remove(_keyLoggedInEmpId);
-      await prefs.remove(_keyAuthToken);
-      await prefs.remove(_keyUserId);  // ✅ Added
-      await prefs.remove(_keyRoleId);  // ✅ Added
-
-      if (kDebugMode) {
-        print("═══════════════════════════════════════");
-        print("✅ Session cleared successfully");
-        print("═══════════════════════════════════════");
-      }
-    } catch (e) {
-      if (kDebugMode) print("❌ Error clearing session: $e");
-      throw Exception("Failed to clear session");
-    }
-  }
 
   // ═══════════════════════════════════════════════════════════════════════
   // TOKEN & USER DATA
@@ -335,7 +422,9 @@ class AuthService {
       if (kDebugMode) {
         if (token != null && token.isNotEmpty) {
           print("✅ Auth token retrieved");
-          print("🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...");
+          print(
+            "🔑 Token (first 30 chars): ${token.substring(0, min(30, token.length))}...",
+          );
         } else {
           print("❌ Auth token not found in storage");
           print("💡 Available keys: ${prefs.getKeys().toList()}");
@@ -511,7 +600,8 @@ class AuthService {
     }
 
     // 4. access_token
-    if (userData['access_token'] != null && userData['access_token'].toString().isNotEmpty) {
+    if (userData['access_token'] != null &&
+        userData['access_token'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 Token found in: userData['access_token']");
       return userData['access_token'].toString();
     }
@@ -519,14 +609,17 @@ class AuthService {
     // 5. data.access_token
     if (userData['data'] != null && userData['data'] is Map) {
       final data = userData['data'] as Map;
-      if (data['access_token'] != null && data['access_token'].toString().isNotEmpty) {
-        if (kDebugMode) print("🔍 Token found in: userData['data']['access_token']");
+      if (data['access_token'] != null &&
+          data['access_token'].toString().isNotEmpty) {
+        if (kDebugMode)
+          print("🔍 Token found in: userData['data']['access_token']");
         return data['access_token'].toString();
       }
     }
 
     // 6. bearer_token
-    if (userData['bearer_token'] != null && userData['bearer_token'].toString().isNotEmpty) {
+    if (userData['bearer_token'] != null &&
+        userData['bearer_token'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 Token found in: userData['bearer_token']");
       return userData['bearer_token'].toString();
     }
@@ -551,33 +644,39 @@ class AuthService {
         if (kDebugMode) print("🔍 User ID found in: user.id");
         return user['id'].toString();
       }
-      if (user['employee_id'] != null && user['employee_id'].toString().isNotEmpty) {
+      if (user['employee_id'] != null &&
+          user['employee_id'].toString().isNotEmpty) {
         if (kDebugMode) print("🔍 User ID found in: user.employee_id");
         return user['employee_id'].toString();
       }
-      if (user['employment_id'] != null && user['employment_id'].toString().isNotEmpty) {
+      if (user['employment_id'] != null &&
+          user['employment_id'].toString().isNotEmpty) {
         if (kDebugMode) print("🔍 User ID found in: user.employment_id");
         return user['employment_id'].toString();
       }
     }
 
     // 2. Direct fields
-    if (userData['user_id'] != null && userData['user_id'].toString().isNotEmpty) {
+    if (userData['user_id'] != null &&
+        userData['user_id'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 User ID found in: userData.user_id");
       return userData['user_id'].toString();
     }
 
-    if (userData['userId'] != null && userData['userId'].toString().isNotEmpty) {
+    if (userData['userId'] != null &&
+        userData['userId'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 User ID found in: userData.userId");
       return userData['userId'].toString();
     }
 
-    if (userData['employee_id'] != null && userData['employee_id'].toString().isNotEmpty) {
+    if (userData['employee_id'] != null &&
+        userData['employee_id'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 User ID found in: userData.employee_id");
       return userData['employee_id'].toString();
     }
 
-    if (userData['employment_id'] != null && userData['employment_id'].toString().isNotEmpty) {
+    if (userData['employment_id'] != null &&
+        userData['employment_id'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 User ID found in: userData.employment_id");
       return userData['employment_id'].toString();
     }
@@ -589,7 +688,8 @@ class AuthService {
         if (kDebugMode) print("🔍 User ID found in: data.user_id");
         return data['user_id'].toString();
       }
-      if (data['employee_id'] != null && data['employee_id'].toString().isNotEmpty) {
+      if (data['employee_id'] != null &&
+          data['employee_id'].toString().isNotEmpty) {
         if (kDebugMode) print("🔍 User ID found in: data.employee_id");
         return data['employee_id'].toString();
       }
@@ -626,12 +726,14 @@ class AuthService {
     }
 
     // 2. Direct fields
-    if (userData['role_id'] != null && userData['role_id'].toString().isNotEmpty) {
+    if (userData['role_id'] != null &&
+        userData['role_id'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 Role ID found in: userData.role_id");
       return userData['role_id'].toString();
     }
 
-    if (userData['roleId'] != null && userData['roleId'].toString().isNotEmpty) {
+    if (userData['roleId'] != null &&
+        userData['roleId'].toString().isNotEmpty) {
       if (kDebugMode) print("🔍 Role ID found in: userData.roleId");
       return userData['roleId'].toString();
     }
@@ -685,7 +787,9 @@ class AuthService {
 
       final userData = prefs.getString(_keyUserData);
       if (userData != null && userData.isNotEmpty) {
-        print("📦 userData (first 200 chars): ${userData.substring(0, min(200, userData.length))}...");
+        print(
+          "📦 userData (first 200 chars): ${userData.substring(0, min(200, userData.length))}...",
+        );
       } else {
         print("📦 userData: NOT FOUND ❌");
       }
