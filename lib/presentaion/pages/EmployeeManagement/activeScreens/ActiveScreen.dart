@@ -397,6 +397,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                     ),
                     SizedBox(height: 16),
                     TextField(
+                      style: TextStyle(fontFamily: AppFonts.poppins),
                       controller: activeProvider.searchController,
                       onChanged: activeProvider.onSearchChanged,
                       decoration: InputDecoration(
@@ -444,23 +445,31 @@ class _ActiveScreenState extends State<ActiveScreen> {
                           label: "Zone",
                           items: activeProvider.zone,
                           selectedItems: activeProvider.selectedZones,
-                          onChanged: activeProvider.setZones,
+                          onChanged: activeProvider.setSelectedZones,
+                          zoneEnableSelectAll: true, // 👈 ONLY Zone has buttons
                         ),
+
                         SizedBox(height: 12),
+
                         MultiSelectDropdown(
                           label: "Branch",
                           items: activeProvider.branch,
                           selectedItems: activeProvider.selectedBranches,
-                          onChanged: activeProvider.setBranches,
+                          onChanged: activeProvider.setSelectedBranches,
+                          // no enableSelectAll here
                         ),
+
                         SizedBox(height: 12),
-                        CustomSearchDropdownWithSearch(
-                          labelText: "Designation",
-                          isMandatory: true,
+                        MultiSelectDropdown(
+                          label: "Designation",
                           items: activeProvider.designation,
-                          selectedValue: activeProvider.selectedDesignation,
-                          onChanged: activeProvider.setSelectedDesignation,
-                          hintText: "Select Designation",
+                          selectedItems:
+                              activeProvider
+                                  .selectedDesignations, // ✅ Now List<String>
+                          onChanged:
+                              activeProvider
+                                  .setSelectedDesignations, // ✅ Now accepts List<String>
+                          designationEnableSelectAll: true,
                         ),
                         SizedBox(height: 12),
                         CustomSearchDropdownWithSearch(
@@ -474,53 +483,130 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         SizedBox(height: 16),
                         Row(
                           children: [
+                            // Clear Button
                             Expanded(
-                              child: OutlinedButton(
-                                onPressed: activeProvider.clearAllFilters,
-                                child: Text(
-                                  "Clear",
-                                  style: TextStyle(
-                                    fontFamily: AppFonts.poppins,
+                              child: InkWell(
+                                onTap: activeProvider.clearAllFilters,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.clear_all,
+                                        size: 18,
+                                        color: Colors.grey[700],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "Clear",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(width: 10),
+                            const SizedBox(width: 12),
+
+                            // Apply Filters Button
                             Expanded(
                               flex: 2,
-                              child: ElevatedButton(
-                                onPressed:
+                              child: InkWell(
+                                onTap:
                                     activeProvider.areAllFiltersSelected
                                         ? activeProvider.searchEmployees
                                         : null,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColor.primaryColor,
-                                  disabledBackgroundColor: AppColor.primaryColor
-                                      .withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient:
+                                        activeProvider.areAllFiltersSelected
+                                            ? const LinearGradient(
+                                              colors: [
+                                                Color(0xFF8E0E6B),
+                                                Color(0xFFD4145A),
+                                              ],
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                            )
+                                            : null,
+                                    color:
+                                        activeProvider.areAllFiltersSelected
+                                            ? null
+                                            : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow:
+                                        activeProvider.areAllFiltersSelected
+                                            ? [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFF8E0E6B,
+                                                ).withOpacity(0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ]
+                                            : [],
+                                  ),
+                                  child: Center(
+                                    child:
+                                        activeProvider.isLoading
+                                            ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                            : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.filter_alt,
+                                                  size: 18,
+                                                  color:
+                                                      activeProvider
+                                                              .areAllFiltersSelected
+                                                          ? Colors.white
+                                                          : Colors.grey[600],
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  "Apply Filters",
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        AppFonts.poppins,
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        activeProvider
+                                                                .areAllFiltersSelected
+                                                            ? Colors.white
+                                                            : Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                  ),
                                 ),
-                                child:
-                                    activeProvider.isLoading
-                                        ? SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                        : Text(
-                                          "Apply Filters",
-                                          style: TextStyle(
-                                            fontFamily: AppFonts.poppins,
-                                            fontWeight: FontWeight.w600,
-                                            color:
-                                                activeProvider
-                                                        .areAllFiltersSelected
-                                                    ? Colors.white
-                                                    : Colors
-                                                        .white70, // slightly faded when disabled
-                                          ),
-                                        ),
                               ),
                             ),
                           ],
@@ -796,125 +882,196 @@ class _ActiveScreenState extends State<ActiveScreen> {
     final employeeName = user.fullname ?? user.username ?? "Unknown";
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(14),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => EmployeeManagementDetailsScreen(user: user),
-              ),
-            );
-          },
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              CircleAvatar(
-                radius: 26,
-                backgroundColor: AppColor.primaryColor.withOpacity(0.1),
-                backgroundImage: _getAvatarImage(user.avatar),
-                child:
-                    _getAvatarImage(user.avatar) == null
-                        ? Text(
-                          employeeName.isNotEmpty
-                              ? employeeName[0].toUpperCase()
-                              : 'E',
-                          style: TextStyle(
-                            color: AppColor.primaryColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )
-                        : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        employeeName,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: AppColor.whiteColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "ID: $employeeId",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColor.whiteColor,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        (user.designation != null &&
-                                user.designation!.trim().isNotEmpty)
-                            ? user.designation!
-                            : "Unknown Designation",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColor.whiteColor,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EmployeeManagementDetailsScreen(user: user),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Row(
+                children: [
+                  // Avatar with gradient border
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
+                      backgroundImage: _getAvatarImage(user.avatar),
+                      child:
+                          _getAvatarImage(user.avatar) == null
+                              ? Text(
+                                employeeName.isNotEmpty
+                                    ? employeeName[0].toUpperCase()
+                                    : 'E',
+                                style: const TextStyle(
+                                  color: Color(0xFF8E0E6B),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              )
+                              : null,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
 
-                      if (user.locationName != null &&
-                          user.locationName!.trim().isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.location_on,
-                                size: 14,
-                                color: Colors.grey[500],
+                  // Employee Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Name
+                        Text(
+                          employeeName,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Employee ID
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8E0E6B).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "ID: $employeeId",
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF8E0E6B),
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Designation
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                user.locationName!,
+                              child: Icon(
+                                Icons.work_outline,
+                                size: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                (user.designation != null &&
+                                        user.designation!.trim().isNotEmpty)
+                                    ? user.designation!
+                                    : "Unknown Designation",
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: AppColor.whiteColor,
+                                  color: Colors.grey[700],
                                   fontFamily: AppFonts.poppins,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Location
+                        if (user.locationName != null &&
+                            user.locationName!.trim().isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Icon(
+                                  Icons.location_on_outlined,
+                                  size: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  user.locationName!,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                    ],
+                        ],
+                      ],
+                    ),
                   ),
-                ),
+
+                  // Arrow Icon
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Icon(Icons.chevron_right, color: Colors.grey[400]),
-              ),
-            ],
+            ),
           ),
         ),
       ),

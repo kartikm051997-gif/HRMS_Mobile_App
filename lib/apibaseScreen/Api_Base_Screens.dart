@@ -13,6 +13,7 @@ class ApiBase {
   static const String getLocationHistory =
       "${trackingBase}get_location_history";
 
-  static const String refreshToken = "https://your-api.com/auth/refresh";
+  static const String saveLocationBatch = "${trackingBase}save_location_batch";
 
+  static const String refreshToken = "https://your-api.com/auth/refresh";
 }

@@ -102,7 +102,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                         const Spacer(),
                         AnimatedRotation(
                           turns:
-                          adminTrackingProvider.isFilterExpanded ? 0.5 : 0,
+                              adminTrackingProvider.isFilterExpanded ? 0.5 : 0,
                           duration: const Duration(milliseconds: 300),
                           child: const Icon(
                             Icons.keyboard_arrow_down,
@@ -126,9 +126,10 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                         MediaQuery.of(context).padding.top + kToolbarHeight;
                     final filterButtonHeight = 100.0;
                     final tabBarHeight =
-                    adminTrackingProvider.hasSearched ? 48.0 : 0.0;
+                        adminTrackingProvider.hasSearched ? 48.0 : 0.0;
 
-                    final maxFilterHeight = screenHeight -
+                    final maxFilterHeight =
+                        screenHeight -
                         appBarHeight -
                         filterButtonHeight -
                         tabBarHeight -
@@ -139,7 +140,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                       duration: const Duration(milliseconds: 300),
                       constraints: BoxConstraints(
                         maxHeight:
-                        maxFilterHeight > 200 ? maxFilterHeight : 200,
+                            maxFilterHeight > 200 ? maxFilterHeight : 200,
                       ),
                       child: SingleChildScrollView(
                         child: Container(
@@ -150,16 +151,18 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               SimpleSearchDropdown(
                                 label: "Employee",
                                 value: adminTrackingProvider.selectedEmployeeId,
-                                items: adminTrackingProvider
-                                    .getFilteredEmployees("")
-                                    .map((e) => "${e.name} (${e.id})")
-                                    .toList(),
+                                items:
+                                    adminTrackingProvider
+                                        .getFilteredEmployees("")
+                                        .map((e) => "${e.name} (${e.id})")
+                                        .toList(),
                                 onChanged: (selectedText) {
-                                  final id = selectedText
-                                      .split("(")
-                                      .last
-                                      .replaceAll(")", "")
-                                      .trim();
+                                  final id =
+                                      selectedText
+                                          .split("(")
+                                          .last
+                                          .replaceAll(")", "")
+                                          .trim();
                                   adminTrackingProvider.setEmployeeId(id);
                                 },
                               ),
@@ -169,7 +172,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               MultiSelectDropdown(
                                 label: "Zone",
                                 selectedItems:
-                                adminTrackingProvider.selectedZones,
+                                    adminTrackingProvider.selectedZones,
                                 items: adminTrackingProvider.zoneNames,
                                 onChanged: (selected) {
                                   adminTrackingProvider.setZones(selected);
@@ -181,7 +184,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               MultiSelectDropdown(
                                 label: "Branch",
                                 selectedItems:
-                                adminTrackingProvider.selectedBranches,
+                                    adminTrackingProvider.selectedBranches,
                                 items: adminTrackingProvider.branchNames,
                                 onChanged: (selected) {
                                   adminTrackingProvider.setBranches(selected);
@@ -192,7 +195,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                               SimpleSearchDropdown(
                                 label: "Role",
                                 value:
-                                adminTrackingProvider.selectedDesignation,
+                                    adminTrackingProvider.selectedDesignation,
                                 items: adminTrackingProvider.getFilteredRoles(
                                   "",
                                 ),
@@ -218,8 +221,9 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
                                           color: Colors.grey.shade300,
-                                          borderRadius:
-                                          BorderRadius.circular(10),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         child: const Text(
                                           "Clear",
@@ -238,55 +242,65 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                                   Expanded(
                                     flex: 2,
                                     child: GestureDetector(
-                                      onTap: _isSearching
-                                          ? null
-                                          : () async {
-                                        final provider = context
-                                            .read<AdminTrackingProvider>();
+                                      onTap:
+                                          _isSearching
+                                              ? null
+                                              : () async {
+                                                final provider =
+                                                    context
+                                                        .read<
+                                                          AdminTrackingProvider
+                                                        >();
 
-                                        if (!provider.isFiltersValid) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Please select all filters',
-                                              ),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                          return;
-                                        }
+                                                if (!provider.isFiltersValid) {
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Please select all filters',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
 
-                                        setState(
-                                                () => _isSearching = true);
-                                        await provider.performSearch();
-                                        setState(() {
-                                          _isSearching = false;
-                                          _selectedSession = null;
-                                          _tabController.animateTo(0);
-                                        });
-                                      },
+                                                setState(
+                                                  () => _isSearching = true,
+                                                );
+                                                await provider.performSearch();
+                                                setState(() {
+                                                  _isSearching = false;
+                                                  _selectedSession = null;
+                                                  _tabController.animateTo(0);
+                                                });
+                                              },
                                       child: Container(
                                         height: 48,
                                         alignment: Alignment.center,
                                         decoration: BoxDecoration(
                                           color: AppColor.primaryColor2,
-                                          borderRadius:
-                                          BorderRadius.circular(10),
-                                        ),
-                                        child: _isSearching
-                                            ? const CircularProgressIndicator(
-                                          color: Colors.white,
-                                        )
-                                            : const Text(
-                                          "Search",
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white,
-                                            fontFamily: AppFonts.poppins,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
+                                        child:
+                                            _isSearching
+                                                ? const CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                )
+                                                : const Text(
+                                                  "Search",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                    fontFamily:
+                                                        AppFonts.poppins,
+                                                  ),
+                                                ),
                                       ),
                                     ),
                                   ),
@@ -314,8 +328,7 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
                       controller: _tabController,
                       indicatorColor: Colors.transparent,
                       dividerColor: Colors.transparent,
-                      overlayColor:
-                      WidgetStateProperty.all(Colors.transparent),
+                      overlayColor: WidgetStateProperty.all(Colors.transparent),
                       splashFactory: NoSplash.splashFactory,
                       indicator: BoxDecoration(
                         gradient: const LinearGradient(
@@ -358,112 +371,119 @@ class _AdminTrackingScreenState extends State<AdminTrackingScreen>
             ],
           ),
 
-          // CONTENT AREA - Fixed the logic here
+          // CONTENT AREA - Fixed the logic here divya
           Expanded(
-            child: adminTrackingProvider.hasSearched
-                ? (adminTrackingProvider.isLoading
-                ? const Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                AlwaysStoppedAnimation(Color(0xFF8E0E6B)),
-              ),
-            )
-                : adminTrackingProvider.trackingRecords.isEmpty
-                ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey.shade300,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No tracking records found',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Try different filter criteria',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                ],
-              ),
-            )
-                : TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                HistoryTabScreen(
-                  sessions:
-                  adminTrackingProvider.trackingRecords,
-                  onViewDetails: _onViewDetails,
-                ),
-                TimelineTabScreen(
-                  session: _selectedSession ??
-                      (adminTrackingProvider
-                          .trackingRecords.isNotEmpty
-                          ? adminTrackingProvider
-                          .trackingRecords.first
-                          : null),
-                ),
-                MapTabScreen(
-                  session: _selectedSession ??
-                      (adminTrackingProvider
-                          .trackingRecords.isNotEmpty
-                          ? adminTrackingProvider
-                          .trackingRecords.first
-                          : null),
-                  onMapCreated: (c) => _mapController = c,
-                ),
-              ],
-            ))
-                : Center(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.filter_alt_outlined,
-                        size: 80,
-                        color: Colors.grey.shade300,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Select filters and search',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade600,
-                          fontFamily: AppFonts.poppins,
+            child:
+                adminTrackingProvider.hasSearched
+                    ? (adminTrackingProvider.isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(
+                              Color(0xFF8E0E6B),
+                            ),
+                          ),
+                        )
+                        : adminTrackingProvider.trackingRecords.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No tracking records found',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Try different filter criteria',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : TabBarView(
+                          controller: _tabController,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: [
+                            HistoryTabScreen(
+                              sessions: adminTrackingProvider.trackingRecords,
+                              onViewDetails: _onViewDetails,
+                            ),
+                            TimelineTabScreen(
+                              session:
+                                  _selectedSession ??
+                                  (adminTrackingProvider
+                                          .trackingRecords
+                                          .isNotEmpty
+                                      ? adminTrackingProvider
+                                          .trackingRecords
+                                          .first
+                                      : null),
+                            ),
+                            MapTabScreen(
+                              session:
+                                  _selectedSession ??
+                                  (adminTrackingProvider
+                                          .trackingRecords
+                                          .isNotEmpty
+                                      ? adminTrackingProvider
+                                          .trackingRecords
+                                          .first
+                                      : null),
+                              onMapCreated: (c) => _mapController = c,
+                            ),
+                          ],
+                        ))
+                    : Center(
+                      child: SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_outlined,
+                                size: 80,
+                                color: Colors.grey.shade300,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Select filters and search',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey.shade600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Use the filter button above to get started',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Use the filter button above to get started',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade400,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+                    ),
           ),
         ],
       ),
@@ -506,7 +526,7 @@ class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
     return widget.items
         .where(
           (item) => item.toLowerCase().contains(_searchQuery.toLowerCase()),
-    )
+        )
         .toList();
   }
 
@@ -550,9 +570,10 @@ class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
                     style: TextStyle(
                       fontFamily: AppFonts.poppins,
                       fontSize: 14,
-                      color: widget.value != null
-                          ? AppColor.primaryColor1
-                          : Colors.grey[600],
+                      color:
+                          widget.value != null
+                              ? AppColor.primaryColor1
+                              : Colors.grey[600],
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -629,43 +650,44 @@ class _SimpleSearchDropdownState extends State<SimpleSearchDropdown> {
                 // List of items
                 Container(
                   constraints: const BoxConstraints(maxHeight: 200),
-                  child: _filteredItems.isEmpty
-                      ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'No ${widget.label.toLowerCase()} found',
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  )
-                      : ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: _filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _filteredItems[index];
-                      return ListTile(
-                        dense: true,
-                        title: Text(
-                          item,
-                          style: const TextStyle(
-                            fontFamily: AppFonts.poppins,
-                            fontSize: 14,
+                  child:
+                      _filteredItems.isEmpty
+                          ? Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              'No ${widget.label.toLowerCase()} found',
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          )
+                          : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: _filteredItems.length,
+                            itemBuilder: (context, index) {
+                              final item = _filteredItems[index];
+                              return ListTile(
+                                dense: true,
+                                title: Text(
+                                  item,
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                onTap: () {
+                                  widget.onChanged(item);
+                                  setState(() {
+                                    _isExpanded = false;
+                                    _searchQuery = '';
+                                    _searchController.clear();
+                                  });
+                                },
+                              );
+                            },
                           ),
-                        ),
-                        onTap: () {
-                          widget.onChanged(item);
-                          setState(() {
-                            _isExpanded = false;
-                            _searchQuery = '';
-                            _searchController.clear();
-                          });
-                        },
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
@@ -765,9 +787,10 @@ class _DatePickerField extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppFonts.poppins,
                     fontSize: 14,
-                    color: provider.selectedDate != null
-                        ? AppColor.primaryColor1
-                        : Colors.grey[600],
+                    color:
+                        provider.selectedDate != null
+                            ? AppColor.primaryColor1
+                            : Colors.grey[600],
                   ),
                 ),
               ],

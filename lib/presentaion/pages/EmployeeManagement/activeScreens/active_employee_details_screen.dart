@@ -8,6 +8,7 @@ import '../../../../model/Employee_management/ActiveUserListModel.dart'
     as models;
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
 import '../../../../apibaseScreen/Api_Base_Screens.dart';
+import '../../../../widgets/avatarZoomIn/SimpleImageZoomViewer.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class EmployeeManagementDetailsScreen extends StatefulWidget {
@@ -95,37 +96,54 @@ class _EmployeeManagementDetailsScreenState
                     child: Column(
                       children: [
                         // Avatar
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.2),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.3),
-                              width: 2,
+                        GestureDetector(
+                          onTap: () {
+                            final imageUrl = getAvatarUrl(widget.user.avatar);
+                            if (imageUrl.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => SimpleImageZoomViewer(
+                                        imageUrl: imageUrl,
+                                        employeeName: employeeName,
+                                      ),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.white.withOpacity(0.2),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.3),
+                                width: 2,
+                              ),
                             ),
-                          ),
-                          child: ClipOval(
-                            child: Builder(
-                              builder: (_) {
-                                final imageUrl = getAvatarUrl(
-                                  widget.user.avatar,
-                                );
-                                if (kDebugMode) {
-                                  print('FINAL AVATAR URL 👉 $imageUrl');
-                                }
+                            child: ClipOval(
+                              child: Builder(
+                                builder: (_) {
+                                  final imageUrl = getAvatarUrl(
+                                    widget.user.avatar,
+                                  );
+                                  if (kDebugMode) {
+                                    print('FINAL AVATAR URL 👉 $imageUrl');
+                                  }
 
-                                return imageUrl.isNotEmpty
-                                    ? Image.network(
-                                      imageUrl,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (_, __, ___) =>
-                                              _defaultAvatar(employeeName),
-                                    )
-                                    : _defaultAvatar(employeeName);
-                              },
+                                  return imageUrl.isNotEmpty
+                                      ? Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (_, __, ___) =>
+                                                _defaultAvatar(employeeName),
+                                      )
+                                      : _defaultAvatar(employeeName);
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -133,7 +151,7 @@ class _EmployeeManagementDetailsScreenState
 
                         // Name
                         Text(
-                          employeeName,
+                          widget.user.fullname.toString(),
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,

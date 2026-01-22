@@ -130,24 +130,13 @@ class AdminTrackingProvider with ChangeNotifier {
 
       if (kDebugMode) print("🔄 Loading admin filter data...");
 
-      // Get auth token
-      final token = await _authService.getAuthToken();
-      if (token == null || token.isEmpty) {
-        _filterErrorMessage = 'Please login again - Session expired';
-        _isLoadingFilters = false;
-        notifyListeners();
-        return;
-      }
-
-      // Fetch filter data from API
-      final filterData = await _adminService.getAllEmployees(token: token);
+      final filterData = await _adminService.getAllEmployees();
 
       if (filterData?.data != null) {
         _employees = filterData!.data!.employees ?? [];
         _branchesData = filterData.data!.branches ?? [];
         _zonesData = filterData.data!.zones ?? [];
 
-        // Extract designations from departments
         _designations = [];
         if (filterData.data!.departments != null) {
           for (var dept in filterData.data!.departments!) {
@@ -158,18 +147,18 @@ class AdminTrackingProvider with ChangeNotifier {
         }
 
         if (kDebugMode) {
-          print("✅ Filter data loaded:");
-          print("   - Employees: ${_employees.length}");
-          print("   - Zones: ${_zonesData.length}");
-          print("   - Branches: ${_branchesData.length}");
-          print("   - Designations: ${_designations.length}");
+          print("✅ Filter data loaded");
+          print("Employees: ${_employees.length}");
+          print("Zones: ${_zonesData.length}");
+          print("Branches: ${_branchesData.length}");
+          print("Designations: ${_designations.length}");
         }
       } else {
         _filterErrorMessage = 'No filter data available';
       }
     } catch (e) {
-      _filterErrorMessage = "Error loading filters: ${e.toString()}";
-      if (kDebugMode) print("❌ Error loading filters: $e");
+      _filterErrorMessage = "Error loading filters: $e";
+      if (kDebugMode) print("❌ Filter load error: $e");
     } finally {
       _isLoadingFilters = false;
       notifyListeners();
@@ -334,20 +323,14 @@ class AdminTrackingProvider with ChangeNotifier {
       final String employeeIdToSend = _selectedEmployeeId ?? "";
 
       final historyData = await _adminService.getEmployeeLocationHistory(
-        token: token,
-        userId: loggedInUserId, // Logged-in admin ID
-        roleId: loggedInRoleId, // Admin role ID
-        employeeId: employeeIdToSend, // Employee being tracked
-        fromDate: apiDate, // ✅ REQUIRED
-        toDate: apiDate, // ✅ REQUIRED
-        zone:
-            selectedZoneIds.isNotEmpty
-                ? selectedZoneIds.join(',')
-                : null, // 🔥 SEND IDs
+        userId: loggedInUserId,
+        roleId: loggedInRoleId,
+        employeeId: employeeIdToSend,
+        fromDate: apiDate,
+        toDate: apiDate,
+        zone: selectedZoneIds.isNotEmpty ? selectedZoneIds.join(',') : null,
         branch:
-            selectedBranchIds.isNotEmpty
-                ? selectedBranchIds.join(',')
-                : null, // 🔥 SEND IDs
+            selectedBranchIds.isNotEmpty ? selectedBranchIds.join(',') : null,
       );
 
       // Convert API response to TrackingRecords
@@ -409,7 +392,6 @@ class AdminTrackingProvider with ChangeNotifier {
       }
 
       final historyData = await _adminService.getEmployeeLocationHistory(
-        token: token,
         userId: loggedInUserId,
         roleId: loggedInRoleId,
         fromDate: apiDate,

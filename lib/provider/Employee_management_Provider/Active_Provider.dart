@@ -10,7 +10,6 @@ import '../../servicesAPI/LogInService/LogIn_Service.dart';
 class ActiveProvider extends ChangeNotifier {
   // Services
   final ActiveUserService _activeUserService = ActiveUserService();
-  final LoginService _authService = LoginService();
   final FilterService _filterService = FilterService();
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -81,24 +80,24 @@ class ActiveProvider extends ChangeNotifier {
   List<String> _selectedBranchIds = [];
   List<String> _selectedBranchNames = [];
 
-  String? _selectedDesignation;
-  String? _selectedDesignationId;
-
   String? _selectedCTC;
   String? _selectedCTCId;
+
+  List<String> _selectedDesignationIds = [];
+  List<String> _selectedDesignationNames = [];
 
   // Getters
   String? get selectedCompany => _selectedCompany;
   List<String> get selectedZones => _selectedZoneNames;
   List<String> get selectedBranches => _selectedBranchNames;
-  String? get selectedDesignation => _selectedDesignation;
+  List<String> get selectedDesignations => _selectedDesignationNames;
   String? get selectedCTC => _selectedCTC;
 
   bool get areAllFiltersSelected {
     return _selectedCompanyId != null &&
         _selectedZoneIds.isNotEmpty &&
         _selectedBranchIds.isNotEmpty &&
-        _selectedDesignationId != null;
+        _selectedDesignationIds.isNotEmpty; // ✅ Changed
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -268,23 +267,25 @@ class ActiveProvider extends ChangeNotifier {
   Future<void> loadAllFilters() async {
     try {
       _isLoadingFilters = true;
+      _isLoading = true;
       _errorMessage = null;
       _isTokenExpired = false;
       notifyListeners();
 
-      if (kDebugMode) print("🔄 ActiveProvider: Loading filters...");
-
-      final token = await _authService.getAuthToken();
-      if (token == null || token.isEmpty) {
-        throw Exception('Authentication token not found. Please login again.');
+      if (kDebugMode) {
+        print("🔄 ActiveProvider: Loading filters...");
       }
 
-      final filtersData = await _filterService.getAllFilters(token: token);
+      // 🔥 DO NOT fetch token here anymore
+      // ApiHelper will attach token automatically
+
+      final filtersData = await _filterService.getAllFilters();
 
       if (filtersData == null || filtersData.data == null) {
-        throw Exception('Failed to load filter options');
+        throw Exception('Invalid filter response from server');
       }
 
+      // ✅ Process filters
       _processFilterData(filtersData);
 
       if (kDebugMode) {
@@ -296,24 +297,35 @@ class ActiveProvider extends ChangeNotifier {
         print("📊 CTC Ranges: ${_ctcList.length}");
       }
 
+      // 🔥 Load users after filters
       await fetchActiveUsers();
+
       _initialLoadDone = true;
     } catch (e) {
-      // ✅ HANDLE TOKEN EXPIRATION
-      if (e.toString().contains('TOKEN_EXPIRED') ||
-          e.toString().contains('UNAUTHORIZED')) {
+      // 🚨 Handle auth issues
+      if (e.toString().contains("401") ||
+          e.toString().contains("UNAUTHORIZED") ||
+          e.toString().contains("TOKEN_EXPIRED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
-        await _clearAuthSession(); // ✅ Clear session
+
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session");
+        }
+
+        await _clearAuthSession();
       } else {
-        _errorMessage = "Error loading filters: ${e.toString()}";
+        _errorMessage = "Error loading filters: $e";
       }
 
-      if (kDebugMode) print("❌ ActiveProvider: $_errorMessage");
+      if (kDebugMode) {
+        print("❌ ActiveProvider: $_errorMessage");
+      }
+
       _initialLoadDone = true;
     } finally {
       _isLoadingFilters = false;
-      _isLoading = false; // 🔥 STOP shimmer only here
+      _isLoading = false;
       notifyListeners();
     }
   }
@@ -395,59 +407,39 @@ class ActiveProvider extends ChangeNotifier {
     try {
       _isLoading = true;
       _errorMessage = null;
-      _isTokenExpired = false; // ✅ Reset token expired flag
+      _isTokenExpired = false;
       notifyListeners();
-
-      final token = await _authService.getAuthToken();
-      if (token == null || token.isEmpty) {
-        _errorMessage = "Authentication token not found. Please login again.";
-        _isLoading = false;
-        notifyListeners();
-        if (kDebugMode) print("❌ ActiveProvider: No auth token found");
-        return;
-      }
 
       if (kDebugMode) print("🔄 ActiveProvider: Fetching active users...");
 
-      final models.ActiveUserList? response = await _activeUserService
-          .getActiveUsers(
-            token: token,
-            cmpid: cmpid,
-            zoneId: zoneId,
-            locationsId: locationsId,
-            designationsId: designationsId,
-            ctcRange: ctcRange,
-            punch: punch,
-            dolpFromdate: dolpFromdate,
-            dolpTodate: dolpTodate,
-            fromdate: fromdate,
-            todate: todate,
-            search: search ?? searchController.text,
-          );
+      // 🔥 ApiHelper will attach token automatically
+      final response = await _activeUserService.getActiveUsers(
+        cmpid: cmpid,
+        zoneId: zoneId,
+        locationsId: locationsId,
+        designationsId: designationsId,
+        ctcRange: ctcRange,
+        punch: punch,
+        dolpFromdate: dolpFromdate,
+        dolpTodate: dolpTodate,
+        fromdate: fromdate,
+        todate: todate,
+        search: search ?? searchController.text,
+      );
 
       if (response != null && response.status == 'success') {
         _activeUserListResponse = response;
         _allEmployees = response.data?.users ?? [];
         _filteredEmployees = List.from(_allEmployees);
 
-        if (response.data?.summary != null) {
-          final summary = response.data!.summary!;
+        final summary = response.data?.summary;
+        if (summary != null) {
           grandTotalCTC = _parseIntFromString(summary.grandTotal) ?? 0;
           totalEmployeeCTC = _parseIntFromString(summary.totalMonthlyCtc) ?? 0;
           totalF11CTC = _parseIntFromString(summary.f11Employees) ?? 0;
           totalProfessionalFee =
               _parseIntFromString(summary.professionalFee) ?? 0;
           totalStudentCTC = _parseIntFromString(summary.studentCtc) ?? 0;
-
-          if (kDebugMode) {
-            print("✅ Summary - Grand Total: $grandTotalCTC");
-          }
-        } else {
-          grandTotalCTC = 0;
-          totalEmployeeCTC = 0;
-          totalF11CTC = 0;
-          totalProfessionalFee = 0;
-          totalStudentCTC = 0;
         }
 
         _hasAppliedFilters = true;
@@ -457,25 +449,16 @@ class ActiveProvider extends ChangeNotifier {
         }
       } else {
         _errorMessage = response?.message ?? "Failed to load employees";
-        if (kDebugMode) print("❌ ActiveProvider: $_errorMessage");
       }
     } catch (e) {
-      // ✅ HANDLE TOKEN EXPIRATION
-      if (e.toString().contains('TOKEN_EXPIRED') ||
-          e.toString().contains('UNAUTHORIZED')) {
+      if (e.toString().contains("401") ||
+          e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
-        if (kDebugMode) print("❌ ActiveProvider: Token expired");
-        await _clearAuthSession(); // ✅ Clear session
-      } else if (e.toString().contains('REQUEST_TIMEOUT')) {
-        _errorMessage =
-            "Request timed out. Please check your internet connection.";
+        await _clearAuthSession();
       } else {
-        _errorMessage =
-            "Error loading employees: ${e.toString().replaceAll('Exception: ', '')}";
+        _errorMessage = "Error loading employees: $e";
       }
-
-      if (kDebugMode) print("❌ ActiveProvider: Exception - $e");
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -510,7 +493,7 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setZones(List<String> zoneNames) {
+  void setSelectedZones(List<String> zoneNames) {
     _selectedZoneNames = zoneNames;
     _selectedZoneIds =
         _zoneList
@@ -523,7 +506,7 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setBranches(List<String> branchNames) {
+  void setSelectedBranches(List<String> branchNames) {
     _selectedBranchNames = branchNames;
     _selectedBranchIds =
         _branchList
@@ -533,17 +516,13 @@ class ActiveProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setSelectedDesignation(String? displayName) {
-    _selectedDesignation = displayName;
-    if (displayName != null) {
-      final item = _designationList.firstWhere(
-        (d) => d['name'] == displayName,
-        orElse: () => {},
-      );
-      _selectedDesignationId = item['id'];
-    } else {
-      _selectedDesignationId = null;
-    }
+  void setSelectedDesignations(List<String> designationNames) {
+    _selectedDesignationNames = designationNames;
+    _selectedDesignationIds =
+        _designationList
+            .where((d) => designationNames.contains(d['name']))
+            .map((d) => d['id']!)
+            .toList();
     notifyListeners();
   }
 
@@ -577,7 +556,7 @@ class ActiveProvider extends ChangeNotifier {
       cmpid: _selectedCompanyId,
       zoneId: _selectedZoneIds.join(','),
       locationsId: _selectedBranchIds.join(','),
-      designationsId: _selectedDesignationId,
+      designationsId: _selectedDesignationIds.join(','), // ✅ Changed
       ctcRange: _selectedCTCId,
       fromdate:
           dojFromController.text.isNotEmpty ? dojFromController.text : null,
@@ -624,8 +603,8 @@ class ActiveProvider extends ChangeNotifier {
     _selectedZoneNames.clear();
     _selectedBranchIds.clear();
     _selectedBranchNames.clear();
-    _selectedDesignation = null;
-    _selectedDesignationId = null;
+    _selectedDesignationIds.clear(); // ✅ Changed
+    _selectedDesignationNames.clear(); // ✅ Changed
     _selectedCTC = null;
     _selectedCTCId = null;
     dojFromController.clear();

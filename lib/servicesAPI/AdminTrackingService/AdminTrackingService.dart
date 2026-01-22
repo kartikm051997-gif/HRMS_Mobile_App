@@ -1,95 +1,51 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
 import '../../apibaseScreen/Api_Base_Screens.dart';
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../model/UserTrackingModel/GetLocationHistoryModel.dart';
+import '../APIHelper/ApiHelper.dart';
 
 class AdminTrackingService {
   static final AdminTrackingService _instance =
-  AdminTrackingService._internal();
-
+      AdminTrackingService._internal();
   factory AdminTrackingService() => _instance;
   AdminTrackingService._internal();
 
-  static const Duration _timeout = Duration(seconds: 30);
-
   // ═══════════════════════════════════════════════════════
-  // HELPER METHOD - Clean Response Body
+  // Clean response
   // ═══════════════════════════════════════════════════════
-
-  String _cleanResponseBody(String rawBody) {
-    String cleaned = rawBody.trim();
-
-    // Remove any leading asterisks or special characters before JSON starts
+  String _clean(String raw) {
+    String cleaned = raw.trim();
     while (cleaned.isNotEmpty &&
         !cleaned.startsWith('{') &&
         !cleaned.startsWith('[')) {
       cleaned = cleaned.substring(1);
     }
-
-    if (kDebugMode && rawBody != cleaned) {
-      print("⚠️ Cleaned response body (removed ${rawBody.length - cleaned.length} leading characters)");
-    }
-
     return cleaned;
   }
 
   // ═══════════════════════════════════════════════════════
-  // 1️⃣ GET ALL FILTER DATA
+  // GET ALL FILTERS
   // ═══════════════════════════════════════════════════════
-
-  Future<GetAllFilters?> getAllEmployees({required String token}) async {
+  Future<GetAllFilters?> getAllEmployees() async {
     try {
       final uri = Uri.parse(ApiBase.getAllFilters);
 
-      if (kDebugMode) {
-        print("═══════════════════════════════════════");
-        print("🔄 Fetching filters");
-        print("🔗 URL: $uri");
-      }
+      final response = await ApiHelper.get(uri);
 
-      final response = await http
-          .get(
-        uri,
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-      )
-          .timeout(_timeout);
-
-      if (kDebugMode) {
-        print("Status: ${response.statusCode}");
-        print("Body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}");
-      }
-
-      if (response.statusCode == 200) {
-        // 🔥 CLEAN RESPONSE BEFORE PARSING
-        final cleanedBody = _cleanResponseBody(response.body);
-        return GetAllFilters.fromJson(jsonDecode(cleanedBody));
-      } else if (response.statusCode == 401) {
-        throw Exception("UNAUTHORIZED");
-      } else {
-        throw Exception("Failed: ${response.statusCode}");
-      }
+      final cleaned = _clean(response.body);
+      return GetAllFilters.fromJson(jsonDecode(cleaned));
     } catch (e) {
-      if (kDebugMode) {
-        print("❌ getAllEmployees Error: $e");
-      }
+      if (kDebugMode) print("❌ getAllEmployees: $e");
       rethrow;
     }
   }
 
   // ═══════════════════════════════════════════════════════
-  // 2️⃣ GET EMPLOYEE LOCATION HISTORY
-  // BACKEND EXPECTS: from_date & to_date
+  // GET LOCATION HISTORY
   // ═══════════════════════════════════════════════════════
-
   Future<GetLocationHistoryModel?> getEmployeeLocationHistory({
-    required String token,
     required String userId,
     required String roleId,
     required String fromDate,
@@ -116,73 +72,19 @@ class AdminTrackingService {
         },
       );
 
-      if (kDebugMode) {
-        print("═══════════════════════════════════════");
-        print("📡 HISTORY API (GET)");
-        print("🔗 URL: $uri");
-        print("🔑 Token: ${token.substring(0, token.length > 30 ? 30 : token.length)}...");
-        print("📋 Parameters:");
-        print("   - user_id: $userId");
-        print("   - role_id: $roleId");
-        print("   - from_date: $fromDate");
-        print("   - to_date: $toDate");
-        print("   - search_emp_id: $employeeId");
-        print("   - zone_id: $zone");
-        print("   - branch_id: $branch");
-      }
+      if (kDebugMode) print("📡 Admin Tracking URI: $uri");
 
-      final response = await http
-          .get(
-        uri,
-        headers: {
-          "Accept": "application/json",
-          "Authorization": "Bearer $token", // 🔥 REQUIRED
-        },
-      )
-          .timeout(_timeout);
+      final response = await ApiHelper.get(uri);
 
-      if (kDebugMode) {
-        print("Status: ${response.statusCode}");
-        print("Response (first 300 chars): ${response.body.substring(0, response.body.length > 300 ? 300 : response.body.length)}");
-      }
-
-      if (response.statusCode == 200) {
-        // 🔥 CLEAN RESPONSE BEFORE PARSING
-        final cleanedBody = _cleanResponseBody(response.body);
-        final model = GetLocationHistoryModel.fromJson(jsonDecode(cleanedBody));
-
-        if (kDebugMode) {
-          print("✅ History parsed successfully");
-          print("📊 Locations count: ${model.data?.locations?.length ?? 0}");
-          if (model.data?.locations != null && model.data!.locations!.isNotEmpty) {
-            print("📍 First location: ${model.data!.locations!.first.capturedAt} - ${model.data!.locations!.first.activityType}");
-            print("📍 Last location: ${model.data!.locations!.last.capturedAt} - ${model.data!.locations!.last.activityType}");
-          }
-        }
-
-        return model;
-      } else if (response.statusCode == 401) {
-        throw Exception("UNAUTHORIZED");
-      } else if (response.statusCode == 404) {
-        if (kDebugMode) {
-          print("⚠️ No tracking data found (404)");
-        }
-        return null;
-      } else {
-        throw Exception("Failed: ${response.statusCode}");
-      }
+      final cleaned = _clean(response.body);
+      return GetLocationHistoryModel.fromJson(jsonDecode(cleaned));
     } catch (e) {
-      if (kDebugMode) {
-        print("❌ getEmployeeLocationHistory Error: $e");
-      }
+      if (kDebugMode) print("❌ getEmployeeLocationHistory: $e");
       rethrow;
     }
   }
 
   // ═══════════════════════════════════════════════════════
-  // 3️⃣ DATE FORMATTER (yyyy-MM-dd)
-  // ═══════════════════════════════════════════════════════
-
   static String formatDateForApi(DateTime date) {
     return "${date.year.toString().padLeft(4, '0')}-"
         "${date.month.toString().padLeft(2, '0')}-"

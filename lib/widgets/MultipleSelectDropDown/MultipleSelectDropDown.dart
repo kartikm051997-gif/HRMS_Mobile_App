@@ -9,6 +9,8 @@ class MultiSelectDropdown extends StatefulWidget {
   final List<String> items;
   final List<String> selectedItems;
   final Function(List<String>) onChanged;
+  final bool zoneEnableSelectAll; // 👈 add
+  final bool designationEnableSelectAll; // 👈 add
 
   const MultiSelectDropdown({
     super.key,
@@ -16,6 +18,8 @@ class MultiSelectDropdown extends StatefulWidget {
     required this.items,
     required this.selectedItems,
     required this.onChanged,
+    this.zoneEnableSelectAll = false,
+    this.designationEnableSelectAll = false, // 👈 default false
   });
 
   @override
@@ -162,6 +166,120 @@ class _MultiSelectDropdownState extends State<MultiSelectDropdown> {
                   ),
                 ),
                 // List of items
+                if (widget.zoneEnableSelectAll ||
+                    widget.designationEnableSelectAll)
+                  Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8E0E6B).withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF8E0E6B).withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              widget.onChanged(List.from(_filteredItems));
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF8E0E6B),
+                                    Color(0xFFD4145A),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF8E0E6B,
+                                    ).withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: const [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Select All',
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              widget.onChanged([]);
+                            },
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: Colors.grey.shade300,
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cancel_outlined,
+                                    size: 16,
+                                    color: Colors.grey[700],
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Clear All',
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 Container(
                   constraints: const BoxConstraints(maxHeight: 200),
                   child:
@@ -201,11 +319,13 @@ class _MultiSelectDropdownState extends State<MultiSelectDropdown> {
                                   final updatedList = List<String>.from(
                                     widget.selectedItems,
                                   );
-                                  if (checked == true) {
+                                  if (checked == true &&
+                                      !updatedList.contains(item)) {
                                     updatedList.add(item);
-                                  } else {
+                                  } else if (checked == false) {
                                     updatedList.remove(item);
                                   }
+
                                   widget.onChanged(updatedList);
                                 },
                               );

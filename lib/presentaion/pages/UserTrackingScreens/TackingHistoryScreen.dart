@@ -43,7 +43,7 @@ class _TrackingHistoryScreenState extends State<TrackingHistoryScreen> {
       final provider = context.read<UserTrackingProvider>();
 
       final model = await TrackingApiService.getLocationHistory(
-        userId: provider.currentUserId,
+        userId: provider.currentUserId.toString(),
         activityType: _selectedActivityType,
         fromDate:
             _fromDate == null

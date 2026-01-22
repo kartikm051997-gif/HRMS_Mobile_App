@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 import '../apibaseScreen/Api_Base_Screens.dart';
+import '../servicesAPI/APIHelper/ApiHelper.dart';
 
 class BackgroundTrackingService {
   static final BackgroundTrackingService _instance =
@@ -21,9 +22,6 @@ class BackgroundTrackingService {
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  // ✅ API Configuration
-
-  // ================= INITIALIZE =================
   Future<void> initializeService() async {
     final service = FlutterBackgroundService();
 
@@ -65,7 +63,6 @@ class BackgroundTrackingService {
     );
   }
 
-  // ================= START =================
   Future<void> startTracking() async {
     final service = FlutterBackgroundService();
     if (!await service.isRunning()) {
@@ -74,7 +71,6 @@ class BackgroundTrackingService {
     }
   }
 
-  // ================= STOP =================
   Future<void> stopTracking() async {
     final service = FlutterBackgroundService();
     service.invoke("stopService");
@@ -88,12 +84,10 @@ class BackgroundTrackingService {
     return true;
   }
 
-  // ================= BACKGROUND ENGINE =================
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
 
-    // ✅ Load user info
     final prefs = await SharedPreferences.getInstance();
     final userId =
         prefs.getString('employeeId') ??
@@ -106,7 +100,6 @@ class BackgroundTrackingService {
       return;
     }
 
-    // ✅ Load all user info for API
     final roleId = prefs.getString('role_id') ?? '1';
     final username =
         prefs.getString('username') ?? prefs.getString('emp_name') ?? 'User';
@@ -129,8 +122,7 @@ class BackgroundTrackingService {
 
     if (kDebugMode) {
       print('✅ Background service started for user: $userId');
-      print('   Username: $username');
-      print('   Email: $email');
+      print('   Role ID: $roleId, Designation: $designationsId');
     }
 
     StreamSubscription<Position>? gpsStream;
@@ -139,25 +131,24 @@ class BackgroundTrackingService {
     Timer? localSaveTimer;
 
     List<Map<String, dynamic>> routePoints = [];
-    List<Map<String, dynamic>> pendingApiCalls = [];
     int totalPointsSaved = 0;
     int apiSuccessCount = 0;
     int apiFailCount = 0;
     String? lastKnownAddress;
 
-    // Track last position to detect real movement
     double? lastLat;
     double? lastLng;
     int gpsUpdateCount = 0;
+
+    Map<String, String> addressCache = {};
 
     // ===== GPS TRACKING =====
     gpsStream = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 20, // ← Trigger updates every 20 meters
+        distanceFilter: 20,
       ),
     ).listen((position) async {
-      // ✅ Check if actually moved 20+ meters (matching distanceFilter)
       if (lastLat != null && lastLng != null) {
         final distance = Geolocator.distanceBetween(
           lastLat!,
@@ -166,7 +157,6 @@ class BackgroundTrackingService {
           position.longitude,
         );
 
-        // Ignore GPS drift
         if (distance < 20.0) {
           if (kDebugMode && gpsUpdateCount % 20 == 0) {
             print(
@@ -181,18 +171,52 @@ class BackgroundTrackingService {
       lastLat = position.latitude;
       lastLng = position.longitude;
 
-      // Add to local route points
+      // ✅ Fetch address
+      String address = lastKnownAddress ?? "Unknown location";
+      final cacheKey =
+          '${position.latitude.toStringAsFixed(4)},${position.longitude.toStringAsFixed(4)}';
+
+      if (addressCache.containsKey(cacheKey)) {
+        address = addressCache[cacheKey]!;
+      } else {
+        try {
+          final places = await placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
+          if (places.isNotEmpty) {
+            final place = places.first;
+            address = [
+              place.name,
+              place.street,
+              place.locality,
+              place.administrativeArea,
+            ].where((e) => e != null && e.isNotEmpty).join(', ');
+
+            addressCache[cacheKey] = address;
+            lastKnownAddress = address;
+
+            if (kDebugMode) {
+              print('🏠 New address: $address');
+            }
+          }
+        } catch (e) {
+          if (kDebugMode) print('❌ Address fetch error: $e');
+        }
+      }
+
+      // ✅ Store point WITH address
       final point = {
         "lat": position.latitude,
         "lng": position.longitude,
         "accuracy": position.accuracy,
         "time": DateTime.now().toIso8601String(),
+        "address": address,
       };
 
       routePoints.add(point);
       totalPointsSaved++;
 
-      // ✅ Save to SharedPreferences
       await prefs.setString('route_points_$userId', json.encode(routePoints));
 
       if (kDebugMode && gpsUpdateCount % 5 == 0) {
@@ -201,28 +225,8 @@ class BackgroundTrackingService {
           '   Position: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)}',
         );
         print('   Accuracy: ${position.accuracy.toStringAsFixed(1)}m');
+        print('   Address: $address');
         print('   Total points: $totalPointsSaved');
-      }
-
-      // ✅ Get address every 5 real movements
-      if (gpsUpdateCount % 5 == 0) {
-        try {
-          final places = await placemarkFromCoordinates(
-            position.latitude,
-            position.longitude,
-          );
-          if (places.isNotEmpty) {
-            final place = places.first;
-            lastKnownAddress = [
-              place.name,
-              place.street,
-              place.locality,
-              place.administrativeArea,
-            ].where((e) => e != null && e.isNotEmpty).join(', ');
-          }
-        } catch (e) {
-          if (kDebugMode) print('❌ Address error: $e');
-        }
       }
     });
 
@@ -233,15 +237,20 @@ class BackgroundTrackingService {
         return;
       }
 
-      try {
-        final pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 15),
-        );
+      if (kDebugMode) {
+        print('📤 Starting Background API Sync');
+        print('   Total points to sync: ${routePoints.length}');
+      }
 
-        String address = lastKnownAddress ?? "Unknown location";
+      int successCount = 0;
+      int failCount = 0;
+      List<Map<String, dynamic>> failedPoints = [];
 
-        // ✅ Prepare API payload
+      // ✅ Send EACH point individually
+      for (var i = 0; i < routePoints.length; i++) {
+        final point = routePoints[i];
+
+        // 🔥 FIX: Convert numbers to strings for backend compatibility
         final payload = {
           "user_id": userId,
           "role_id": roleId,
@@ -251,87 +260,85 @@ class BackgroundTrackingService {
           "avatar": avatar,
           "designations_id": designationsId,
           "activity_type": "ROUTE_POINT",
-          "latitude": pos.latitude,
-          "longitude": pos.longitude,
-          "accuracy": pos.accuracy,
-          "captured_at": DateTime.now().toIso8601String(),
-          "device_time": DateTime.now().toIso8601String(),
-          "location_address": address,
+          "latitude": point['lat'].toString(), // 🔥 Convert to string
+          "longitude": point['lng'].toString(), // 🔥 Convert to string
+          "accuracy": point['accuracy'].toString(), // 🔥 Convert to string
+          "captured_at": point['time'],
+          "device_time": point['time'],
+          "location_address": point['address'] ?? "Unknown location",
           "device_id": "BACKGROUND_SERVICE",
-          "battery_level": 0, // Can be enhanced with battery_plus
-          "network_type": "MOBILE", // Can be enhanced with connectivity_plus
+          "battery_level": 0,
+          "network_type": "MOBILE",
           if (zoneId != null) "zone_id": zoneId,
           if (branchId != null) "branch_id": branchId,
-          "remarks": "Background tracking sync - ${routePoints.length} points",
+          "remarks": "Route point ${i + 1}/${routePoints.length}",
         };
 
-        if (kDebugMode) {
-          print('📤 Background API Sync:');
-          print('   Endpoint: ${ApiBase.saveLocation}');
-          print('   Points to sync: ${routePoints.length}');
-          print('   Location: ${pos.latitude}, ${pos.longitude}');
-          print('   Address: $address');
-        }
+        try {
+          if (kDebugMode && i == 0) {
+            if (kDebugMode) {
+              print('📤 Sample payload:');
+            }
+            print(json.encode(payload));
+          }
 
-        // ✅ Make API call
-        final response = await http
-            .post(
-              Uri.parse(ApiBase.saveLocation),
-
-              headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-              },
-              body: json.encode(payload),
-            )
-            .timeout(const Duration(seconds: 30));
-
-        if (kDebugMode) {
-          print('📥 Background API Response: ${response.statusCode}');
-          print('📥 Body: ${response.body}');
-        }
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          apiSuccessCount++;
-
-          // Clear synced points
-          routePoints.clear();
-          await prefs.setString(
-            'route_points_$userId',
-            json.encode(routePoints),
+          final response = await ApiHelper.post(
+            Uri.parse(ApiBase.saveLocation),
+            payload,
           );
 
-          if (kDebugMode) {
-            print('✅ Background API sync successful');
-            print('   Success count: $apiSuccessCount');
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            successCount++;
+
+            if (kDebugMode && i % 10 == 0) {
+              print(
+                '✅ Point ${i + 1}/${routePoints.length} synced: ${point['address']}',
+              );
+            }
+          } else {
+            failCount++;
+            failedPoints.add(point);
+
+            if (kDebugMode) {
+              print('❌ Point ${i + 1} failed: ${response.statusCode}');
+              print('   Response: ${response.body}');
+            }
           }
-        } else {
-          throw Exception('API returned ${response.statusCode}');
-        }
-      } catch (e) {
-        apiFailCount++;
+        } catch (e) {
+          failCount++;
+          failedPoints.add(point);
 
-        if (kDebugMode) {
-          print('❌ Background API sync failed: $e');
-          print('   Fail count: $apiFailCount');
+          if (kDebugMode) {
+            print('❌ Point ${i + 1} error: $e');
+          }
         }
 
-        // Store failed call for retry
-        pendingApiCalls.add({
-          'timestamp': DateTime.now().toIso8601String(),
-          'error': e.toString(),
-          'points_count': routePoints.length,
-        });
-
-        // ✅ Retry logic: Try to sync pending calls
-        if (pendingApiCalls.length > 3) {
-          if (kDebugMode)
-            print(
-              '⚠️ Too many pending API calls (${pendingApiCalls.length}), clearing old ones',
-            );
-          pendingApiCalls = pendingApiCalls.sublist(pendingApiCalls.length - 3);
+        // ✅ Delay between requests
+        if (i < routePoints.length - 1) {
+          await Future.delayed(const Duration(milliseconds: 300));
         }
       }
+
+      if (kDebugMode) {
+        print('📊 Background API Sync Complete:');
+        print('   Success: $successCount/${routePoints.length}');
+        print('   Failed: $failCount/${routePoints.length}');
+      }
+
+      apiSuccessCount += successCount;
+      apiFailCount += failCount;
+
+      // ✅ Keep only failed points for retry
+      if (failedPoints.isEmpty) {
+        routePoints.clear();
+      } else {
+        routePoints = failedPoints;
+        if (kDebugMode) {
+          print('⚠️ Keeping ${failedPoints.length} failed points for retry');
+        }
+      }
+
+      await prefs.setString('route_points_$userId', json.encode(routePoints));
     });
 
     // ===== LOCAL SAVE EVERY 30 SECONDS =====
@@ -345,12 +352,14 @@ class BackgroundTrackingService {
       }
     });
 
-    // ===== UPDATE NOTIFICATION EVERY 30 SECONDS =====
+    // ===== UPDATE NOTIFICATION =====
     notificationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      final uniqueAddresses = addressCache.values.toSet().length;
+
       FlutterLocalNotificationsPlugin().show(
         888,
         "🎯 Tracking Active",
-        "📍 Points: $totalPointsSaved | ✅ API: $apiSuccessCount | ❌ Fails: $apiFailCount",
+        "📍 ${totalPointsSaved} points • 🏠 ${uniqueAddresses} places • ✅ ${apiSuccessCount} synced • ❌ ${apiFailCount} failed",
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'tracking_channel',
@@ -370,6 +379,7 @@ class BackgroundTrackingService {
       if (kDebugMode) {
         print('🛑 Background service stopping');
         print('   Total points collected: $totalPointsSaved');
+        print('   Unique places: ${addressCache.values.toSet().length}');
         print('   API success: $apiSuccessCount');
         print('   API fails: $apiFailCount');
       }
