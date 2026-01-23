@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
 import 'DashboardScreen.dart';
 import 'LiveTrackingScreen.dart';
 import 'SettingsScreen.dart';
@@ -12,23 +15,10 @@ class PaGarBookAdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(title: "PagarBook Geo"),
+      drawer: const TabletMobileDrawer(),
+
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'PagarBook Geo',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -142,6 +132,7 @@ class PaGarBookAdminScreen extends StatelessWidget {
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: Colors.black87,
+            fontFamily: AppFonts.poppins,
           ),
         ),
         trailing: const Icon(
