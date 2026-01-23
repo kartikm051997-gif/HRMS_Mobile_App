@@ -11,6 +11,7 @@ import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/EmployeeScreen
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/F11EmployeesScreens/F11EmployeesScreens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/ProfessionalsScreens/Professionals_Screens.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeScreens/StudentScreen/Student_Screen.dart';
+import 'package:hrms_mobile_app/presentaion/pages/PagarBookAdminScreens/PagarBookAdminScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Attendance Log_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Employee_Manual_Punches_Screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/PayRoll/Mispunch_Reports%20-Screen.dart';
@@ -274,7 +275,9 @@ class MyApp extends StatelessWidget {
       case AppRoutes.trackingTabViewScreen:
         return const UserTrackingTabViewScreen();
       case AppRoutes.assetDetails:
-        return const EmployeeAssetScreen ();
+        return const EmployeeAssetScreen();
+      case AppRoutes.paGarBookAdmin:
+        return const PaGarBookAdminScreen();
       default:
         return const NotFoundPage();
     }

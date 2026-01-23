@@ -153,6 +153,12 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                         route: AppRoutes.assetDetails,
                         index: 5,
                       ),
+                      _buildNavItem(
+                        icon: Icons.inventory_2_rounded,
+                        title: 'PargarBook Admin',
+                        route: AppRoutes.paGarBookAdmin,
+                        index: 5,
+                      ),
                     ],
                     const SizedBox(height: 20),
                   ],

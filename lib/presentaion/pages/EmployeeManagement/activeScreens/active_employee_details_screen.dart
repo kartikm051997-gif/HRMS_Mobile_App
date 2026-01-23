@@ -469,7 +469,9 @@ class _EmployeeManagementDetailsScreenState
                       children: [
                         _detailRow(
                           "Department",
-                          widget.user.department ?? "N/A",
+                          widget.user.department?.trim().isNotEmpty == true
+                              ? widget.user.department!
+                              : "Unknown Department",
                           Icons.business_rounded,
                         ),
                         _detailRow(
@@ -873,12 +875,11 @@ class _EmployeeManagementDetailsScreenState
 
     // If backend already sends full URL
     if (avatar.startsWith('http')) {
-      // Replace localhost for real device access
-      return avatar.replaceFirst('http://localhost', 'http://192.168.0.100');
+      return avatar; // ✅ DO NOT replace anything in live
     }
 
-    // Relative path case
-    return 'http://192.168.0.100/hrms/$avatar';
+    // Relative path → attach live base URL
+    return '${ApiBase.baseUrl}$avatar';
   }
 
   Widget _defaultAvatar(String employeeName) {

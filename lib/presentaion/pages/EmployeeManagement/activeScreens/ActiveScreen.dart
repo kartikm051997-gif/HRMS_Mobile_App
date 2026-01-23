@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/model/Employee_management/ActiveUserListModel.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/AdminTrackingProvider/AdminTrackingProvider.dart';
 import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
@@ -168,80 +170,139 @@ class _ActiveScreenState extends State<ActiveScreen> {
                     ),
                     SizedBox(height: 20),
 
-                    // Employee List Shimmer (using your CustomCardShimmer style)
                     ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: 10,
                       itemBuilder: (context, index) {
-                        return Shimmer.fromColors(
-                          baseColor: Colors.grey.shade300,
-                          highlightColor: Colors.grey.shade100,
-                          child: Container(
-                            margin: EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Row(
-                              children: [
-                                // Left bar
-                                Container(
-                                  width: 5,
-                                  height: 90,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(14),
-                                      bottomLeft: Radius.circular(14),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.grey.shade100,
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Avatar
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                                // Avatar
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                // Details
-                                Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                  const SizedBox(width: 14),
+
+                                  // Details
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
+                                        // Name
                                         Container(
                                           width: 150,
                                           height: 16,
-                                          color: Colors.white,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
                                         ),
-                                        SizedBox(height: 8),
+                                        const SizedBox(height: 8),
+
+                                        // ID Badge
                                         Container(
-                                          width: 100,
-                                          height: 14,
-                                          color: Colors.white,
+                                          width: 80,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
                                         ),
-                                        SizedBox(height: 6),
-                                        Container(
-                                          width: 120,
-                                          height: 12,
-                                          color: Colors.white,
+                                        const SizedBox(height: 8),
+
+                                        // Designation Row
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              width: 100,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+
+                                        // Location Row
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              width: 120,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 12),
-                              ],
+
+                                  // Arrow Icon
+                                  Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -877,12 +938,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
     );
   }
 
-  Widget _buildEmployeeCard(BuildContext context, user) {
-    final employeeId = user.employmentId ?? user.userId ?? "";
-    final employeeName = user.fullname ?? user.username ?? "Unknown";
-
+  Widget _buildEmployeeCard(BuildContext context, Users user) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -912,30 +970,25 @@ class _ActiveScreenState extends State<ActiveScreen> {
               padding: const EdgeInsets.all(14),
               child: Row(
                 children: [
-                  // Avatar with gradient border
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
-                      backgroundImage: _getAvatarImage(user.avatar),
-                      child:
-                          _getAvatarImage(user.avatar) == null
-                              ? Text(
-                                employeeName.isNotEmpty
-                                    ? employeeName[0].toUpperCase()
-                                    : 'E',
-                                style: const TextStyle(
-                                  color: Color(0xFF8E0E6B),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              )
-                              : null,
-                    ),
+                  // Avatar
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
+                    backgroundImage:
+                        (user.avatar != null && user.avatar!.isNotEmpty)
+                            ? NetworkImage(user.avatar!)
+                            : null,
+                    child:
+                        (user.avatar == null || user.avatar!.isEmpty)
+                            ? Text(
+                              (user.username ?? 'E')[0].toUpperCase(),
+                              style: const TextStyle(
+                                color: Color(0xFF8E0E6B),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            )
+                            : null,
                   ),
                   const SizedBox(width: 14),
 
@@ -946,12 +999,12 @@ class _ActiveScreenState extends State<ActiveScreen> {
                       children: [
                         // Name
                         Text(
-                          employeeName,
-                          style: const TextStyle(
+                          user.fullname ?? 'Employee',
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            fontFamily: AppFonts.poppins,
                             color: Color(0xFF1A1A1A),
+                            fontFamily: AppFonts.poppins,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -969,7 +1022,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            "ID: $employeeId",
+                            "ID: ${user.employmentId ?? 'N/A'}",
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -998,10 +1051,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                (user.designation != null &&
-                                        user.designation!.trim().isNotEmpty)
+                                user.department?.trim().isNotEmpty == true
                                     ? user.designation!
-                                    : "Unknown Designation",
+                                    : "Unknown Department",
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[700],
@@ -1014,40 +1066,39 @@ class _ActiveScreenState extends State<ActiveScreen> {
                           ],
                         ),
 
-                        // Location
-                        if (user.locationName != null &&
-                            user.locationName!.trim().isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  Icons.location_on_outlined,
-                                  size: 12,
-                                  color: Colors.grey[600],
-                                ),
+                        // Branch/Location
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  user.locationName!,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey[700],
-                                    fontFamily: AppFonts.poppins,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                size: 12,
+                                color: Colors.grey[600],
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                user.locationName?.trim().isNotEmpty == true
+                                    ? user.locationName!
+                                    : "Unknown Branch",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

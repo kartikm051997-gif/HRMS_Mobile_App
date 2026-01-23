@@ -36,10 +36,12 @@ class Data {
         users!.add(Users.fromJson(v));
       });
     }
-    summary = json['summary'] != null ? Summary.fromJson(json['summary']) : null;
-    pagination = json['pagination'] != null
-        ? Pagination.fromJson(json['pagination'])
-        : null; // Add this
+    summary =
+        json['summary'] != null ? Summary.fromJson(json['summary']) : null;
+    pagination =
+        json['pagination'] != null
+            ? Pagination.fromJson(json['pagination'])
+            : null; // Add this
   }
 
   Map<String, dynamic> toJson() {
@@ -56,6 +58,7 @@ class Data {
     return data;
   }
 }
+
 class Users {
   String? userId;
   String? employmentId;
@@ -175,6 +178,7 @@ class Pagination {
     };
   }
 }
+
 class Summary {
   String? grandTotal;
   String? totalMonthlyCtc;

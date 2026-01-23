@@ -671,7 +671,7 @@ class AdminTrackingProvider with ChangeNotifier {
 
   void resetFilters() {
     _selectedEmployeeId = null;
-    _selectedZones = [];
+            _selectedZones = [];
     _selectedBranches = [];
     _selectedDesignation = null;
     _selectedDate = null;

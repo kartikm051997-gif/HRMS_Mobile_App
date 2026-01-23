@@ -34,9 +34,7 @@ class AppRoutes {
   static const String trackingTabViewScreen = "/TrackingTabViewScreen";
   static const String trackingDetailScreen = '/trackingdetail';
   static const String assetDetails = '/AssetDetails';
+  static const String paGarBookAdmin = '/paGarBookAdmin';
 
-
-
-
-// ✅ Lowercase here
+  // ✅ Lowercase here
 }

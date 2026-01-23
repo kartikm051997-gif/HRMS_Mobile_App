@@ -6,9 +6,6 @@ import 'SettingsScreen.dart';
 import 'TasksScreen.dart';
 import 'TimelineScreen.dart';
 
-// ============================================
-// MAIN ENTRY POINT - Your PagarBookAdminScreen
-// ============================================
 class PaGarBookAdminScreen extends StatelessWidget {
   const PaGarBookAdminScreen({super.key});
 
@@ -156,23 +153,3 @@ class PaGarBookAdminScreen extends StatelessWidget {
     );
   }
 }
-
-// ============================================
-// 1. LIVE TRACKING SCREEN
-// ============================================
-
-// ============================================
-// 2. TIMELINE SCREEN
-// ============================================
-
-// ============================================
-// 3. DASHBOARD SCREEN
-// ============================================
-
-// ============================================
-// 4. TASKS SCREEN
-// ============================================
-
-// ============================================
-// 5. SETTINGS SCREEN
-// ============================================

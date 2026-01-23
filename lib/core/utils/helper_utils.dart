@@ -35,6 +35,7 @@ class HelperUtil {
       AppRoutes.bottomNav,
       AppRoutes.trackingTabViewScreen,
       AppRoutes.assetDetails,
+      AppRoutes.paGarBookAdmin,
     ];
 
     return validRoutes.contains(route);
