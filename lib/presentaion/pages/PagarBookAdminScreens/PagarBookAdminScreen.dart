@@ -15,7 +15,7 @@ class PaGarBookAdminScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: "PagarBook Geo"),
+      appBar: const CustomAppBar(title: "PaGarBook Geo"),
       drawer: const TabletMobileDrawer(),
 
       backgroundColor: const Color(0xFFF5F5F5),
