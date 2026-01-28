@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
+import '../../../core/fonts/fonts.dart';
+
 class LiveTrackingScreen extends StatefulWidget {
-  const LiveTrackingScreen({Key? key}) : super(key: key);
+  const LiveTrackingScreen({super.key});
 
   @override
   State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
@@ -114,34 +118,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(title: "Live Tracking"),
+      drawer: const TabletMobileDrawer(),
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Live Tracking',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.my_location, color: Colors.black),
-            onPressed: () {
-              if (_mapController != null) {
-                _mapController!.animateCamera(
-                  CameraUpdate.newLatLngZoom(
-                    _people[_selectedPersonIndex]['position'],
-                    14,
-                  ),
-                );
-              }
-            },
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           // Google Map
@@ -243,6 +222,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     color: isSelected ? Colors.white : Colors.green,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
+                    fontFamily: AppFonts.poppins,
+
                   ),
                 ),
               ],
@@ -254,6 +235,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 color: isSelected ? Colors.white : Colors.black,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -264,6 +247,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               style: TextStyle(
                 color: isSelected ? Colors.white70 : Colors.grey[600],
                 fontSize: 11,
+                fontFamily: AppFonts.poppins,
+
               ),
             ),
           ],
@@ -310,6 +295,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -329,6 +316,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 13,
+                        fontFamily: AppFonts.poppins,
+
                       ),
                     ),
                   ],
@@ -348,6 +337,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 color: Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
+                fontFamily: AppFonts.poppins,
+
               ),
             ),
           ),

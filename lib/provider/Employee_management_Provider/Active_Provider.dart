@@ -5,7 +5,6 @@ import '../../model/Employee_management/ActiveUserListModel.dart' as models;
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/ActiveUserService/ActiveUserFilterService.dart';
 import '../../servicesAPI/ActiveUserService/ActiveUserService.dart';
-import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 class ActiveProvider extends ChangeNotifier {
   // Services
@@ -19,7 +18,7 @@ class ActiveProvider extends ChangeNotifier {
   bool _showFilters = false;
   bool get showFilters => _showFilters;
 
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool get isLoading => _isLoading;
 
   bool _isLoadingFilters = false;

@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
+
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
+import '../../../core/fonts/fonts.dart';
+
 class TimelineScreen extends StatelessWidget {
-  const TimelineScreen({Key? key}) : super(key: key);
+  const TimelineScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Timeline',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-      ),
+      appBar: const CustomAppBar(title: "TimeLine"),
+      drawer: const TabletMobileDrawer(),
       body: Column(
         children: [
           // Date selector
@@ -29,7 +24,11 @@ class TimelineScreen extends StatelessWidget {
                 const SizedBox(width: 8),
                 const Text(
                   '09 Dec 25',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: AppFonts.poppins,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
@@ -99,6 +98,7 @@ class TimelineScreen extends StatelessWidget {
                 color: color,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
               ),
             ),
           ),
@@ -133,6 +133,7 @@ class TimelineScreen extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -141,6 +142,7 @@ class TimelineScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey[600],
+                            fontFamily: AppFonts.poppins,
                           ),
                         ),
                       ],

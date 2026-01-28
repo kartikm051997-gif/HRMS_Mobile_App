@@ -1,30 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/fonts/fonts.dart';
+
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(title: "Dashboard"),
+      drawer: const TabletMobileDrawer(),
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
-      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -33,9 +21,13 @@ class DashboardScreen extends StatelessWidget {
             children: [
               const Icon(Icons.calendar_today, size: 20),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 '09 Dec 25',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: AppFonts.poppins,
+                ),
               ),
               const Spacer(),
               IconButton(icon: const Icon(Icons.refresh), onPressed: () {}),
@@ -120,11 +112,11 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildStatCard(
-      String title,
-      String value,
-      IconData icon,
-      Color color,
-      ) {
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -156,11 +148,22 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(title, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: AppFonts.poppins,
+            ),
           ),
         ],
       ),
@@ -205,17 +208,26 @@ class DashboardScreen extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   location,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontFamily: AppFonts.poppins,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   time,
-                  style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                    fontFamily: AppFonts.poppins,
+                  ),
                 ),
               ],
             ),

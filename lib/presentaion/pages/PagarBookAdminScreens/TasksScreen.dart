@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/widgets/custom_botton/custom_gradient_button.dart';
+
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
 
 class TasksScreen extends StatelessWidget {
-  const TasksScreen({Key? key}) : super(key: key);
+  const TasksScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Tasks',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-      ),
+      appBar: const CustomAppBar(title: "Tasks"),
+      drawer: const TabletMobileDrawer(),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -86,9 +80,10 @@ class TasksScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
                   ),
                 ),
               ),
@@ -107,6 +102,7 @@ class TasksScreen extends StatelessWidget {
                     color: priorityColor,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
                   ),
                 ),
               ),
@@ -119,7 +115,11 @@ class TasksScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 assignedTo,
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                  fontFamily: AppFonts.poppins,
+                ),
               ),
             ],
           ),
@@ -130,7 +130,11 @@ class TasksScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 dueDate,
-                style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                  fontFamily: AppFonts.poppins,
+                ),
               ),
               const Spacer(),
               Text(
@@ -139,6 +143,7 @@ class TasksScreen extends StatelessWidget {
                   fontSize: 13,
                   color: Colors.blue[700],
                   fontWeight: FontWeight.w500,
+                  fontFamily: AppFonts.poppins,
                 ),
               ),
             ],

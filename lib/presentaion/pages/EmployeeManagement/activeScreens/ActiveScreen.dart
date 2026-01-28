@@ -26,27 +26,17 @@ class _ActiveScreenState extends State<ActiveScreen> {
     });
   }
 
-  ImageProvider? _getAvatarImage(String? avatar) {
-    if (avatar == null || avatar.isEmpty || avatar == 'null') return null;
-    if (avatar.startsWith('http')) return NetworkImage(avatar);
-    return NetworkImage('https://app.draravindsivf.com/hrms/$avatar');
-  }
-
   @override
   Widget build(BuildContext context) {
     final activeProvider = Provider.of<ActiveProvider>(context);
-
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
       body: CustomScrollView(
         slivers: [
-          // ════════════════════════════════════════════════════════════
-          // LOADING STATE - SHOW ALL SHIMMER
-          // ════════════════════════════════════════════════════════════
           if (activeProvider.isLoading && !activeProvider.initialLoadDone)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
                     // Page Info Shimmer
@@ -318,9 +308,10 @@ class _ActiveScreenState extends State<ActiveScreen> {
           // ════════════════════════════════════════════════════════════
           if (!activeProvider.isLoading || activeProvider.initialLoadDone) ...[
             // SUMMARY CARDS SECTION
-            SliverToBoxAdapter(
-              child: Container(
-                padding: const EdgeInsets.all(20),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+
+              sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
                     // Page info
@@ -370,8 +361,8 @@ class _ActiveScreenState extends State<ActiveScreen> {
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      childAspectRatio: 1.2,
+                      physics: const NeverScrollableScrollPhysics(),
+                      childAspectRatio: 1, // 🔥 FIX
                       children: [
                         _buildGridCard(
                           "Total Monthly CTC of Employees",
@@ -405,10 +396,10 @@ class _ActiveScreenState extends State<ActiveScreen> {
             ),
 
             // FILTER & SEARCH SECTION
-            SliverToBoxAdapter(
-              child: Container(
-                padding: EdgeInsets.all(16),
-                color: Colors.white,
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+
+              sliver: SliverToBoxAdapter(
                 child: Column(
                   children: [
                     InkWell(
@@ -478,6 +469,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         ),
                       ),
                     ),
+                    SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -485,9 +477,10 @@ class _ActiveScreenState extends State<ActiveScreen> {
 
             // FILTERS DROPDOWN
             if (activeProvider.showFilters)
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: EdgeInsets.all(16),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+
+                sliver: SliverToBoxAdapter(
                   child: Column(
                     children: [
                       if (activeProvider.isLoadingFilters)
@@ -724,12 +717,14 @@ class _ActiveScreenState extends State<ActiveScreen> {
             // EMPLOYEE LIST
             if (activeProvider.paginatedEmployees.isNotEmpty)
               SliverPadding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                ), // ← Consistent padding
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     if (index == 0) {
                       return Padding(
-                        padding: EdgeInsets.only(bottom: 16),
+                        padding: EdgeInsets.all(10),
                         child: Text(
                           "${activeProvider.filteredEmployees.length} Employees Found",
                           style: TextStyle(
@@ -748,9 +743,13 @@ class _ActiveScreenState extends State<ActiveScreen> {
 
             // PAGINATION
             if (activeProvider.paginatedEmployees.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: EdgeInsets.all(12),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+
+                sliver: SliverToBoxAdapter(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -818,6 +817,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
                   ),
                 ),
               ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 35), // Bottom spacing
+            ),
           ],
         ],
       ),
@@ -890,16 +892,15 @@ class _ActiveScreenState extends State<ActiveScreen> {
     IconData icon,
   ) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -907,14 +908,17 @@ class _ActiveScreenState extends State<ActiveScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(10),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 24),
           ),
-          Spacer(),
+
+          const SizedBox(height: 10),
+
+          /// 👇 THIS IS THE KEY FIX
           Text(
             title,
             style: TextStyle(
@@ -922,12 +926,16 @@ class _ActiveScreenState extends State<ActiveScreen> {
               color: Colors.grey[600],
               fontFamily: AppFonts.poppins,
             ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
-          SizedBox(height: 4),
+
+          const SizedBox(height: 6),
+
           Text(
             value,
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               fontFamily: AppFonts.poppins,
               color: color,

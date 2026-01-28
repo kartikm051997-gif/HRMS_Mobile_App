@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/fonts/fonts.dart';
+
+import '../../../core/components/appbar/appbar.dart';
+import '../../../core/components/drawer/drawer.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _locationAccess = true;
   bool _news1 = true;
   bool _news2 = false;
   bool _news3 = false;
@@ -17,19 +20,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const CustomAppBar(title: "Setting"),
+      drawer: const TabletMobileDrawer(),
       backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(color: Colors.black, fontSize: 18),
-        ),
-      ),
       body: ListView(
         children: [
           const SizedBox(height: 16),
@@ -53,11 +46,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Staff Location Access',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        fontFamily: AppFonts.poppins,
                       ),
                     ),
                     const Spacer(),
@@ -76,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           color: Colors.white,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
                         ),
                       ),
                     ),
@@ -84,6 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   decoration: InputDecoration(
+                    hintStyle: TextStyle(fontFamily: AppFonts.poppins),
                     hintText: 'Search for Name',
                     prefixIcon: const Icon(Icons.search),
                     border: OutlineInputBorder(
@@ -110,6 +106,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: _news1,
             onChanged: (val) => setState(() => _news1 = val),
             color: Colors.orange,
+
           ),
           _buildEmployeeToggle(
             name: 'News1',
@@ -151,6 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  fontFamily: AppFonts.poppins,
                 ),
               ),
             ),
@@ -202,12 +200,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontFamily: AppFonts.poppins,
+                  ),
                 ),
               ],
             ),
