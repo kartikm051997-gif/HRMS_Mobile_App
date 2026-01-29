@@ -20,7 +20,7 @@ class TimelineScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today, size: 20),
+                const Icon(Icons.calendar_today, size: 21),
                 const SizedBox(width: 8),
                 const Text(
                   '09 Dec 25',
