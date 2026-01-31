@@ -1,18 +1,23 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../model/Employee_management/Employee_management.dart';
+import '../../../../model/Employee_management/ManagementApprovalListModel.dart';
+import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
+import '../../../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ManagementApprovalService.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class EmployeeManagementApprovalDetailsScreen extends StatefulWidget {
   final String empId;
-  final Employee employee;
+  final ManagementApprovalUser? employee;
+
   const EmployeeManagementApprovalDetailsScreen({
     super.key,
     required this.empId,
-    required this.employee,
+    this.employee,
   });
 
   @override
@@ -26,6 +31,13 @@ class _EmployeeManagementApprovalDetailsScreenState
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  ManagementApprovalUser? _employeeDetails;
+  bool _isLoading = true;
+  String? _errorMessage;
+  bool _isProcessing = false;
+  final ManagementApprovalService _approvalService =
+      ManagementApprovalService();
 
   @override
   void initState() {
@@ -50,6 +62,112 @@ class _EmployeeManagementApprovalDetailsScreenState
       ),
     );
     _animationController.forward();
+
+    // Load employee details
+    _loadEmployeeDetails();
+  }
+
+  Future<void> _loadEmployeeDetails() async {
+    // If employee data is already passed, use it
+    if (widget.employee != null) {
+      setState(() {
+        _employeeDetails = widget.employee;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Otherwise, fetch from provider
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final provider = Provider.of<ManagementApprovalProvider>(
+        context,
+        listen: false,
+      );
+
+      // Try to find employee in the filtered list
+      final employee = provider.filteredEmployees.firstWhere(
+        (emp) => (emp.employmentId ?? emp.userId ?? '') == widget.empId,
+        orElse:
+            () =>
+                provider.filteredEmployees.isNotEmpty
+                    ? provider.filteredEmployees.first
+                    : throw Exception('Employee not found'),
+      );
+
+      setState(() {
+        _employeeDetails = employee;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading employee details: $e");
+      }
+      setState(() {
+        _errorMessage = "Failed to load employee details";
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleApprovalAction(bool isApprove) async {
+    if (_employeeDetails == null) return;
+
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      // TODO: Replace with actual API endpoint when available
+      // For now, simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (mounted) {
+        Navigator.pop(context);
+        Get.snackbar(
+          isApprove ? "Approved" : "Rejected",
+          isApprove
+              ? "${_employeeDetails!.fullname ?? 'Employee'} has been approved"
+              : "${_employeeDetails!.fullname ?? 'Employee'} has been rejected",
+          backgroundColor:
+              isApprove ? const Color(0xFF059669) : const Color(0xFFDC2626),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+        );
+
+        // Refresh the list in provider
+        final provider = Provider.of<ManagementApprovalProvider>(
+          context,
+          listen: false,
+        );
+        provider.refreshCurrentPage();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error processing approval: $e");
+      }
+      if (mounted) {
+        Get.snackbar(
+          "Error",
+          "Failed to ${isApprove ? 'approve' : 'reject'} employee",
+          backgroundColor: const Color(0xFFDC2626),
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
   }
 
   @override
@@ -60,6 +178,69 @@ class _EmployeeManagementApprovalDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Employee Details",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: AppColor.primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          ),
+        ),
+        backgroundColor: AppColor.backgroundColor,
+        body: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+          ),
+        ),
+      );
+    }
+
+    if (_errorMessage != null || _employeeDetails == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Employee Details",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
+          centerTitle: true,
+          backgroundColor: AppColor.primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          ),
+        ),
+        backgroundColor: AppColor.backgroundColor,
+        body: Center(
+          child: Text(
+            _errorMessage ?? "Employee not found",
+            style: const TextStyle(
+              fontSize: 16,
+              fontFamily: AppFonts.poppins,
+              color: AppColor.textSecondary,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -79,7 +260,6 @@ class _EmployeeManagementApprovalDetailsScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         ),
       ),
-
       backgroundColor: AppColor.backgroundColor,
       drawer: const TabletMobileDrawer(),
       body: CustomScrollView(
@@ -122,6 +302,10 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   Widget _buildEmployeeHeaderCard() {
+    final employee = _employeeDetails!;
+    final photoUrl = employee.createdBy?.image;
+    final name = employee.fullname ?? '';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColor.cardColor,
@@ -167,25 +351,22 @@ class _EmployeeManagementApprovalDetailsScreenState
                   ),
                   child: ClipOval(
                     child:
-                        widget.employee.photoUrl != null &&
-                                widget.employee.photoUrl!.isNotEmpty
+                        photoUrl != null && photoUrl.isNotEmpty
                             ? Image.network(
-                              widget.employee.photoUrl!,
+                              photoUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
-                                return _buildDefaultAvatar(
-                                  widget.employee.name,
-                                );
+                                return _buildDefaultAvatar(name);
                               },
                             )
-                            : _buildDefaultAvatar(widget.employee.name),
+                            : _buildDefaultAvatar(name),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // Name
                 Text(
-                  widget.employee.name,
+                  name,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -207,7 +388,7 @@ class _EmployeeManagementApprovalDetailsScreenState
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${widget.employee.employeeId}",
+                    "ID: ${employee.employmentId ?? employee.userId ?? ''}",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -220,7 +401,7 @@ class _EmployeeManagementApprovalDetailsScreenState
 
                 // Designation
                 Text(
-                  widget.employee.designation,
+                  employee.designation ?? '',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -264,6 +445,8 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   Widget _buildViewProfileButton() {
+    final employee = _employeeDetails!;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.95, end: 1.0),
       duration: const Duration(milliseconds: 300),
@@ -279,11 +462,11 @@ class _EmployeeManagementApprovalDetailsScreenState
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.employee.employeeId,
-                      empPhoto: widget.employee.photoUrl ?? "",
-                      empName: widget.employee.name,
-                      empDesignation: widget.employee.designation,
-                      empBranch: widget.employee.branch,
+                      empId: employee.employmentId ?? employee.userId ?? '',
+                      empPhoto: employee.createdBy?.image ?? "",
+                      empName: employee.fullname ?? '',
+                      empDesignation: employee.designation ?? '',
+                      empBranch: employee.location ?? '',
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -342,6 +525,8 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   Widget _buildProfessionalInfoCard() {
+    final employee = _employeeDetails!;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 500),
@@ -423,22 +608,22 @@ class _EmployeeManagementApprovalDetailsScreenState
                 children: [
                   _buildDetailRow(
                     "Department",
-                    widget.employee.department,
+                    employee.department ?? 'N/A',
                     Icons.business_rounded,
                   ),
                   _buildDetailRow(
-                    "Branch",
-                    widget.employee.branch,
+                    "Location",
+                    employee.location ?? 'N/A',
                     Icons.location_on_rounded,
                   ),
                   _buildDetailRow(
                     "Date of Joining",
-                    widget.employee.doj,
+                    employee.joiningDate ?? 'N/A',
                     Icons.calendar_today_rounded,
                   ),
                   _buildDetailRow(
-                    "Payroll Category",
-                    widget.employee.payrollCategory,
+                    "Role",
+                    employee.role ?? 'N/A',
                     Icons.category_rounded,
                     isLast: true,
                   ),
@@ -509,6 +694,8 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   Widget _buildTeamInfoCard() {
+    final employee = _employeeDetails!;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 600),
@@ -590,15 +777,15 @@ class _EmployeeManagementApprovalDetailsScreenState
                 children: [
                   _buildTeamMemberCard(
                     "Recruiter",
-                    widget.employee.recruiterName ?? "Not assigned",
-                    widget.employee.recruiterPhotoUrl,
+                    employee.recruiter?.name ?? "Not assigned",
+                    employee.recruiter?.image,
                     Icons.person_search_rounded,
                   ),
                   const SizedBox(height: 12),
                   _buildTeamMemberCard(
                     "Created By",
-                    widget.employee.createdByName ?? "Unknown",
-                    widget.employee.createdByPhotoUrl,
+                    employee.createdBy?.name ?? "Unknown",
+                    employee.createdBy?.image,
                     Icons.person_add_rounded,
                   ),
                 ],
@@ -713,6 +900,8 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   Widget _buildApprovalActionsCard() {
+    final employee = _employeeDetails!;
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 700),
@@ -757,7 +946,10 @@ class _EmployeeManagementApprovalDetailsScreenState
                       label: "Reject",
                       icon: Icons.close_rounded,
                       color: const Color(0xFFDC2626),
-                      onTap: () => _showConfirmDialog(false),
+                      onTap:
+                          _isProcessing
+                              ? null
+                              : () => _showConfirmDialog(false),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -766,11 +958,23 @@ class _EmployeeManagementApprovalDetailsScreenState
                       label: "Approve",
                       icon: Icons.check_rounded,
                       color: const Color(0xFF059669),
-                      onTap: () => _showConfirmDialog(true),
+                      onTap:
+                          _isProcessing ? null : () => _showConfirmDialog(true),
                     ),
                   ),
                 ],
               ),
+              if (_isProcessing)
+                const Padding(
+                  padding: EdgeInsets.only(top: 16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColor.primaryColor,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
@@ -782,7 +986,7 @@ class _EmployeeManagementApprovalDetailsScreenState
     required String label,
     required IconData icon,
     required Color color,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return Material(
       color: Colors.transparent,
@@ -792,15 +996,18 @@ class _EmployeeManagementApprovalDetailsScreenState
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: color,
+            color: onTap == null ? color.withOpacity(0.5) : color,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            boxShadow:
+                onTap == null
+                    ? null
+                    : [
+                      BoxShadow(
+                        color: color.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -824,6 +1031,9 @@ class _EmployeeManagementApprovalDetailsScreenState
   }
 
   void _showConfirmDialog(bool isApprove) {
+    final employee = _employeeDetails!;
+    final employeeName = employee.fullname ?? 'Employee';
+
     showDialog(
       context: context,
       builder:
@@ -870,8 +1080,8 @@ class _EmployeeManagementApprovalDetailsScreenState
                   const SizedBox(height: 12),
                   Text(
                     isApprove
-                        ? "Are you sure you want to approve ${widget.employee.name}?"
-                        : "Are you sure you want to reject ${widget.employee.name}?",
+                        ? "Are you sure you want to approve $employeeName?"
+                        : "Are you sure you want to reject $employeeName?",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
@@ -909,21 +1119,7 @@ class _EmployeeManagementApprovalDetailsScreenState
                         child: ElevatedButton(
                           onPressed: () {
                             Navigator.pop(dialogContext);
-                            Navigator.pop(context);
-                            Get.snackbar(
-                              isApprove ? "Approved" : "Rejected",
-                              isApprove
-                                  ? "${widget.employee.name} has been approved"
-                                  : "${widget.employee.name} has been rejected",
-                              backgroundColor:
-                                  isApprove
-                                      ? const Color(0xFF059669)
-                                      : const Color(0xFFDC2626),
-                              colorText: Colors.white,
-                              snackPosition: SnackPosition.BOTTOM,
-                              margin: const EdgeInsets.all(16),
-                              borderRadius: 12,
-                            );
+                            _handleApprovalAction(isApprove);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:

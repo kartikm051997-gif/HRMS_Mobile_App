@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../presentaion/pages/PagarBookAdminScreens/PagarBookAdminScreen.dart';
 import '../../../presentaion/pages/UserTrackingScreens/Tracking_History_TabView_Screen.dart';
 import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
@@ -53,7 +54,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
       if (kDebugMode) {
         print('✅ BottomNavScreen: Tracking provider initialized');
         print('   User ID: $currentUserId');
-        print('   Tracking records: ${trackingProvider.trackingRecords.length}');
+        print(
+          '   Tracking records: ${trackingProvider.trackingRecords.length}',
+        );
       }
     } catch (e) {
       if (kDebugMode) print('❌ BottomNavScreen initialization error: $e');
@@ -84,7 +87,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     final user = loginProvider.loginData?.user;
 
     final List<Widget> screens = const [
-      UserTrackingTabViewScreen(),
+      PaGarBookAdminScreen(),
       DeliverablesOverviewScreen(),
       EmployeeManagementTabviewScreen(),
       UserProfileScreen(),
@@ -96,7 +99,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
         builder: (rootContext) {
           return Scaffold(
             key: _scaffoldKey, // ✅ Add scaffold key
-
             // ✅ Add Drawer
             drawer: _buildDrawer(context, user),
 
@@ -141,7 +143,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             ),
 
             floatingActionButtonLocation:
-            FloatingActionButtonLocation.centerDocked,
+                FloatingActionButtonLocation.centerDocked,
 
             // ---------------- Bottom Navigation -----------------
             bottomNavigationBar: Container(
@@ -188,7 +190,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                           index: 2,
                         ),
                       ),
-                      Expanded(child: _buildProfileNavItem(user: user, index: 3)),
+                      Expanded(
+                        child: _buildProfileNavItem(user: user, index: 3),
+                      ),
                     ],
                   ),
                 ),
@@ -223,26 +227,26 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                       radius: 40,
                       backgroundColor: Colors.white,
                       backgroundImage:
-                      (user?.avatar != null && user!.avatar!.isNotEmpty)
-                          ? NetworkImage(
-                        "https://app.draravindsivf.com/hrms/${user.avatar}",
-                      )
-                          : null,
+                          (user?.avatar != null && user!.avatar!.isNotEmpty)
+                              ? NetworkImage(
+                                "https://app.draravindsivf.com/hrms/${user.avatar}",
+                              )
+                              : null,
                       child:
-                      (user?.avatar == null || user!.avatar!.isEmpty)
-                          ? Text(
-                        user?.fullname != null &&
-                            user!.fullname!.isNotEmpty
-                            ? user.fullname![0].toUpperCase()
-                            : "U",
-                        style: const TextStyle(
-                          color: Color(0xFF8E0E6B),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
-                          fontFamily: AppFonts.poppins,
-                        ),
-                      )
-                          : null,
+                          (user?.avatar == null || user!.avatar!.isEmpty)
+                              ? Text(
+                                user?.fullname != null &&
+                                        user!.fullname!.isNotEmpty
+                                    ? user.fullname![0].toUpperCase()
+                                    : "U",
+                                style: const TextStyle(
+                                  color: Color(0xFF8E0E6B),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 32,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              )
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -330,20 +334,25 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                         // Show logout confirmation
                         final shouldLogout = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Logout'),
-                            content: const Text('Are you sure you want to logout?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancel'),
+                          builder:
+                              (context) => AlertDialog(
+                                title: const Text('Logout'),
+                                content: const Text(
+                                  'Are you sure you want to logout?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: const Text('Logout'),
+                                  ),
+                                ],
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Logout'),
-                              ),
-                            ],
-                          ),
                         );
 
                         if (shouldLogout == true && mounted) {
@@ -427,9 +436,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   child: Icon(
                     icon,
                     color:
-                    isSelected
-                        ? const Color(0xFF8E0E6B)
-                        : Colors.grey.shade400,
+                        isSelected
+                            ? const Color(0xFF8E0E6B)
+                            : Colors.grey.shade400,
                     size: 26,
                   ),
                 );
@@ -442,7 +451,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color:
-                isSelected ? const Color(0xFF8E0E6B) : Colors.grey.shade500,
+                    isSelected ? const Color(0xFF8E0E6B) : Colors.grey.shade500,
                 fontFamily: AppFonts.poppins,
               ),
               child: Text(label),
@@ -479,9 +488,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color:
-                          isSelected
-                              ? const Color(0xFF8E0E6B)
-                              : Colors.grey.shade300,
+                              isSelected
+                                  ? const Color(0xFF8E0E6B)
+                                  : Colors.grey.shade300,
                           width: 2,
                         ),
                       ),
@@ -489,29 +498,29 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                         radius: 14,
                         backgroundColor: Colors.grey.shade200,
                         backgroundImage:
-                        (user?.avatar != null && user!.avatar!.isNotEmpty)
-                            ? NetworkImage(
-                          "https://app.draravindsivf.com/hrms/${user.avatar}",
-                        )
-                            : null,
+                            (user?.avatar != null && user!.avatar!.isNotEmpty)
+                                ? NetworkImage(
+                                  "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                )
+                                : null,
                         child:
-                        (user?.avatar == null || user!.avatar!.isEmpty)
-                            ? Text(
-                          user?.fullname != null &&
-                              user!.fullname!.isNotEmpty
-                              ? user.fullname![0].toUpperCase()
-                              : "U",
-                          style: TextStyle(
-                            color:
-                            isSelected
-                                ? const Color(0xFF8E0E6B)
-                                : Colors.black87,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            fontFamily: AppFonts.poppins,
-                          ),
-                        )
-                            : null,
+                            (user?.avatar == null || user!.avatar!.isEmpty)
+                                ? Text(
+                                  user?.fullname != null &&
+                                          user!.fullname!.isNotEmpty
+                                      ? user.fullname![0].toUpperCase()
+                                      : "U",
+                                  style: TextStyle(
+                                    color:
+                                        isSelected
+                                            ? const Color(0xFF8E0E6B)
+                                            : Colors.black87,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                )
+                                : null,
                       ),
                     ),
                   );
@@ -524,9 +533,9 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color:
-                  isSelected
-                      ? const Color(0xFF8E0E6B)
-                      : Colors.grey.shade500,
+                      isSelected
+                          ? const Color(0xFF8E0E6B)
+                          : Colors.grey.shade500,
                   fontFamily: AppFonts.poppins,
                 ),
                 child: const Text('Profile'),

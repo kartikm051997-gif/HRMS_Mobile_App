@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -7,15 +8,16 @@ import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../../../provider/Employee_management_Provider/All_Employees_Provider.dart';
+import '../../../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/AllEmployeeService.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class AllEmployeeDetailsScreens extends StatefulWidget {
   final String empId;
-  final Employee employee;
+  final Employee? employee;
   const AllEmployeeDetailsScreens({
     super.key,
     required this.empId,
-    required this.employee,
+    this.employee,
   });
 
   @override
@@ -28,6 +30,11 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  final AllEmployeeService _allEmployeeService = AllEmployeeService();
+  Employee? _employeeDetails;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -52,6 +59,82 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
       ),
     );
     _animationController.forward();
+    _loadEmployeeDetails();
+  }
+
+  Future<void> _loadEmployeeDetails() async {
+    // If employee data is already passed, use it
+    if (widget.employee != null) {
+      setState(() {
+        _employeeDetails = widget.employee;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Otherwise, fetch from API
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // First try to find in provider's filtered list
+      try {
+        final provider = Provider.of<AllEmployeesProvider>(
+          context,
+          listen: false,
+        );
+
+        final employee = provider.filteredEmployees.firstWhere(
+          (emp) => emp.employeeId == widget.empId,
+          orElse: () => throw Exception('Not in provider list'),
+        );
+
+        setState(() {
+          _employeeDetails = employee;
+          _isLoading = false;
+        });
+        return;
+      } catch (_) {
+        // Not in provider list, fetch from API
+      }
+
+      // Fetch from API
+      final user = await _allEmployeeService.getEmployeeById(widget.empId);
+
+      if (user != null) {
+        setState(() {
+          _employeeDetails = Employee(
+            employeeId: user.employmentId ?? user.userId ?? widget.empId,
+            name: user.fullname ?? '',
+            branch: user.locationName ?? user.location ?? '',
+            doj: user.joiningDate ?? '',
+            department: user.department ?? '',
+            designation: user.designation ?? '',
+            monthlyCTC: user.monthlyCTC ?? '',
+            payrollCategory: user.payrollCategory ?? '',
+            status: user.status ?? '',
+            photoUrl: user.avatar,
+            recruiterName: user.recruiterName,
+            recruiterPhotoUrl: user.recruiterPhotoUrl,
+            createdByName: user.createdByName,
+            createdByPhotoUrl: user.createdByPhotoUrl,
+          );
+          _isLoading = false;
+        });
+      } else {
+        throw Exception('Employee not found');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading employee details: $e");
+      }
+      setState(() {
+        _errorMessage = "Failed to load employee details";
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -92,6 +175,86 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColor.backgroundColor,
+        drawer: const TabletMobileDrawer(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Loading employee details...",
+                style: TextStyle(
+                  color: AppColor.textSecondary,
+                  fontSize: 15,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_errorMessage != null || _employeeDetails == null) {
+      return Scaffold(
+        backgroundColor: AppColor.backgroundColor,
+        drawer: const TabletMobileDrawer(),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline_rounded,
+                  size: 64,
+                  color: AppColor.textSecondary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _errorMessage ?? "Employee not found",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                    color: AppColor.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    _loadEmployeeDetails();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColor.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text(
+                    "Retry",
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
       drawer: const TabletMobileDrawer(),
@@ -191,8 +354,9 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
   }
 
   Widget _buildEmployeeHeaderCard() {
-    final statusColor = _getStatusColor(widget.employee.status);
-    final statusBgColor = _getStatusBgColor(widget.employee.status);
+    final employee = _employeeDetails!;
+    final statusColor = _getStatusColor(employee.status);
+    final statusBgColor = _getStatusBgColor(employee.status);
 
     return Container(
       decoration: BoxDecoration(
@@ -237,16 +401,16 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                   ),
                   child: ClipOval(
                     child:
-                        widget.employee.photoUrl != null &&
-                                widget.employee.photoUrl!.isNotEmpty
+                        employee.photoUrl != null &&
+                                employee.photoUrl!.isNotEmpty
                             ? Image.network(
-                              widget.employee.photoUrl!,
+                              employee.photoUrl!,
                               width: 90,
                               height: 90,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return _buildDefaultAvatar(
-                                  widget.employee.name,
+                                  employee.name,
                                 );
                               },
                               loadingBuilder: (
@@ -274,12 +438,12 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                                 );
                               },
                             )
-                            : _buildDefaultAvatar(widget.employee.name),
+                            : _buildDefaultAvatar(employee.name),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  widget.employee.name,
+                  employee.name,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -299,7 +463,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${widget.employee.employeeId}",
+                    "ID: ${employee.employeeId}",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -310,7 +474,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.employee.designation,
+                  employee.designation,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -352,7 +516,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                           ),
                           const SizedBox(width: 10),
                           Text(
-                            widget.employee.status,
+                            employee.status,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -440,6 +604,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
   }
 
   Widget _buildViewProfileButton() {
+    final employee = _employeeDetails!;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.95, end: 1.0),
       duration: const Duration(milliseconds: 300),
@@ -455,11 +620,11 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.employee.employeeId,
-                      empPhoto: widget.employee.photoUrl ?? "",
-                      empName: widget.employee.name,
-                      empDesignation: widget.employee.designation,
-                      empBranch: widget.employee.branch,
+                      empId: employee.employeeId,
+                      empPhoto: employee.photoUrl ?? "",
+                      empName: employee.name,
+                      empDesignation: employee.designation,
+                      empBranch: employee.branch,
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -518,6 +683,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
   }
 
   Widget _buildProfessionalInfoCard() {
+    final employee = _employeeDetails!;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 500),
@@ -596,27 +762,27 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                 children: [
                   _buildDetailRow(
                     "Department",
-                    widget.employee.department,
+                    employee.department,
                     Icons.business_rounded,
                   ),
                   _buildDetailRow(
                     "Branch",
-                    widget.employee.branch,
+                    employee.branch,
                     Icons.location_on_rounded,
                   ),
                   _buildDetailRow(
                     "Date of Joining",
-                    widget.employee.doj,
+                    employee.doj,
                     Icons.calendar_today_rounded,
                   ),
                   _buildDetailRow(
                     "Monthly CTC",
-                    "₹${widget.employee.monthlyCTC}",
+                    "₹${employee.monthlyCTC}",
                     Icons.account_balance_wallet_rounded,
                   ),
                   _buildDetailRow(
                     "Payroll Category",
-                    widget.employee.payrollCategory,
+                    employee.payrollCategory,
                     Icons.category_rounded,
                     isLast: true,
                   ),
@@ -687,6 +853,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
   }
 
   Widget _buildTeamInfoCard() {
+    final employee = _employeeDetails!;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 600),
@@ -765,15 +932,15 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                 children: [
                   _buildTeamMemberCard(
                     "Recruiter",
-                    widget.employee.recruiterName ?? "Not assigned",
-                    widget.employee.recruiterPhotoUrl,
+                    employee.recruiterName ?? "Not assigned",
+                    employee.recruiterPhotoUrl,
                     Icons.person_search_rounded,
                   ),
                   const SizedBox(height: 12),
                   _buildTeamMemberCard(
                     "Created By",
-                    widget.employee.createdByName ?? "Unknown",
-                    widget.employee.createdByPhotoUrl,
+                    employee.createdByName ?? "Unknown",
+                    employee.createdByPhotoUrl,
                     Icons.person_add_rounded,
                   ),
                 ],
@@ -1054,7 +1221,7 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
                                     Navigator.pop(dialogContext);
                                     provider
                                         .updateEmployeeStatus(
-                                          widget.employee.employeeId,
+                                          _employeeDetails!.employeeId,
                                           selectedStatus,
                                           selectedDate!,
                                         )

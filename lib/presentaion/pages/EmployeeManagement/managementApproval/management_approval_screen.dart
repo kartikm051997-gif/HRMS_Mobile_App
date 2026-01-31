@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import 'Emp_management_details.dart';
 
 class ManagementApprovalScreen extends StatefulWidget {
@@ -56,15 +58,28 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Header Section
+            // ✅ ALWAYS show header (no shimmer blocking it)
             SliverToBoxAdapter(child: _buildHeaderSection(provider)),
 
-            // Filter Section
+            // ✅ Show filters if toggled
             if (provider.showFilters)
               SliverToBoxAdapter(child: _buildFilterSection(provider)),
 
-            // Results Section
-            _buildResultsSection(provider),
+            // ✅ Show shimmer ONLY during initial filter load
+            if (provider.isLoadingFilters && !provider.initialLoadDone)
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _buildShimmerCard(),
+                    childCount: 5,
+                  ),
+                ),
+              ),
+
+            // ✅ Show results section when filters loaded
+            if (!provider.isLoadingFilters || provider.initialLoadDone)
+              _buildResultsSection(provider),
           ],
         ),
       ),
@@ -90,7 +105,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Filter Toggle and Page Size Row
+              // Filter Toggle Button
               Row(
                 children: [Expanded(child: _buildFilterToggleButton(provider))],
               ),
@@ -183,60 +198,60 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
   }
 
   Widget _buildSearchField(ManagementApprovalProvider provider) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColor.borderColor),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.borderColor),
+      ),
+      child: TextField(
+        controller: provider.searchController,
+        onChanged: provider.onSearchChanged,
+        onSubmitted: (value) {
+          // Immediate search on Enter — show matching cards (same as Active screen)
+          provider.performSearchWithQuery(value);
+        },
+        style: const TextStyle(
+          fontSize: 15,
+          fontFamily: AppFonts.poppins,
+          color: AppColor.textPrimary,
         ),
-        child: TextField(
-          controller: provider.searchController,
-          onChanged: (value) => provider.onSearchChanged(value),
-          style: const TextStyle(
-            fontSize: 15,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.transparent,
+          hintText: "Search employees...",
+          hintStyle: TextStyle(
+            fontSize: 14,
             fontFamily: AppFonts.poppins,
-            color: AppColor.textPrimary,
+            color: AppColor.textSecondary.withOpacity(0.7),
           ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.transparent,
-            hintText: "Search employees...",
-            hintStyle: TextStyle(
-              fontSize: 14,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textSecondary.withOpacity(0.7),
-            ),
-            prefixIcon: const Icon(
-              Icons.search_rounded,
-              color: AppColor.textSecondary,
-              size: 22,
-            ),
-            suffixIcon:
-                provider.searchController.text.isNotEmpty
-                    ? IconButton(
-                      onPressed: () => provider.clearSearch(),
-                      icon: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColor.textSecondary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: AppColor.textSecondary,
-                          size: 16,
-                        ),
+          prefixIcon: const Icon(
+            Icons.search_rounded,
+            color: AppColor.textSecondary,
+            size: 22,
+          ),
+          suffixIcon:
+              provider.searchController.text.isNotEmpty
+                  ? IconButton(
+                    onPressed: () => provider.clearSearch(),
+                    icon: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: AppColor.textSecondary.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                    )
-                    : null,
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: AppColor.textSecondary,
+                        size: 16,
+                      ),
+                    ),
+                  )
+                  : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
           ),
         ),
       ),
@@ -255,52 +270,45 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
 
-            // Zone Dropdown
-            CustomSearchDropdownWithSearch(
-              labelText: "Zone *",
+            // Zone
+            MultiSelectDropdown(
+              label: "Zone *",
               items: provider.zone,
-              selectedValue: provider.selectedZone,
-              onChanged: provider.setSelectedZone,
-              hintText: "Select Zone",
-            ),
-            const SizedBox(height: 8),
-
-            // Branch and Designation Row
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Branch *",
-                    items: provider.branch,
-                    selectedValue: provider.selectedBranch,
-                    onChanged: provider.setSelectedBranch,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Designation *",
-                    items: provider.designation,
-                    selectedValue: provider.selectedDesignation,
-                    onChanged: provider.setSelectedDesignation,
-                    hintText: "Select",
-                  ),
-                ),
-              ],
+              selectedItems: provider.selectedZones,
+              onChanged: provider.setSelectedZones,
             ),
             const SizedBox(height: 12),
 
-            // Action Buttons
+            // Branch
+            MultiSelectDropdown(
+              label: "Branch *",
+              items: provider.branch,
+              selectedItems: provider.selectedBranches,
+              onChanged: provider.setSelectedBranches,
+              designationEnableSelectAll: true,
+            ),
+            const SizedBox(height: 12),
+
+            // Designation
+            MultiSelectDropdown(
+              label: "Designation *",
+              items: provider.designation,
+              selectedItems: provider.selectedDesignations,
+              onChanged: provider.setSelectedDesignations,
+              designationEnableSelectAll: true,
+            ),
+            const SizedBox(height: 16),
+
+            // Clear and Apply buttons
             Row(
               children: [
                 Expanded(child: _buildClearButton(provider)),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(flex: 2, child: _buildApplyButton(provider)),
               ],
             ),
@@ -379,6 +387,17 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                       : null,
             ),
             child: Center(
+              child:
+              provider.isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  : Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -403,22 +422,42 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildResultsSection(ManagementApprovalProvider provider) {
-    if (!provider.hasAppliedFilters) {
-      return SliverFillRemaining(child: _buildSelectFiltersMessage());
+    // ✅ Show loading during data fetch (not filter load)
+    if (provider.isLoading && !provider.initialLoadDone) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColor.primaryColor,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                "Loading approvals...",
+                style: TextStyle(
+                  color: AppColor.textSecondary,
+                  fontFamily: AppFonts.poppins,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    if (provider.isLoading) {
-      return SliverFillRemaining(child: _buildLoadingState());
-    }
-
-    if (provider.filteredEmployees.isEmpty) {
+    // ✅ Show empty state
+    if (provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildEmptyState());
     }
 
+    // ✅ Show employee list
     return SliverPadding(
       padding: const EdgeInsets.all(16),
       sliver: SliverList(
@@ -426,7 +465,10 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           if (index == 0) {
             return _buildResultsHeader(provider);
           }
-          final employee = provider.filteredEmployees[index - 1];
+          if (index == provider.paginatedEmployees.length + 1) {
+            return _buildPaginationControls(provider);
+          }
+          final employee = provider.paginatedEmployees[index - 1];
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: Duration(milliseconds: 300 + (index * 50)),
@@ -439,118 +481,61 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
             },
             child: _buildEmployeeCard(employee),
           );
-        }, childCount: provider.filteredEmployees.length + 1),
+        }, childCount: provider.paginatedEmployees.length + 2),
       ),
     );
   }
 
-  Widget _buildSelectFiltersMessage() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColor.primaryColor.withOpacity(0.1),
-                      AppColor.secondaryColor.withOpacity(0.1),
+  Widget _buildShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 16,
+                        width: double.infinity,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(height: 8),
+                      Container(height: 12, width: 100, color: Colors.white),
                     ],
                   ),
-                  shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.approval_rounded,
-                  size: 48,
-                  color: AppColor.primaryColor,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "Select Filters to View Approvals",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "Please select Zone, Branch, and Designation\nto view pending approvals",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColor.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColor.primaryColor.withOpacity(0.3),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.touch_app_rounded,
-                      size: 18,
-                      color: AppColor.primaryColor,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      "Tap 'Filters' above to start",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: AppFonts.poppins,
-                        color: AppColor.primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
-            strokeWidth: 3,
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Loading approvals...",
-            style: TextStyle(
-              color: AppColor.textSecondary,
-              fontSize: 15,
-              fontFamily: AppFonts.poppins,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: Container(height: 40, color: Colors.white)),
+                const SizedBox(width: 16),
+                Expanded(child: Container(height: 40, color: Colors.white)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -616,7 +601,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "${provider.filteredEmployees.length}",
+                  "${provider.totalRecords ?? provider.paginatedEmployees.length}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -637,18 +622,55 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
               ),
             ],
           ),
-          if (provider.showFilters)
-            TextButton.icon(
-              onPressed: () => provider.toggleFilters(),
-              icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 18),
-              label: const Text(
-                "Hide",
-                style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColor.textSecondary,
-              ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaginationControls(ManagementApprovalProvider provider) {
+    if (provider.totalPages <= 1) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColor.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: provider.currentPage > 1 ? provider.previousPage : null,
+            icon: const Icon(Icons.chevron_left),
+            color:
+                provider.currentPage > 1
+                    ? AppColor.primaryColor
+                    : AppColor.textSecondary,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            "Page ${provider.currentPage} of ${provider.totalPages}",
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              fontFamily: AppFonts.poppins,
+              color: AppColor.textPrimary,
             ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed:
+                provider.currentPage < provider.totalPages
+                    ? provider.nextPage
+                    : null,
+            icon: const Icon(Icons.chevron_right),
+            color:
+                provider.currentPage < provider.totalPages
+                    ? AppColor.primaryColor
+                    : AppColor.textSecondary,
+          ),
         ],
       ),
     );
@@ -678,7 +700,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeManagementApprovalDetailsScreen(
-                      empId: employee.employeeId,
+                      empId: employee.employmentId ?? employee.userId ?? '',
                       employee: employee,
                     ),
                 transitionsBuilder: (_, animation, __, child) {
@@ -731,8 +753,8 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                       ),
                       child: Center(
                         child: Text(
-                          employee.name.isNotEmpty
-                              ? employee.name[0].toUpperCase()
+                          (employee.fullname ?? '').isNotEmpty
+                              ? (employee.fullname ?? '')[0].toUpperCase()
                               : "E",
                           style: const TextStyle(
                             fontSize: 20,
@@ -751,7 +773,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            employee.name,
+                            employee.fullname ?? '',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -772,7 +794,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: ${employee.employeeId}",
+                              "ID: ${employee.employmentId ?? employee.userId ?? ''}",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -795,9 +817,9 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                         color: Colors.orange.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        "Pending",
-                        style: TextStyle(
+                      child: Text(
+                        employee.approvalStatus ?? "Pending",
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           fontFamily: AppFonts.poppins,
@@ -819,7 +841,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                       child: _buildInfoItem(
                         icon: Icons.work_outline_rounded,
                         label: "DESIGNATION",
-                        value: employee.designation,
+                        value: employee.designation ?? '',
                         color: AppColor.primaryColor,
                       ),
                     ),
@@ -832,8 +854,8 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                     Expanded(
                       child: _buildInfoItem(
                         icon: Icons.location_on_outlined,
-                        label: "BRANCH",
-                        value: employee.branch,
+                        label: "LOCATION",
+                        value: employee.location ?? 'N/A',
                         color: AppColor.secondaryColor,
                       ),
                     ),

@@ -4,6 +4,12 @@ class ApiBase {
   // Auth & HRMS
   static const String loginEndpoint = "${baseUrl}api/mobile_login";
   static const String activeUserList = "${baseUrl}api/get_active_users";
+  static const String inActiveUserList = "${baseUrl}api/inactiveuserList_api";
+  static const String managementApprovalList = "${baseUrl}api/approvePendingList_api";
+  static const String abscondUserList = "${baseUrl}api/abscondUserList_api";
+  static const String noticePeriodUserList = "${baseUrl}api/noticePeriodUserList_api";
+  static const String allEmployeeList = "${baseUrl}api/allemployee_api";
+  static const String employeeDetailsById = "${baseUrl}api/employee_details_by_id";
   static const String getAllFilters = "${baseUrl}api/get_all_filters";
   static const String logoutEndpoint = "${baseUrl}api/mobile_logout";
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -5,18 +6,17 @@ import 'package:provider/provider.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../model/Employee_management/Employee_management.dart';
+import '../../../../model/Employee_management/InActiveUserListModelClass.dart';
 import '../../../../provider/Employee_management_Provider/InActiveProvider.dart';
+import '../../../../apibaseScreen/Api_Base_Screens.dart';
+import '../../../../widgets/avatarZoomIn/SimpleImageZoomViewer.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class InActiveDetailsScreen extends StatefulWidget {
   final String empId;
-  final Employee employee;
-  const InActiveDetailsScreen({
-    super.key,
-    required this.empId,
-    required this.employee,
-  });
+  final InActiveUser? employee; // Changed from Employee to InActiveUser
+
+  const InActiveDetailsScreen({super.key, required this.empId, this.employee});
 
   @override
   State<InActiveDetailsScreen> createState() => _InActiveDetailsScreenState();
@@ -27,6 +27,10 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  InActiveUser? _employeeDetails;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -51,6 +55,49 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
       ),
     );
     _animationController.forward();
+
+    // Load employee details
+    _loadEmployeeDetails();
+  }
+
+  Future<void> _loadEmployeeDetails() async {
+    // If employee data is already passed, use it
+    if (widget.employee != null) {
+      setState(() {
+        _employeeDetails = widget.employee;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Otherwise, fetch from API using the provider
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final provider = Provider.of<InActiveProvider>(context, listen: false);
+
+      // Try to find employee in the filtered list
+      final employee = provider.filteredEmployees.firstWhere(
+        (emp) => (emp.employmentId ?? emp.userId ?? '') == widget.empId,
+        orElse: () => provider.filteredEmployees.first,
+      );
+
+      setState(() {
+        _employeeDetails = employee;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error loading employee details: $e");
+      }
+      setState(() {
+        _errorMessage = "Failed to load employee details";
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -61,13 +108,54 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: AppColor.backgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+          ),
+        ),
+      );
+    }
+
+    if (_errorMessage != null || _employeeDetails == null) {
+      return Scaffold(
+        backgroundColor: AppColor.backgroundColor,
+        appBar: AppBar(
+          title: const Text("Employee Details"),
+          backgroundColor: AppColor.primaryColor,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red),
+              SizedBox(height: 16),
+              Text(_errorMessage ?? "Employee not found"),
+              SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text("Go Back"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final employee = _employeeDetails!;
+    final employeeName = employee.fullname ?? employee.username ?? "Unknown";
+
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
       drawer: const TabletMobileDrawer(),
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          _buildGradientAppBar(),
+          _buildGradientAppBar(employeeName),
           SliverToBoxAdapter(
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -77,11 +165,11 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      _buildEmployeeHeaderCard(),
+                      _buildEmployeeHeaderCard(employee, employeeName),
                       const SizedBox(height: 16),
-                      _buildProfessionalInfoCard(),
+                      _buildProfessionalInfoCard(employee),
                       const SizedBox(height: 16),
-                      _buildTeamInfoCard(),
+                      _buildAdditionalInfoCard(employee),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -94,7 +182,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildGradientAppBar() {
+  Widget _buildGradientAppBar(String employeeName) {
     return SliverAppBar(
       expandedHeight: 120,
       floating: false,
@@ -159,7 +247,9 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildEmployeeHeaderCard() {
+  Widget _buildEmployeeHeaderCard(InActiveUser employee, String employeeName) {
+    final avatarUrl = getAvatarUrl(employee.avatar);
+
     return Container(
       decoration: BoxDecoration(
         color: AppColor.cardColor,
@@ -190,62 +280,52 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
             ),
             child: Column(
               children: [
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.2),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.4),
-                      width: 3,
+                GestureDetector(
+                  onTap:
+                      avatarUrl.isNotEmpty
+                          ? () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (_) => SimpleImageZoomViewer(
+                                      imageUrl: avatarUrl,
+                                      employeeName: employeeName,
+                                    ),
+                              ),
+                            );
+                          }
+                          : null,
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.2),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.4),
+                        width: 3,
+                      ),
                     ),
-                  ),
-                  child: ClipOval(
-                    child:
-                        widget.employee.photoUrl != null &&
-                                widget.employee.photoUrl!.isNotEmpty
-                            ? Image.network(
-                              widget.employee.photoUrl!,
-                              width: 90,
-                              height: 90,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildDefaultAvatar(
-                                  widget.employee.name,
-                                );
-                              },
-                              loadingBuilder: (
-                                context,
-                                child,
-                                loadingProgress,
-                              ) {
-                                if (loadingProgress == null) return child;
-                                return Center(
-                                  child: CircularProgressIndicator(
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                                null
-                                            ? loadingProgress
-                                                    .cumulativeBytesLoaded /
-                                                loadingProgress
-                                                    .expectedTotalBytes!
-                                            : null,
-                                    strokeWidth: 3,
-                                    valueColor:
-                                        const AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
-                                  ),
-                                );
-                              },
-                            )
-                            : _buildDefaultAvatar(widget.employee.name),
+                    child: ClipOval(
+                      child:
+                          avatarUrl.isNotEmpty
+                              ? Image.network(
+                                avatarUrl,
+                                width: 90,
+                                height: 90,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return _buildDefaultAvatar(employeeName);
+                                },
+                              )
+                              : _buildDefaultAvatar(employeeName),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  widget.employee.name,
+                  employeeName,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -265,7 +345,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${widget.employee.employeeId}",
+                    "ID: ${employee.employmentId ?? employee.userId ?? 'N/A'}",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -276,7 +356,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.employee.designation,
+                  employee.designation ?? "N/A",
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -293,10 +373,13 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [_buildStatusBadge(), _buildActivateButton()],
+                  children: [
+                    _buildStatusBadge(),
+                    _buildActivateButton(employee),
+                  ],
                 ),
                 const SizedBox(height: 20),
-                _buildViewProfileButton(),
+                _buildViewProfileButton(employee, employeeName, avatarUrl),
               ],
             ),
           ),
@@ -360,11 +443,11 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildActivateButton() {
+  Widget _buildActivateButton(InActiveUser employee) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showActivateDialog(context),
+        onTap: () => _showActivateDialog(context, employee),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -400,7 +483,11 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildViewProfileButton() {
+  Widget _buildViewProfileButton(
+    InActiveUser employee,
+    String employeeName,
+    String avatarUrl,
+  ) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.95, end: 1.0),
       duration: const Duration(milliseconds: 300),
@@ -416,11 +503,12 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.employee.employeeId,
-                      empPhoto: widget.employee.photoUrl ?? "",
-                      empName: widget.employee.name,
-                      empDesignation: widget.employee.designation,
-                      empBranch: widget.employee.branch,
+                      empId: employee.employmentId ?? employee.userId ?? "",
+                      empPhoto: avatarUrl,
+                      empName: employeeName,
+                      empDesignation: employee.designation ?? "N/A",
+                      empBranch:
+                          employee.locationName ?? employee.location ?? "N/A",
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -478,7 +566,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildProfessionalInfoCard() {
+  Widget _buildProfessionalInfoCard(InActiveUser employee) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 500),
@@ -557,28 +645,40 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                 children: [
                   _buildDetailRow(
                     "Department",
-                    widget.employee.department,
+                    employee.department ?? "N/A",
                     Icons.business_rounded,
                   ),
                   _buildDetailRow(
                     "Branch",
-                    widget.employee.branch,
+                    employee.locationName ?? employee.location ?? "N/A",
                     Icons.location_on_rounded,
                   ),
                   _buildDetailRow(
                     "Date of Joining",
-                    widget.employee.doj,
+                    employee.joiningDate ?? "N/A",
                     Icons.calendar_today_rounded,
                   ),
                   _buildDetailRow(
                     "Relieving Date",
-                    widget.employee.doj,
+                    employee.relievingDate ?? "N/A",
                     Icons.event_rounded,
                   ),
+                  if (employee.email != null && employee.email!.isNotEmpty)
+                    _buildDetailRow(
+                      "Email",
+                      employee.email!,
+                      Icons.email_rounded,
+                    ),
+                  if (employee.mobile != null && employee.mobile!.isNotEmpty)
+                    _buildDetailRow(
+                      "Mobile",
+                      employee.mobile!,
+                      Icons.phone_rounded,
+                    ),
                   _buildDetailRow(
-                    "Payroll Category",
-                    widget.employee.payrollCategory,
-                    Icons.category_rounded,
+                    "Role",
+                    employee.role ?? "N/A",
+                    Icons.person_rounded,
                     isLast: true,
                   ),
                 ],
@@ -647,7 +747,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildTeamInfoCard() {
+  Widget _buildAdditionalInfoCard(InActiveUser employee) {
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 600),
@@ -702,14 +802,14 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
-                      Icons.people_rounded,
+                      Icons.info_rounded,
                       color: Colors.white,
                       size: 20,
                     ),
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    "Team Information",
+                    "Additional Information",
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -724,19 +824,19 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildTeamMemberCard(
-                    "Recruiter",
-                    widget.employee.recruiterName ?? "Not assigned",
-                    widget.employee.recruiterPhotoUrl,
-                    Icons.person_search_rounded,
-                  ),
+                  _infoCard("User ID", employee.userId ?? "N/A"),
                   const SizedBox(height: 12),
-                  _buildTeamMemberCard(
-                    "Created By",
-                    widget.employee.createdByName ?? "Unknown",
-                    widget.employee.createdByPhotoUrl,
-                    Icons.person_add_rounded,
-                  ),
+                  _infoCard("Employment ID", employee.employmentId ?? "N/A"),
+                  if (employee.username != null &&
+                      employee.username!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _infoCard("Username", employee.username!),
+                  ],
+                  if (employee.status != null &&
+                      employee.status!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _infoCard("Status", employee.status!),
+                  ],
                 ],
               ),
             ),
@@ -746,14 +846,9 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
     );
   }
 
-  Widget _buildTeamMemberCard(
-    String role,
-    String name,
-    String? photoUrl,
-    IconData icon,
-  ) {
+  Widget _infoCard(String label, String value) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(12),
@@ -761,57 +856,12 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  AppColor.primaryColor.withOpacity(0.2),
-                  AppColor.secondaryColor.withOpacity(0.2),
-                ],
-              ),
-              border: Border.all(color: AppColor.borderColor),
-            ),
-            child: ClipOval(
-              child:
-                  photoUrl != null && photoUrl.isNotEmpty
-                      ? Image.network(
-                        photoUrl,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildSmallDefaultAvatar(name);
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value:
-                                  loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColor.primaryColor.withOpacity(0.6),
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                      : _buildSmallDefaultAvatar(name),
-            ),
-          ),
-          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  role,
+                  label,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -821,7 +871,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  name,
+                  value,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -832,41 +882,15 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColor.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColor.primaryColor),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildSmallDefaultAvatar(String name) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColor.primaryColor, AppColor.secondaryColor],
-        ),
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : "?",
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-      ),
-    );
-  }
+  void _showActivateDialog(BuildContext context, InActiveUser employee) {
+    final employeeName = employee.fullname ?? employee.username ?? "Unknown";
+    final employeeId = employee.employmentId ?? employee.userId ?? "";
 
-  void _showActivateDialog(BuildContext context) {
     showDialog(
       context: context,
       builder:
@@ -906,7 +930,7 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Are you sure you want to activate ${widget.employee.name}? This will change their status to active.",
+                    "Are you sure you want to activate $employeeName? This will change their status to active.",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
@@ -946,32 +970,32 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
                               listen: false,
                             );
                             Navigator.pop(dialogContext);
-                            provider
-                                .activateEmployee(widget.employee.employeeId)
-                                .then((success) {
-                                  if (success) {
-                                    Get.back();
-                                    Get.snackbar(
-                                      "Success",
-                                      "${widget.employee.name} has been activated",
-                                      backgroundColor: const Color(0xFF059669),
-                                      colorText: Colors.white,
-                                      snackPosition: SnackPosition.BOTTOM,
-                                      margin: const EdgeInsets.all(16),
-                                      borderRadius: 12,
-                                    );
-                                  } else {
-                                    Get.snackbar(
-                                      "Error",
-                                      "Failed to activate employee",
-                                      backgroundColor: const Color(0xFFDC2626),
-                                      colorText: Colors.white,
-                                      snackPosition: SnackPosition.BOTTOM,
-                                      margin: const EdgeInsets.all(16),
-                                      borderRadius: 12,
-                                    );
-                                  }
-                                });
+                            provider.activateEmployee(employeeId).then((
+                              success,
+                            ) {
+                              if (success) {
+                                Get.back();
+                                Get.snackbar(
+                                  "Success",
+                                  "$employeeName has been activated",
+                                  backgroundColor: const Color(0xFF059669),
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  margin: const EdgeInsets.all(16),
+                                  borderRadius: 12,
+                                );
+                              } else {
+                                Get.snackbar(
+                                  "Error",
+                                  "Failed to activate employee",
+                                  backgroundColor: const Color(0xFFDC2626),
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  margin: const EdgeInsets.all(16),
+                                  borderRadius: 12,
+                                );
+                              }
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF059669),
@@ -998,5 +1022,20 @@ class _InActiveDetailsScreenState extends State<InActiveDetailsScreen>
             ),
           ),
     );
+  }
+
+  String getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
+    }
+
+    // If backend already sends full URL
+    if (avatar.startsWith('http')) {
+      return avatar;
+    }
+
+    // Relative path → attach base URL
+    final cleanPath = avatar.startsWith('/') ? avatar.substring(1) : avatar;
+    return '${ApiBase.baseUrl}$cleanPath';
   }
 }

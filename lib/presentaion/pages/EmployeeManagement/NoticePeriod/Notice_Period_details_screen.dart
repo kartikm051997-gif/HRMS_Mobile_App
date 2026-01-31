@@ -5,17 +5,17 @@ import 'package:provider/provider.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../model/Employee_management/Employee_management.dart';
+import '../../../../model/Employee_management/NoticePeriodUserListModel.dart';
 import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class NoticePeriodDetailsScreen extends StatefulWidget {
   final String empId;
-  final Employee employee;
+  final NoticePeriodUser? noticePeriodUser;
   const NoticePeriodDetailsScreen({
     super.key,
     required this.empId,
-    required this.employee,
+    this.noticePeriodUser,
   });
 
   @override
@@ -81,8 +81,6 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                       _buildEmployeeHeaderCard(),
                       const SizedBox(height: 16),
                       _buildProfessionalInfoCard(),
-                      const SizedBox(height: 16),
-                      _buildTeamInfoCard(),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -160,7 +158,21 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
     );
   }
 
+  String get _displayName {
+    final u = widget.noticePeriodUser;
+    if (u == null) return 'Employee';
+    return u.fullname ?? u.username ?? 'Employee';
+  }
+
   Widget _buildEmployeeHeaderCard() {
+    final u = widget.noticePeriodUser;
+    final photoUrl = u?.avatar;
+    final name = _displayName;
+    final empId = widget.empId;
+    final designation = u?.designation?.trim().isNotEmpty == true
+        ? u!.designation!
+        : '—';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColor.cardColor,
@@ -203,24 +215,19 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     ),
                   ),
                   child: ClipOval(
-                    child:
-                        widget.employee.photoUrl != null &&
-                                widget.employee.photoUrl!.isNotEmpty
-                            ? Image.network(
-                              widget.employee.photoUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildDefaultAvatar(
-                                  widget.employee.name,
-                                );
-                              },
-                            )
-                            : _buildDefaultAvatar(widget.employee.name),
+                    child: photoUrl != null && photoUrl.isNotEmpty
+                        ? Image.network(
+                            photoUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _buildDefaultAvatar(name),
+                          )
+                        : _buildDefaultAvatar(name),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  widget.employee.name,
+                  name,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -240,7 +247,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${widget.employee.employeeId}",
+                    "ID: $empId",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -251,7 +258,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  widget.employee.designation,
+                  designation,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -388,16 +395,17 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
+            final u = widget.noticePeriodUser;
             Navigator.push(
               context,
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.employee.employeeId,
-                      empPhoto: widget.employee.photoUrl ?? "",
-                      empName: widget.employee.name,
-                      empDesignation: widget.employee.designation,
-                      empBranch: widget.employee.branch,
+                      empId: widget.empId,
+                      empPhoto: u?.avatar ?? "",
+                      empName: _displayName,
+                      empDesignation: u?.designation ?? "",
+                      empBranch: u?.locationName ?? u?.location ?? "",
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -534,28 +542,33 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                 children: [
                   _buildDetailRow(
                     "Department",
-                    widget.employee.department,
+                    widget.noticePeriodUser?.department ?? '—',
                     Icons.business_rounded,
                   ),
                   _buildDetailRow(
                     "Branch",
-                    widget.employee.branch,
+                    widget.noticePeriodUser?.locationName ?? widget.noticePeriodUser?.location ?? '—',
                     Icons.location_on_rounded,
                   ),
                   _buildDetailRow(
                     "Notice Period Start",
-                    widget.employee.doj,
+                    widget.noticePeriodUser?.noticePeriodStart ?? widget.noticePeriodUser?.joiningDate ?? '—',
                     Icons.calendar_today_rounded,
                   ),
                   _buildDetailRow(
                     "Notice Period End",
-                    widget.employee.doj,
+                    widget.noticePeriodUser?.noticePeriodEnd ?? widget.noticePeriodUser?.relievingDate ?? '—',
                     Icons.event_rounded,
                   ),
                   _buildDetailRow(
-                    "Payroll Category",
-                    widget.employee.payrollCategory,
-                    Icons.category_rounded,
+                    "Email",
+                    widget.noticePeriodUser?.email ?? '—',
+                    Icons.email_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Mobile",
+                    widget.noticePeriodUser?.mobile ?? '—',
+                    Icons.phone_rounded,
                     isLast: true,
                   ),
                 ],
@@ -621,105 +634,6 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
         if (!isLast)
           Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
       ],
-    );
-  }
-
-  Widget _buildTeamInfoCard() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColor.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColor.secondaryColor.withOpacity(0.1),
-                    AppColor.primaryColor.withOpacity(0.05),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          AppColor.secondaryColor,
-                          AppColor.primaryColor,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.people_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "Team Information",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildTeamMemberCard(
-                    "Recruiter",
-                    widget.employee.recruiterName ?? "Not assigned",
-                    widget.employee.recruiterPhotoUrl,
-                    Icons.person_search_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTeamMemberCard(
-                    "Created By",
-                    widget.employee.createdByName ?? "Unknown",
-                    widget.employee.createdByPhotoUrl,
-                    Icons.person_add_rounded,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -972,7 +886,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                                     Navigator.pop(dialogContext);
                                     provider
                                         .updateEmployeeStatus(
-                                          widget.employee.employeeId,
+                                          widget.empId,
                                           selectedStatus,
                                           selectedDate!,
                                         )

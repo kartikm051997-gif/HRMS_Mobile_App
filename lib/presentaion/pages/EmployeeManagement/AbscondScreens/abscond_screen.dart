@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
+import '../../../../model/Employee_management/AbscondUserListModelClass.dart';
 import '../../../../provider/Employee_management_Provider/Abscond_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import 'Abscond_Emp_Deatils_Screen.dart';
 
 class AbscondScreen extends StatefulWidget {
@@ -55,15 +58,158 @@ class _AbscondScreenState extends State<AbscondScreen>
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(child: _buildHeaderSection(provider)),
-            if (provider.showFilters)
-              SliverToBoxAdapter(child: _buildFilterSection(provider)),
-            _buildResultsSection(provider),
+            // ════════════════════════════════════════════════════════════
+            // SHIMMER LOADING STATE (Only during initial load)
+            // ════════════════════════════════════════════════════════════
+            if (provider.isLoading && !provider.initialLoadDone)
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      _buildShimmerPageInfo(),
+                      const SizedBox(height: 16),
+                      _buildShimmerList(),
+                    ],
+                  ),
+                ),
+              ),
+
+            // ════════════════════════════════════════════════════════════
+            // CONTENT (After initial load completes)
+            // ════════════════════════════════════════════════════════════
+            if (!provider.isLoading || provider.initialLoadDone) ...[
+              SliverToBoxAdapter(child: _buildHeaderSection(provider)),
+              if (provider.showFilters)
+                SliverToBoxAdapter(child: _buildFilterSection(provider)),
+              _buildResultsSection(provider),
+            ],
           ],
         ),
       ),
     );
   }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // SHIMMER WIDGETS
+  // ══════════════════════════════════════════════════════════════════════
+
+  Widget _buildShimmerPageInfo() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade300,
+      highlightColor: Colors.grey.shade100,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Container(height: 16, width: 150, color: Colors.white),
+            const SizedBox(height: 8),
+            Container(height: 14, width: 250, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShimmerList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 10,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.grey.shade100,
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade200, width: 1),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 150,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          width: 80,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 100,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // HEADER SECTION
+  // ══════════════════════════════════════════════════════════════════════
 
   Widget _buildHeaderSection(AbscondProvider provider) {
     return Container(
@@ -235,7 +381,7 @@ class _AbscondScreenState extends State<AbscondScreen>
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.transparent,
-            hintText: "Search absconded employees...",
+            hintText: "Search by name or ID...",
             hintStyle: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
@@ -275,6 +421,10 @@ class _AbscondScreenState extends State<AbscondScreen>
     );
   }
 
+  // ══════════════════════════════════════════════════════════════════════
+  // FILTER SECTION
+  // ══════════════════════════════════════════════════════════════════════
+
   Widget _buildFilterSection(AbscondProvider provider) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -290,7 +440,6 @@ class _AbscondScreenState extends State<AbscondScreen>
           children: [
             Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
-
             CustomSearchDropdownWithSearch(
               labelText: "Zone *",
               items: provider.zone,
@@ -300,32 +449,24 @@ class _AbscondScreenState extends State<AbscondScreen>
             ),
             const SizedBox(height: 8),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Branch *",
-                    items: provider.branch,
-                    selectedValue: provider.selectedBranch,
-                    onChanged: provider.setSelectedBranch,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Designation *",
-                    items: provider.designation,
-                    selectedValue: provider.selectedDesignation,
-                    onChanged: provider.setSelectedDesignation,
-                    hintText: "Select",
-                  ),
-                ),
-              ],
+            MultiSelectDropdown(
+              label: "Branch *",
+              items: provider.branch,
+              selectedItems: provider.selectedBranches,
+              onChanged: provider.setSelectedBranches,
+              designationEnableSelectAll: true,
             ),
             const SizedBox(height: 12),
 
+            MultiSelectDropdown(
+              label: "Designation *",
+              items: provider.designation,
+              selectedItems: provider.selectedDesignations,
+              onChanged: provider.setSelectedDesignations,
+              designationEnableSelectAll: true,
+            ),
+
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(child: _buildClearButton(provider)),
@@ -408,6 +549,17 @@ class _AbscondScreenState extends State<AbscondScreen>
                       : null,
             ),
             child: Center(
+              child:
+              provider.isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  :Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -432,19 +584,47 @@ class _AbscondScreenState extends State<AbscondScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 
+  // ══════════════════════════════════════════════════════════════════════
+  // RESULTS SECTION
+  // ══════════════════════════════════════════════════════════════════════
+
   Widget _buildResultsSection(AbscondProvider provider) {
-    if (!provider.hasAppliedFilters) {
+    // ✅ Show "Select Filters" message if backend requires filters
+    if (!provider.hasAppliedFilters && provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildSelectFiltersMessage());
     }
 
-    if (provider.isLoading) {
+    if (provider.isLoading && provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildLoadingState());
     }
 
-    if (provider.filteredEmployees.isEmpty) {
+    if (provider.errorMessage != null && !provider.initialLoadDone) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Text(
+                provider.errorMessage ?? 'Error',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => provider.loadAllFilters(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildEmptyState());
     }
 
@@ -452,8 +632,12 @@ class _AbscondScreenState extends State<AbscondScreen>
       padding: const EdgeInsets.all(16),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == 0) return _buildResultsHeader(provider);
-          final employee = provider.filteredEmployees[index - 1];
+          if (index == 0) return _buildPageInfo(provider);
+          if (index == 1) return _buildResultsHeader(provider);
+          if (index == provider.paginatedEmployees.length + 2) {
+            return _buildPagination(provider);
+          }
+          final user = provider.paginatedEmployees[index - 2];
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: Duration(milliseconds: 300 + (index * 50)),
@@ -464,9 +648,66 @@ class _AbscondScreenState extends State<AbscondScreen>
                 child: Opacity(opacity: value, child: child),
               );
             },
-            child: _buildEmployeeCard(employee),
+            child: _buildEmployeeCard(user),
           );
-        }, childCount: provider.filteredEmployees.length + 1),
+        }, childCount: provider.paginatedEmployees.length + 3),
+      ),
+    );
+  }
+
+  Widget _buildPageInfo(AbscondProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Text(
+              "Page ${provider.currentPage} of ${provider.totalPages}",
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Showing ${provider.paginatedEmployees.length} on this page",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontFamily: AppFonts.poppins,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
+            strokeWidth: 3,
+          ),
+          SizedBox(height: 20),
+          Text(
+            "Loading absconded employees...",
+            style: TextStyle(
+              color: AppColor.textSecondary,
+              fontSize: 15,
+              fontFamily: AppFonts.poppins,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -559,66 +800,45 @@ class _AbscondScreenState extends State<AbscondScreen>
     );
   }
 
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
-            strokeWidth: 3,
-          ),
-          SizedBox(height: 20),
-          Text(
-            "Loading absconded employees...",
-            style: TextStyle(
-              color: AppColor.textSecondary,
-              fontSize: 15,
-              fontFamily: AppFonts.poppins,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.person_search_rounded,
+                size: 48,
+                color: AppColor.textSecondary,
+              ),
             ),
-            child: const Icon(
-              Icons.person_search_rounded,
-              size: 48,
-              color: AppColor.textSecondary,
+            const SizedBox(height: 20),
+            const Text(
+              "No absconded employees found",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+                color: AppColor.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            "No absconded employees found",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textPrimary,
+            const SizedBox(height: 8),
+            const Text(
+              "Try adjusting your search or filters",
+              style: TextStyle(
+                fontSize: 14,
+                fontFamily: AppFonts.poppins,
+                color: AppColor.textSecondary,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            "Try adjusting your filters",
-            style: TextStyle(
-              fontSize: 14,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textSecondary,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -643,7 +863,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "${provider.filteredEmployees.length}",
+                  "${provider.paginatedEmployees.length}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -681,7 +901,16 @@ class _AbscondScreenState extends State<AbscondScreen>
     );
   }
 
-  Widget _buildEmployeeCard(dynamic employee) {
+  Widget _buildEmployeeCard(AbscondUser user) {
+    final name = user.fullname ?? user.username ?? 'Employee';
+    final empId = user.employmentId ?? user.userId ?? '';
+    final designation =
+        user.designation?.trim().isNotEmpty == true ? user.designation! : '—';
+    final branch =
+        (user.locationName ?? user.location ?? '').trim().isNotEmpty
+            ? (user.locationName ?? user.location)!
+            : '—';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -705,8 +934,8 @@ class _AbscondScreenState extends State<AbscondScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => AbscondEmpDetailsScreen(
-                      empId: employee.employeeId,
-                      employee: employee,
+                      empId: empId,
+                      abscondUser: user,
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -727,7 +956,6 @@ class _AbscondScreenState extends State<AbscondScreen>
           },
           child: Column(
             children: [
-              // Header with Gradient
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -757,9 +985,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                       ),
                       child: Center(
                         child: Text(
-                          employee.name.isNotEmpty
-                              ? employee.name[0].toUpperCase()
-                              : "E",
+                          name.isNotEmpty ? name[0].toUpperCase() : "E",
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -770,13 +996,12 @@ class _AbscondScreenState extends State<AbscondScreen>
                       ),
                     ),
                     const SizedBox(width: 14),
-
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            employee.name,
+                            name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -797,7 +1022,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: ${employee.employeeId}",
+                              "ID: $empId",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -809,8 +1034,6 @@ class _AbscondScreenState extends State<AbscondScreen>
                         ],
                       ),
                     ),
-
-                    // Absconded Badge
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -833,8 +1056,6 @@ class _AbscondScreenState extends State<AbscondScreen>
                   ],
                 ),
               ),
-
-              // Bottom Section
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
@@ -844,7 +1065,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                       child: _buildInfoItem(
                         icon: Icons.work_outline_rounded,
                         label: "DESIGNATION",
-                        value: employee.designation,
+                        value: designation,
                         color: AppColor.primaryColor,
                       ),
                     ),
@@ -858,7 +1079,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                       child: _buildInfoItem(
                         icon: Icons.location_on_outlined,
                         label: "BRANCH",
-                        value: employee.branch,
+                        value: branch,
                         color: AppColor.secondaryColor,
                       ),
                     ),
@@ -868,6 +1089,70 @@ class _AbscondScreenState extends State<AbscondScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildPagination(AbscondProvider provider) {
+    if (provider.totalPages <= 1) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: provider.currentPage > 1 ? provider.previousPage : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          ...List.generate(provider.totalPages > 5 ? 5 : provider.totalPages, (
+            i,
+          ) {
+            int pageNum;
+            if (provider.totalPages <= 5) {
+              pageNum = i + 1;
+            } else {
+              if (provider.currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (provider.currentPage >= provider.totalPages - 2) {
+                pageNum = provider.totalPages - 4 + i;
+              } else {
+                pageNum = provider.currentPage - 2 + i;
+              }
+            }
+            return InkWell(
+              onTap: () => provider.goToPage(pageNum),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color:
+                      provider.currentPage == pageNum
+                          ? AppColor.primaryColor
+                          : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$pageNum',
+                  style: TextStyle(
+                    color:
+                        provider.currentPage == pageNum
+                            ? Colors.white
+                            : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ),
+            );
+          }),
+          IconButton(
+            onPressed:
+                provider.currentPage < provider.totalPages
+                    ? provider.nextPage
+                    : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
       ),
     );
   }

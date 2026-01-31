@@ -4,17 +4,17 @@ import 'package:provider/provider.dart';
 import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../model/Employee_management/Employee_management.dart';
+import '../../../../model/Employee_management/AbscondUserListModelClass.dart';
 import '../../../../provider/Employee_management_Provider/Abscond_Provider.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 
 class AbscondEmpDetailsScreen extends StatefulWidget {
   final String empId;
-  final Employee employee;
+  final AbscondUser? abscondUser;
   const AbscondEmpDetailsScreen({
     super.key,
     required this.empId,
-    required this.employee,
+    this.abscondUser,
   });
 
   @override
@@ -80,8 +80,6 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                       _buildEmployeeHeaderCard(),
                       const SizedBox(height: 16),
                       _buildProfessionalInfoCard(),
-                      const SizedBox(height: 16),
-                      _buildTeamInfoCard(),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -159,7 +157,20 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
     );
   }
 
+  String get _displayName {
+    final u = widget.abscondUser;
+    if (u == null) return 'Employee';
+    return u.fullname ?? u.username ?? 'Employee';
+  }
+
   Widget _buildEmployeeHeaderCard() {
+    final u = widget.abscondUser;
+    final photoUrl = u?.avatar;
+    final name = _displayName;
+    final empId = widget.empId;
+    final designation =
+        u?.designation?.trim().isNotEmpty == true ? u!.designation! : '—';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColor.cardColor,
@@ -174,7 +185,6 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
       ),
       child: Column(
         children: [
-          // Gradient Header with Avatar
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
@@ -191,7 +201,6 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
             ),
             child: Column(
               children: [
-                // Avatar
                 Container(
                   width: 90,
                   height: 90,
@@ -205,25 +214,19 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                   ),
                   child: ClipOval(
                     child:
-                        widget.employee.photoUrl != null &&
-                                widget.employee.photoUrl!.isNotEmpty
+                        photoUrl != null && photoUrl.isNotEmpty
                             ? Image.network(
-                              widget.employee.photoUrl!,
+                              photoUrl,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return _buildDefaultAvatar(
-                                  widget.employee.name,
-                                );
-                              },
+                              errorBuilder:
+                                  (_, __, ___) => _buildDefaultAvatar(name),
                             )
-                            : _buildDefaultAvatar(widget.employee.name),
+                            : _buildDefaultAvatar(name),
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // Name
                 Text(
-                  widget.employee.name,
+                  name,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -233,8 +236,6 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-
-                // ID Badge
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -245,7 +246,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${widget.employee.employeeId}",
+                    "ID: $empId",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -255,10 +256,8 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                // Designation
                 Text(
-                  widget.employee.designation,
+                  designation,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -342,7 +341,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _showActivateDialog(),
+        onTap: _showActivateDialog,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -379,6 +378,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
   }
 
   Widget _buildViewProfileButton() {
+    final u = widget.abscondUser;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.95, end: 1.0),
       duration: const Duration(milliseconds: 300),
@@ -394,11 +394,11 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.employee.employeeId,
-                      empPhoto: widget.employee.photoUrl ?? "",
-                      empName: widget.employee.name,
-                      empDesignation: widget.employee.designation,
-                      empBranch: widget.employee.branch,
+                      empId: widget.empId,
+                      empPhoto: u?.avatar ?? "",
+                      empName: _displayName,
+                      empDesignation: u?.designation ?? "",
+                      empBranch: u?.locationName ?? u?.location ?? "",
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -457,6 +457,15 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
   }
 
   Widget _buildProfessionalInfoCard() {
+    final u = widget.abscondUser;
+    final department =
+        u?.department?.trim().isNotEmpty == true ? u!.department! : '—';
+    final branch =
+        (u?.locationName ?? u?.location ?? '').trim().isNotEmpty
+            ? (u!.locationName ?? u.location)!
+            : '—';
+    final abscondDate = u?.relievingDate ?? u?.joiningDate ?? '—';
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: const Duration(milliseconds: 500),
@@ -469,7 +478,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
       },
       child: Container(
         decoration: BoxDecoration(
-          color:AppColor. cardColor,
+          color: AppColor.cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -503,7 +512,10 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [AppColor.primaryColor, AppColor.secondaryColor],
+                        colors: [
+                          AppColor.primaryColor,
+                          AppColor.secondaryColor,
+                        ],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -532,23 +544,24 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                 children: [
                   _buildDetailRow(
                     "Department",
-                    widget.employee.department,
+                    department,
                     Icons.business_rounded,
                   ),
+                  _buildDetailRow("Branch", branch, Icons.location_on_rounded),
                   _buildDetailRow(
-                    "Branch",
-                    widget.employee.branch,
-                    Icons.location_on_rounded,
-                  ),
-                  _buildDetailRow(
-                    "Abscond Date",
-                    widget.employee.doj,
+                    "Abscond / Relieving Date",
+                    abscondDate,
                     Icons.event_busy_rounded,
                   ),
                   _buildDetailRow(
-                    "Payroll Category",
-                    widget.employee.payrollCategory,
-                    Icons.category_rounded,
+                    "Email",
+                    u?.email ?? '—',
+                    Icons.email_rounded,
+                  ),
+                  _buildDetailRow(
+                    "Mobile",
+                    u?.mobile ?? '—',
+                    Icons.phone_rounded,
                     isLast: true,
                   ),
                 ],
@@ -611,204 +624,9 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
             ],
           ),
         ),
-        if (!isLast) Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
+        if (!isLast)
+          Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
       ],
-    );
-  }
-
-  Widget _buildTeamInfoCard() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
-          child: Opacity(opacity: value, child: child),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColor.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColor.secondaryColor.withOpacity(0.1),
-                    AppColor.primaryColor.withOpacity(0.05),
-                  ],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColor.secondaryColor, AppColor.primaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.people_rounded,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "Team Information",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  _buildTeamMemberCard(
-                    "Recruiter",
-                    widget.employee.recruiterName ?? "Not assigned",
-                    widget.employee.recruiterPhotoUrl,
-                    Icons.person_search_rounded,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildTeamMemberCard(
-                    "Created By",
-                    widget.employee.createdByName ?? "Unknown",
-                    widget.employee.createdByPhotoUrl,
-                    Icons.person_add_rounded,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTeamMemberCard(
-    String role,
-    String name,
-    String? photoUrl,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor.withOpacity(0.5)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [
-                  AppColor.primaryColor.withOpacity(0.2),
-                  AppColor.secondaryColor.withOpacity(0.2),
-                ],
-              ),
-              border: Border.all(color: AppColor.borderColor),
-            ),
-            child: ClipOval(
-              child:
-                  photoUrl != null && photoUrl.isNotEmpty
-                      ? Image.network(
-                        photoUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return _buildSmallDefaultAvatar(name);
-                        },
-                      )
-                      : _buildSmallDefaultAvatar(name),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  role,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: AppFonts.poppins,
-                    color: AppColor.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: AppFonts.poppins,
-                    color: AppColor.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColor.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColor.primaryColor),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSmallDefaultAvatar(String name) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [AppColor.primaryColor, AppColor.secondaryColor]),
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : "?",
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-      ),
     );
   }
 
@@ -853,7 +671,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    "Are you sure you want to activate ${widget.employee.name}?",
+                    "Are you sure you want to activate $_displayName?",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
@@ -893,14 +711,14 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                             Navigator.pop(dialogContext);
 
                             final success = await provider.activateEmployee(
-                              widget.employee.employeeId,
+                              widget.empId,
                             );
 
                             if (success) {
                               Get.back();
                               Get.snackbar(
                                 "Activated",
-                                "${widget.employee.name} has been activated successfully",
+                                "$_displayName has been activated successfully",
                                 backgroundColor: const Color(0xFF059669),
                                 colorText: Colors.white,
                                 snackPosition: SnackPosition.BOTTOM,

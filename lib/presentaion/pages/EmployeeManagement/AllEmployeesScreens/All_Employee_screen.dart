@@ -5,6 +5,7 @@ import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/All_Employees_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import 'All_Employee_Details_Screens.dart';
 
 class AllEmployeeScreen extends StatefulWidget {
@@ -237,7 +238,7 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
         ),
         child: TextField(
           controller: provider.searchController,
-          onChanged: (value) => provider.onSearchChanged(value),
+          onChanged: provider.onSearchChanged,
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
@@ -306,46 +307,33 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
           children: [
             Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Zone *",
-                    items: provider.zone,
-                    selectedValue: provider.selectedZone,
-                    onChanged: provider.setSelectedZone,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Branch *",
-                    items: provider.branch,
-                    selectedValue: provider.selectedBranch,
-                    onChanged: provider.setSelectedBranch,
-                    hintText: "Select",
-                  ),
-                ),
-              ],
+            // Zone (single select)
+            CustomSearchDropdownWithSearch(
+              labelText: "Zone *",
+              items: provider.zone,
+              selectedValue: provider.selectedZone,
+              onChanged: provider.setSelectedZone,
+              hintText: "Select Zone",
             ),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Designation *",
-                    items: provider.designation,
-                    selectedValue: provider.selectedDesignation,
-                    onChanged: provider.setSelectedDesignation,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(child: SizedBox()),
-              ],
+            const SizedBox(height: 12),
+
+            // Branch (multiselect)
+            MultiSelectDropdown(
+              label: "Branch *",
+              items: provider.branch,
+              selectedItems: provider.selectedBranches,
+              onChanged: provider.setSelectedBranches,
+              designationEnableSelectAll: true,
+            ),
+            const SizedBox(height: 12),
+
+            // Designation (multiselect)
+            MultiSelectDropdown(
+              label: "Designation *",
+              items: provider.designation,
+              selectedItems: provider.selectedDesignations,
+              onChanged: provider.setSelectedDesignations,
+              designationEnableSelectAll: true,
             ),
             const SizedBox(height: 12),
             Row(
@@ -430,26 +418,44 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                       : null,
             ),
             child: Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_rounded,
-                    size: 18,
-                    color: canApply ? Colors.white : AppColor.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    canApply ? "Apply Filters" : "Select All Filters",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : AppColor.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+              child:
+                  provider.isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_rounded,
+                              size: 18,
+                              color:
+                                  canApply
+                                      ? Colors.white
+                                      : AppColor.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              canApply ? "Apply Filters" : "Select All Filters",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                                color:
+                                    canApply
+                                        ? Colors.white
+                                        : AppColor.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
             ),
           ),
         ),
@@ -767,7 +773,8 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 pageBuilder:
                     (_, __, ___) => AllEmployeeDetailsScreens(
                       empId: employee.employeeId,
-                      employee: employee,
+                      employee:
+                          employee, // Optional - can be null to fetch from API
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(

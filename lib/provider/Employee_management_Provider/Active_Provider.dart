@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../model/Employee_management/ActiveUserListModel.dart' as models;
 import '../../model/Employee_management/getAllFiltersModel.dart';
-import '../../servicesAPI/ActiveUserService/ActiveUserFilterService.dart';
-import '../../servicesAPI/ActiveUserService/ActiveUserService.dart';
+import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
+import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserService.dart';
 
 class ActiveProvider extends ChangeNotifier {
   // Services
@@ -117,50 +117,78 @@ class ActiveProvider extends ChangeNotifier {
 
   int _currentPage = 1;
   final int _itemsPerPage = 10;
+  int? _totalRecords;
+  int? _totalPagesFromServer;
+  /// True when API returned pagination (server-side); false when we slice on client
+  bool _paginationFromServer = false;
 
   int get currentPage => _currentPage;
   int get itemsPerPage => _itemsPerPage;
 
+  /// Total pages from API or from client-side slice
   int get totalPages {
+    if (_totalPagesFromServer != null) return _totalPagesFromServer!;
+    if (_totalRecords != null) return ((_totalRecords! / _itemsPerPage).ceil()).clamp(1, 999999);
     if (_filteredEmployees.isEmpty) return 0;
     return (_filteredEmployees.length / _itemsPerPage).ceil();
   }
 
-  List<models.Users> get paginatedEmployees {
-    final startIndex = (_currentPage - 1) * _itemsPerPage;
-    final endIndex = startIndex + _itemsPerPage;
-
-    if (startIndex >= _filteredEmployees.length) {
-      return [];
-    }
-
-    return _filteredEmployees.sublist(
-      startIndex,
-      endIndex > _filteredEmployees.length
-          ? _filteredEmployees.length
-          : endIndex,
-    );
-  }
+  /// Current page list (server returns one page, or we slice from _allEmployees)
+  List<models.Users> get paginatedEmployees => _filteredEmployees;
 
   void nextPage() {
-    if (_currentPage < totalPages) {
-      _currentPage++;
+    if (_currentPage >= totalPages) return;
+    _currentPage++;
+    if (_paginationFromServer) {
+      _fetchCurrentPage();
+    } else {
+      _applyClientSidePage();
       notifyListeners();
     }
   }
 
   void previousPage() {
-    if (_currentPage > 1) {
-      _currentPage--;
+    if (_currentPage <= 1) return;
+    _currentPage--;
+    if (_paginationFromServer) {
+      _fetchCurrentPage();
+    } else {
+      _applyClientSidePage();
       notifyListeners();
     }
   }
 
   void goToPage(int page) {
-    if (page >= 1 && page <= totalPages) {
-      _currentPage = page;
+    if (page < 1 || page > totalPages) return;
+    _currentPage = page;
+    if (_paginationFromServer) {
+      _fetchCurrentPage();
+    } else {
+      _applyClientSidePage();
       notifyListeners();
     }
+  }
+
+  void _applyClientSidePage() {
+    final start = (_currentPage - 1) * _itemsPerPage;
+    final end = (start + _itemsPerPage).clamp(0, _allEmployees.length);
+    _filteredEmployees = start < _allEmployees.length ? _allEmployees.sublist(start, end) : [];
+  }
+
+  /// Fetch current page from server (same concept as Management Approval)
+  void _fetchCurrentPage() {
+    fetchActiveUsers(
+      cmpid: _selectedCompanyId,
+      zoneId: _selectedZoneIds.isNotEmpty ? _selectedZoneIds.join(',') : null,
+      locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+      designationsId: _selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null,
+      ctcRange: _selectedCTCId,
+      fromdate: dojFromController.text.isNotEmpty ? dojFromController.text : null,
+      todate: fojToController.text.isNotEmpty ? fojToController.text : null,
+      page: _currentPage,
+      perPage: _itemsPerPage,
+      search: searchController.text.isNotEmpty ? searchController.text : null,
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════
@@ -296,8 +324,8 @@ class ActiveProvider extends ChangeNotifier {
         print("📊 CTC Ranges: ${_ctcList.length}");
       }
 
-      // 🔥 Load users after filters
-      await fetchActiveUsers();
+      // 🔥 Load default first 10 from backend (same concept as Management Approval)
+      await fetchActiveUsers(page: 1, perPage: 10);
 
       _initialLoadDone = true;
     } catch (e) {
@@ -409,27 +437,44 @@ class ActiveProvider extends ChangeNotifier {
       _isTokenExpired = false;
       notifyListeners();
 
-      if (kDebugMode) print("🔄 ActiveProvider: Fetching active users...");
+      if (kDebugMode) print("🔄 ActiveProvider: Fetching active users (page ${page ?? _currentPage}, perPage ${perPage ?? _itemsPerPage})...");
 
-      // 🔥 ApiHelper will attach token automatically
+      // 🔥 Request only current page from backend (default 10) – same concept as Management Approval
       final response = await _activeUserService.getActiveUsers(
-        cmpid: cmpid,
-        zoneId: zoneId,
-        locationsId: locationsId,
-        designationsId: designationsId,
-        ctcRange: ctcRange,
+        cmpid: cmpid ?? _selectedCompanyId,
+        zoneId: zoneId ?? (_selectedZoneIds.isNotEmpty ? _selectedZoneIds.join(',') : null),
+        locationsId: locationsId ?? (_selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null),
+        designationsId: designationsId ?? (_selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null),
+        ctcRange: ctcRange ?? _selectedCTCId,
         punch: punch,
         dolpFromdate: dolpFromdate,
         dolpTodate: dolpTodate,
-        fromdate: fromdate,
-        todate: todate,
+        fromdate: fromdate ?? (dojFromController.text.isNotEmpty ? dojFromController.text : null),
+        todate: todate ?? (fojToController.text.isNotEmpty ? fojToController.text : null),
+        page: page ?? _currentPage,
+        perPage: perPage ?? _itemsPerPage,
         search: search ?? searchController.text,
       );
 
       if (response != null && response.status == 'success') {
         _activeUserListResponse = response;
         _allEmployees = response.data?.users ?? [];
-        _filteredEmployees = List.from(_allEmployees);
+
+        final pagination = response.data?.pagination;
+        if (pagination != null && (pagination.total != null || pagination.lastPage != null)) {
+          _paginationFromServer = true;
+          _totalRecords = pagination.total;
+          _totalPagesFromServer = pagination.lastPage ?? (pagination.total != null ? ((pagination.total! / _itemsPerPage).ceil()) : null);
+          _currentPage = pagination.currentPage ?? _currentPage;
+          _filteredEmployees = List.from(_allEmployees);
+        } else {
+          _paginationFromServer = false;
+          _totalRecords = _allEmployees.length;
+          _totalPagesFromServer = (_allEmployees.length / _itemsPerPage).ceil().clamp(1, 999999);
+          final start = (_currentPage - 1) * _itemsPerPage;
+          final end = (start + _itemsPerPage).clamp(0, _allEmployees.length);
+          _filteredEmployees = start < _allEmployees.length ? _allEmployees.sublist(start, end) : [];
+        }
 
         final summary = response.data?.summary;
         if (summary != null) {
@@ -444,7 +489,7 @@ class ActiveProvider extends ChangeNotifier {
         _hasAppliedFilters = true;
 
         if (kDebugMode) {
-          print("✅ ActiveProvider: Loaded ${_allEmployees.length} employees");
+          print("✅ ActiveProvider: Loaded ${_allEmployees.length} employees (page $_currentPage of $totalPages, total $_totalRecords)");
         }
       } else {
         _errorMessage = response?.message ?? "Failed to load employees";
@@ -549,50 +594,47 @@ class ActiveProvider extends ChangeNotifier {
       return;
     }
 
-    _currentPage = 1; // ✅ Reset to first page
-
+    _currentPage = 1;
     fetchActiveUsers(
       cmpid: _selectedCompanyId,
-      zoneId: _selectedZoneIds.join(','),
-      locationsId: _selectedBranchIds.join(','),
-      designationsId: _selectedDesignationIds.join(','), // ✅ Changed
+      zoneId: _selectedZoneIds.isNotEmpty ? _selectedZoneIds.join(',') : null,
+      locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+      designationsId: _selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null,
       ctcRange: _selectedCTCId,
-      fromdate:
-          dojFromController.text.isNotEmpty ? dojFromController.text : null,
+      fromdate: dojFromController.text.isNotEmpty ? dojFromController.text : null,
       todate: fojToController.text.isNotEmpty ? fojToController.text : null,
+      page: 1,
+      perPage: _itemsPerPage,
       search: searchController.text.isNotEmpty ? searchController.text : null,
     );
   }
 
+  /// Server-side search: fetch page 1 with search query (same concept as Management Approval)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+    _currentPage = 1;
+    _fetchCurrentPageWithSearch(query);
+  }
 
-    _currentPage = 1; // ✅ Reset to first page when searching
-
-    if (query.isEmpty) {
-      _filteredEmployees = List.from(_allEmployees);
-    } else {
-      _filteredEmployees =
-          _allEmployees.where((user) {
-            return (user.fullname ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                ) ||
-                (user.employmentId ?? user.userId ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                ) ||
-                (user.designation ?? "").toLowerCase().contains(
-                  query.toLowerCase(),
-                );
-          }).toList();
-    }
-    notifyListeners();
+  void _fetchCurrentPageWithSearch(String searchQuery) {
+    fetchActiveUsers(
+      cmpid: _selectedCompanyId,
+      zoneId: _selectedZoneIds.isNotEmpty ? _selectedZoneIds.join(',') : null,
+      locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+      designationsId: _selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null,
+      ctcRange: _selectedCTCId,
+      fromdate: dojFromController.text.isNotEmpty ? dojFromController.text : null,
+      todate: fojToController.text.isNotEmpty ? fojToController.text : null,
+      page: 1,
+      perPage: _itemsPerPage,
+      search: searchQuery.isNotEmpty ? searchQuery : null,
+    );
   }
 
   void clearSearch() {
     searchController.clear();
-    _filteredEmployees = List.from(_allEmployees);
     _currentPage = 1;
-    notifyListeners();
+    _fetchCurrentPage();
   }
 
   void clearAllFilters() {
@@ -602,8 +644,8 @@ class ActiveProvider extends ChangeNotifier {
     _selectedZoneNames.clear();
     _selectedBranchIds.clear();
     _selectedBranchNames.clear();
-    _selectedDesignationIds.clear(); // ✅ Changed
-    _selectedDesignationNames.clear(); // ✅ Changed
+    _selectedDesignationIds.clear();
+    _selectedDesignationNames.clear();
     _selectedCTC = null;
     _selectedCTCId = null;
     dojFromController.clear();
@@ -611,8 +653,11 @@ class ActiveProvider extends ChangeNotifier {
     searchController.clear();
     _errorMessage = null;
     _currentPage = 1;
+    _totalRecords = null;
+    _totalPagesFromServer = null;
     notifyListeners();
-    fetchActiveUsers();
+    // Request default first 10 from backend (same as Management Approval)
+    fetchActiveUsers(page: 1, perPage: _itemsPerPage);
   }
 
   // ═══════════════════════════════════════════════════════════════════════

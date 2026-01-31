@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/model/Employee_management/InActiveUserListModelClass.dart';
 import 'package:provider/provider.dart';
-
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
-import '../../../../provider/Employee_management_Provider/InActiveProvider.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../provider/Employee_management_Provider/InActiveProvider.dart';
 import 'InActiveDetailsScreen.dart';
 
 class InActiveScreen extends StatefulWidget {
@@ -14,23 +16,10 @@ class InActiveScreen extends StatefulWidget {
   State<InActiveScreen> createState() => _InActiveScreenState();
 }
 
-class _InActiveScreenState extends State<InActiveScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
+class _InActiveScreenState extends State<InActiveScreen> {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-    _animationController.forward();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<InActiveProvider>(
         context,
@@ -40,967 +29,873 @@ class _InActiveScreenState extends State<InActiveScreen>
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<InActiveProvider>(context);
-
+    final inActiveProvider = Provider.of<InActiveProvider>(context);
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Header Section
-            SliverToBoxAdapter(child: _buildHeaderSection(provider)),
-
-            // Filter Section
-            if (provider.showFilters)
-              SliverToBoxAdapter(child: _buildFilterSection(provider)),
-
-            // Results Section
-            _buildResultsSection(provider),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderSection(InActiveProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Filter Toggle and Page Size Row
-            Row(
-              children: [
-                Expanded(child: _buildFilterToggleButton(provider)),
-                const SizedBox(width: 12),
-                _buildPageSizeDropdown(provider),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildSearchField(provider),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterToggleButton(InActiveProvider provider) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.95, end: 1.0),
-      duration: const Duration(milliseconds: 300),
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: provider.toggleFilters,
-          borderRadius: BorderRadius.circular(12),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient:
-                  provider.showFilters
-                      ? const LinearGradient(
-                        colors: [
-                          AppColor.primaryColor,
-                          AppColor.secondaryColor,
-                        ],
-                      )
-                      : null,
-              color: provider.showFilters ? null : const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color:
-                    provider.showFilters
-                        ? Colors.transparent
-                        : AppColor.borderColor,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.tune_rounded,
-                  size: 20,
-                  color:
-                      provider.showFilters
-                          ? Colors.white
-                          : AppColor.textSecondary,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  "Filters",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: AppFonts.poppins,
-                    color:
-                        provider.showFilters
-                            ? Colors.white
-                            : AppColor.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                AnimatedRotation(
-                  turns: provider.showFilters ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color:
-                        provider.showFilters
-                            ? Colors.white
-                            : AppColor.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageSizeDropdown(InActiveProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: provider.pageSize,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColor.textSecondary,
-          ),
-          items:
-              [5, 10, 15, 20].map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(
-                    "$e",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-          onChanged: (val) {
-            if (val != null) provider.setPageSize(val);
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchField(InActiveProvider provider) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColor.borderColor),
-        ),
-        child: TextField(
-          controller: provider.searchController,
-          onChanged: (value) => provider.onSearchChanged(value),
-          style: const TextStyle(
-            fontSize: 15,
-            fontFamily: AppFonts.poppins,
-            color: AppColor.textPrimary,
-          ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.transparent,
-            hintText: "Search employees by name, ID...",
-            hintStyle: TextStyle(
-              fontSize: 14,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textSecondary.withOpacity(0.7),
-            ),
-            prefixIcon: const Icon(
-              Icons.search_rounded,
-              color: AppColor.textSecondary,
-              size: 22,
-            ),
-            suffixIcon:
-                provider.searchController.text.isNotEmpty
-                    ? IconButton(
-                      onPressed: () => provider.clearSearch(),
-                      icon: Container(
-                        padding: const EdgeInsets.all(4),
+      body: CustomScrollView(
+        slivers: [
+          // Shimmer during initial load (same concept as Active screen)
+          if (inActiveProvider.isLoading && !inActiveProvider.initialLoadDone)
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    // Page Info Shimmer
+                    Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.grey.shade100,
+                      child: Container(
+                        padding: EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColor.textSecondary.withOpacity(0.1),
-                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: AppColor.textSecondary,
-                          size: 16,
+                        child: Column(
+                          children: [
+                            Container(
+                              height: 16,
+                              width: 150,
+                              color: Colors.white,
+                            ),
+                            SizedBox(height: 8),
+                            Container(
+                              height: 14,
+                              width: 250,
+                              color: Colors.white,
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                    : null,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            disabledBorder: InputBorder.none,
-            errorBorder: InputBorder.none,
-            focusedErrorBorder: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+                    ),
+                    SizedBox(height: 16),
+
+                    // List Shimmer
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: 10,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.grey.shade100,
+                            child: Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.grey.shade200,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Avatar
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+
+                                  // Details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Name
+                                        Container(
+                                          width: 150,
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+
+                                        // ID Badge
+                                        Container(
+                                          width: 80,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+
+                                        // Designation Row
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              width: 100,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+
+                                        // Location Row
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 20,
+                                              height: 20,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              width: 120,
+                                              height: 12,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  // Arrow Icon
+                                  Container(
+                                    width: 30,
+                                    height: 30,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
+
+          // ════════════════════════════════════════════════════════════
+          // ACTUAL CONTENT (When Data Loaded)
+          // ════════════════════════════════════════════════════════════
+          if (!inActiveProvider.isLoading ||
+              inActiveProvider.initialLoadDone) ...[
+            // SUMMARY CARDS SECTION
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    // Page info
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Page ${inActiveProvider.currentPage} of ${inActiveProvider.totalPages}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Total Inactive Employees: ${inActiveProvider.filteredEmployees.length}",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[700],
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+
+            // FILTER & SEARCH SECTION
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: inActiveProvider.toggleFilters,
+                      child: Container(
+                        padding: EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color:
+                              inActiveProvider.showFilters
+                                  ? AppColor.primaryColor
+                                  : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.filter_list,
+                              color:
+                                  inActiveProvider.showFilters
+                                      ? Colors.white
+                                      : Colors.black,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Filters",
+                              style: TextStyle(
+                                color:
+                                    inActiveProvider.showFilters
+                                        ? Colors.white
+                                        : Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Spacer(),
+                            Icon(
+                              inActiveProvider.showFilters
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color:
+                                  inActiveProvider.showFilters
+                                      ? Colors.white
+                                      : Colors.black,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    TextField(
+                      style: TextStyle(fontFamily: AppFonts.poppins),
+                      controller: inActiveProvider.searchController,
+                      onChanged: inActiveProvider.onSearchChanged,
+                      decoration: InputDecoration(
+                        hintStyle: TextStyle(fontFamily: AppFonts.poppins),
+                        hintText: "Search by name, ID...",
+                        prefixIcon: Icon(Icons.search),
+                        suffixIcon:
+                            inActiveProvider.searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(Icons.clear),
+                                  onPressed: inActiveProvider.clearSearch,
+                                )
+                                : null,
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+
+            // FILTERS DROPDOWN
+            if (inActiveProvider.showFilters)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      if (inActiveProvider.isLoadingFilters)
+                        Center(child: CircularProgressIndicator())
+                      else ...[
+                        CustomSearchDropdownWithSearch(
+                          labelText: "Zone *",
+                          isMandatory: true,
+                          items: inActiveProvider.zone,
+                          selectedValue: inActiveProvider.selectedZone,
+                          onChanged: inActiveProvider.setSelectedZone,
+                          hintText: "Select Zone",
+                        ),
+
+                        SizedBox(height: 12),
+
+                        MultiSelectDropdown(
+                          label: "Branch",
+                          items: inActiveProvider.branch,
+                          selectedItems: inActiveProvider.selectedBranches,
+                          onChanged: inActiveProvider.setSelectedBranches,
+                          zoneEnableSelectAll: true,
+
+                        ),
+
+                        SizedBox(height: 12),
+                        MultiSelectDropdown(
+                          label: "Designation",
+                          items: inActiveProvider.designation,
+                          selectedItems: inActiveProvider.selectedDesignations,
+                          onChanged: inActiveProvider.setSelectedDesignations,
+                          designationEnableSelectAll: true,
+                        ),
+                        SizedBox(height: 16),
+                        Row(
+                          children: [
+                            // Clear Button
+                            Expanded(
+                              child: InkWell(
+                                onTap: inActiveProvider.clearAllFilters,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                      width: 1.5,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.clear_all,
+                                        size: 18,
+                                        color: Colors.grey[700],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        "Clear",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Apply Filters Button
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap:
+                                    inActiveProvider.areAllFiltersSelected
+                                        ? inActiveProvider.searchEmployees
+                                        : null,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    gradient:
+                                        inActiveProvider.areAllFiltersSelected
+                                            ? const LinearGradient(
+                                              colors: [
+                                                Color(0xFF8E0E6B),
+                                                Color(0xFFD4145A),
+                                              ],
+                                              begin: Alignment.centerLeft,
+                                              end: Alignment.centerRight,
+                                            )
+                                            : null,
+                                    color:
+                                        inActiveProvider.areAllFiltersSelected
+                                            ? null
+                                            : Colors.grey.shade300,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow:
+                                        inActiveProvider.areAllFiltersSelected
+                                            ? [
+                                              BoxShadow(
+                                                color: const Color(
+                                                  0xFF8E0E6B,
+                                                ).withOpacity(0.4),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ]
+                                            : [],
+                                  ),
+                                  child: Center(
+                                    child:
+                                        inActiveProvider.isLoading
+                                            ? const SizedBox(
+                                              height: 20,
+                                              width: 20,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                            : Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.filter_alt,
+                                                  size: 18,
+                                                  color:
+                                                      inActiveProvider
+                                                              .areAllFiltersSelected
+                                                          ? Colors.white
+                                                          : Colors.grey[600],
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  "Apply Filters",
+                                                  style: TextStyle(
+                                                    fontFamily:
+                                                        AppFonts.poppins,
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.w600,
+                                                    color:
+                                                        inActiveProvider
+                                                                .areAllFiltersSelected
+                                                            ? Colors.white
+                                                            : Colors.grey[600],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+            // EMPTY STATE
+            if (inActiveProvider.paginatedEmployees.isEmpty &&
+                !inActiveProvider.isLoading &&
+                inActiveProvider.initialLoadDone)
+              SliverFillRemaining(
+                child: Center(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.person_off, size: 48, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          "No inactive employees found",
+                          style: TextStyle(fontFamily: AppFonts.poppins),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // ERROR STATE
+            if (inActiveProvider.errorMessage != null &&
+                !inActiveProvider.initialLoadDone)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error, size: 48, color: Colors.red),
+                      SizedBox(height: 16),
+                      Text(inActiveProvider.errorMessage ?? "Error"),
+                      SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: inActiveProvider.fetchInActiveUsers,
+                        child: Text("Retry"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // EMPLOYEE LIST
+            if (inActiveProvider.paginatedEmployees.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          "${inActiveProvider.filteredEmployees.length} Inactive Employees Found",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: AppFonts.poppins,
+                          ),
+                        ),
+                      );
+                    }
+                    final user = inActiveProvider.paginatedEmployees[index - 1];
+                    return _buildEmployeeCard(context, user);
+                  }, childCount: inActiveProvider.paginatedEmployees.length + 1),
+                ),
+              ),
+
+            // PAGINATION
+            if (inActiveProvider.paginatedEmployees.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed:
+                            inActiveProvider.currentPage > 1
+                                ? inActiveProvider.previousPage
+                                : null,
+                        icon: Icon(Icons.chevron_left),
+                      ),
+                      ...List.generate(
+                        inActiveProvider.totalPages > 5
+                            ? 5
+                            : inActiveProvider.totalPages,
+                        (index) {
+                          int pageNum;
+                          if (inActiveProvider.totalPages <= 5) {
+                            pageNum = index + 1;
+                          } else {
+                            if (inActiveProvider.currentPage <= 3) {
+                              pageNum = index + 1;
+                            } else if (inActiveProvider.currentPage >=
+                                inActiveProvider.totalPages - 2) {
+                              pageNum = inActiveProvider.totalPages - 4 + index;
+                            } else {
+                              pageNum =
+                                  inActiveProvider.currentPage - 2 + index;
+                            }
+                          }
+                          return InkWell(
+                            onTap: () => inActiveProvider.goToPage(pageNum),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 4),
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color:
+                                    inActiveProvider.currentPage == pageNum
+                                        ? AppColor.primaryColor
+                                        : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "$pageNum",
+                                style: TextStyle(
+                                  color:
+                                      inActiveProvider.currentPage == pageNum
+                                          ? Colors.white
+                                          : Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        onPressed:
+                            inActiveProvider.currentPage <
+                                    inActiveProvider.totalPages
+                                ? inActiveProvider.nextPage
+                                : null,
+                        icon: Icon(Icons.chevron_right),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 35), // Bottom spacing
+            ),
+          ],
+        ],
       ),
     );
   }
 
-  Widget _buildFilterSection(InActiveProvider provider) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        border: Border(
-          bottom: BorderSide(color: AppColor.borderColor.withOpacity(0.5)),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: Column(
-          children: [
-            Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Zone *",
-                    items: provider.zone,
-                    selectedValue: provider.selectedZone,
-                    onChanged: provider.setSelectedZone,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Branch *",
-                    items: provider.branch,
-                    selectedValue: provider.selectedBranch,
-                    onChanged: provider.setSelectedBranch,
-                    hintText: "Select",
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Designation *",
-                    items: provider.designation,
-                    selectedValue: provider.selectedDesignation,
-                    onChanged: provider.setSelectedDesignation,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(child: SizedBox()),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildClearButton(provider)),
-                const SizedBox(width: 10),
-                Expanded(flex: 2, child: _buildApplyButton(provider)),
-              ],
+  Widget _buildEmployeeCard(BuildContext context, InActiveUser user) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade200, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildClearButton(InActiveProvider provider) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => provider.clearAllFilters(),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColor.borderColor),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Center(
-            child: Text(
-              "Clear",
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                fontFamily: AppFonts.poppins,
-                color: AppColor.textSecondary,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApplyButton(InActiveProvider provider) {
-    final bool canApply = provider.areAllFiltersSelected;
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.95, end: 1.0),
-      duration: const Duration(milliseconds: 200),
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: canApply ? () => provider.searchEmployees() : null,
-          borderRadius: BorderRadius.circular(12),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              gradient:
-                  canApply
-                      ? const LinearGradient(
-                        colors: [
-                          AppColor.primaryColor,
-                          AppColor.secondaryColor,
-                        ],
-                      )
-                      : null,
-              color: canApply ? null : AppColor.borderColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow:
-                  canApply
-                      ? [
-                        BoxShadow(
-                          color: AppColor.primaryColor.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                      : null,
-            ),
-            child: Center(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => InActiveDetailsScreen(
+                        empId: user.employmentId ?? user.userId ?? '',
+                        employee: user,
+                      ),
+                ),
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(14),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.search_rounded,
-                    size: 18,
-                    color: canApply ? Colors.white : AppColor.textSecondary,
+                  // Avatar
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
+                    backgroundImage:
+                        (user.avatar != null && user.avatar!.isNotEmpty)
+                            ? NetworkImage(user.avatar!)
+                            : null,
+                    child:
+                        (user.avatar == null || user.avatar!.isEmpty)
+                            ? Text(
+                              (user.fullname ?? user.username ?? 'E')[0]
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                color: Color(0xFF8E0E6B),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            )
+                            : null,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    canApply ? "Apply Filters" : "Select All Filters",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : AppColor.textSecondary,
+                  const SizedBox(width: 14),
+
+                  // Employee Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Name
+                        Text(
+                          user.fullname ?? 'Employee',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A1A),
+                            fontFamily: AppFonts.poppins,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Employee ID
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF8E0E6B).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            "ECI ID: ${user.employmentId ?? 'N/A'}",
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF8E0E6B),
+                              fontFamily: AppFonts.poppins,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Designation
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                Icons.work_outline,
+                                size: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                user.designation?.trim().isNotEmpty == true
+                                    ? user.designation!
+                                    : "Unknown Designation",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Branch/Location
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                size: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                (user.locationName ?? user.location ?? '')
+                                        .trim()
+                                        .isNotEmpty
+                                    ? (user.locationName ?? user.location ?? '')
+                                    : "Unknown Branch",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[700],
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Relieving Date (if available)
+                        if (user.relievingDate != null &&
+                            user.relievingDate!.isNotEmpty)
+                          const SizedBox(height: 4),
+                        if (user.relievingDate != null &&
+                            user.relievingDate!.isNotEmpty)
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Icon(
+                                  Icons.calendar_today,
+                                  size: 12,
+                                  color: Colors.red[600],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  "Relieved: ${user.relievingDate}",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.red[700],
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Arrow Icon
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                      size: 14,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResultsSection(InActiveProvider provider) {
-    if (!provider.hasAppliedFilters) {
-      return SliverFillRemaining(child: _buildSelectFiltersMessage());
-    }
-
-    if (provider.isLoading) {
-      return SliverFillRemaining(child: _buildLoadingState());
-    }
-
-    if (provider.filteredEmployees.isEmpty) {
-      return SliverFillRemaining(child: _buildEmptyState());
-    }
-
-    return SliverPadding(
-      padding: const EdgeInsets.all(16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == 0) return _buildResultsHeader(provider);
-          final employee = provider.filteredEmployees[index - 1];
-          return TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: Duration(milliseconds: 300 + (index * 50)),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: Opacity(opacity: value, child: child),
-              );
-            },
-            child: _buildEmployeeCard(employee),
-          );
-        }, childCount: provider.filteredEmployees.length + 1),
-      ),
-    );
-  }
-
-  Widget _buildSelectFiltersMessage() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColor.primaryColor.withOpacity(0.1),
-                      AppColor.secondaryColor.withOpacity(0.1),
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_off_rounded,
-                  size: 48,
-                  color: AppColor.primaryColor,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "Select Filters to View Employees",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "Please select Zone, Branch, and Designation\nto view inactive employees",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColor.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColor.primaryColor.withOpacity(0.3),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.touch_app_rounded,
-                      size: 18,
-                      color: AppColor.primaryColor,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      "Tap 'Filters' above to start",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: AppFonts.poppins,
-                        color: AppColor.primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(
-            width: 50,
-            height: 50,
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColor.primaryColor),
-              strokeWidth: 3,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            "Loading inactive employees...",
-            style: TextStyle(
-              color: AppColor.textSecondary,
-              fontSize: 15,
-              fontFamily: AppFonts.poppins,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_search_rounded,
-                size: 48,
-                color: AppColor.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "No employees found",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                fontFamily: AppFonts.poppins,
-                color: AppColor.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Try adjusting your filters",
-              style: TextStyle(
-                fontSize: 14,
-                fontFamily: AppFonts.poppins,
-                color: AppColor.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResultsHeader(InActiveProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  "${provider.filteredEmployees.length}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    fontFamily: AppFonts.poppins,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                "Employees Found",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          if (provider.showFilters)
-            TextButton.icon(
-              onPressed: () => provider.toggleFilters(),
-              icon: const Icon(Icons.keyboard_arrow_up_rounded, size: 18),
-              label: const Text(
-                "Hide",
-                style: TextStyle(fontSize: 13, fontFamily: AppFonts.poppins),
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColor.textSecondary,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmployeeCard(dynamic employee) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder:
-                    (_, __, ___) => InActiveDetailsScreen(
-                      empId: employee.employeeId,
-                      employee: employee,
-                    ),
-                transitionsBuilder: (_, animation, __, child) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(1, 0),
-                      end: Offset.zero,
-                    ).animate(
-                      CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                    child: child,
-                  );
-                },
-              ),
-            );
-          },
-          child: Column(
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child:
-                            employee.photoUrl != null &&
-                                    employee.photoUrl!.isNotEmpty
-                                ? Image.network(
-                                  employee.photoUrl!,
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return _buildDefaultAvatar(employee.name);
-                                  },
-                                  loadingBuilder: (
-                                    context,
-                                    child,
-                                    loadingProgress,
-                                  ) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: CircularProgressIndicator(
-                                        value:
-                                            loadingProgress
-                                                        .expectedTotalBytes !=
-                                                    null
-                                                ? loadingProgress
-                                                        .cumulativeBytesLoaded /
-                                                    loadingProgress
-                                                        .expectedTotalBytes!
-                                                : null,
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            const AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    );
-                                  },
-                                )
-                                : _buildDefaultAvatar(employee.name),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            employee.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              "ID: ${employee.employeeId}",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: AppFonts.poppins,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Inactive Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF6B7280).withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.person_off_rounded,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            "InActive",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _buildInfoItem(
-                        icon: Icons.work_outline_rounded,
-                        label: "DESIGNATION",
-                        value: employee.designation,
-                        color: AppColor.primaryColor,
-                      ),
-                    ),
-                    Container(
-                      height: 40,
-                      width: 1,
-                      color: AppColor.borderColor,
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildInfoItem(
-                        icon: Icons.location_on_outlined,
-                        label: "BRANCH",
-                        value: employee.branch,
-                        color: AppColor.secondaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textSecondary.withOpacity(0.7),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: AppFonts.poppins,
-                  color: AppColor.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDefaultAvatar(String name) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColor.primaryColor, AppColor.secondaryColor],
-        ),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : "E",
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-            fontFamily: AppFonts.poppins,
           ),
         ),
       ),

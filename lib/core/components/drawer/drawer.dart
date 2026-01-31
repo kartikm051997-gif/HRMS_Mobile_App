@@ -93,14 +93,29 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                     const SizedBox(height: 8),
 
                     // Main Navigation Items
-                    _buildNavItem(
-                      icon: Icons.location_on_rounded,
-                      title: 'User Tracking',
-                      route: AppRoutes.userTrackingScreen,
-                      index: 0,
-                    ),
+                    // _buildNavItem(
+                    //   icon: Icons.location_on_rounded,
+                    //   title: 'User Tracking',
+                    //   route: AppRoutes.userTrackingScreen,
+                    //   index: 0,
+                    // ),
 
                     // 🔹 Deliverables → Everyone
+                    if (isAdmin) ...[
+                      _buildNavItem(
+                        icon: Icons.inventory_2_rounded,
+                        title: 'PargarBook Admin',
+                        route: AppRoutes.paGarBookAdmin,
+                        index: 5,
+                      ),
+                    ],
+
+                    _buildNavItem(
+                      icon: Icons.people_alt_rounded,
+                      title: 'Employee Management',
+                      route: AppRoutes.employeeManagement,
+                      index: 3,
+                    ),
                     _buildNavItem(
                       icon: Icons.dashboard_rounded,
                       title: 'Deliverables Overview',
@@ -110,18 +125,12 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
 
                     // 🔹 Admin-only menus
                     if (isAdmin) ...[
-                      _buildNavItem(
-                        icon: Icons.admin_panel_settings_rounded,
-                        title: 'Admin Tracking',
-                        route: AppRoutes.adminTracking,
-                        index: 1,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.people_alt_rounded,
-                        title: 'Employee Management',
-                        route: AppRoutes.employeeManagement,
-                        index: 3,
-                      ),
+                      // _buildNavItem(
+                      //   icon: Icons.admin_panel_settings_rounded,
+                      //   title: 'Admin Tracking',
+                      //   route: AppRoutes.adminTracking,
+                      //   index: 1,
+                      // ),
                     ],
 
                     const SizedBox(height: 16),
@@ -151,12 +160,6 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                         icon: Icons.inventory_2_rounded,
                         title: 'Asset Details',
                         route: AppRoutes.assetDetails,
-                        index: 5,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.inventory_2_rounded,
-                        title: 'PargarBook Admin',
-                        route: AppRoutes.paGarBookAdmin,
                         index: 5,
                       ),
                     ],
@@ -397,7 +400,6 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                 Navigator.of(context).pop();
                 // Get.offNamed(route);
                 Get.toNamed(route);
-
               },
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
@@ -594,7 +596,6 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             Navigator.of(context).pop();
             // Get.offNamed(route);
             Get.toNamed(route);
-
           },
           borderRadius: BorderRadius.circular(8),
           child: AnimatedContainer(

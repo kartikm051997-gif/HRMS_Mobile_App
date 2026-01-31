@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
+import '../../../../model/Employee_management/NoticePeriodUserListModel.dart';
 import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
+import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import 'Notice_Period_details_screen.dart';
 
 class NoticePeriodScreen extends StatefulWidget {
@@ -56,15 +59,174 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            // Header Section
-            SliverToBoxAdapter(child: _buildHeaderSection(provider)),
-
-            // Filter Section
-            if (provider.showFilters)
-              SliverToBoxAdapter(child: _buildFilterSection(provider)),
-
-            // Results Section
-            _buildResultsSection(provider),
+            // Shimmer during initial load (same concept as Active screen)
+            if (provider.isLoading && !provider.initialLoadDone)
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverToBoxAdapter(
+                  child: Column(
+                    children: [
+                      Shimmer.fromColors(
+                        baseColor: Colors.grey.shade300,
+                        highlightColor: Colors.grey.shade100,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            children: [
+                              Container(
+                                height: 16,
+                                width: 150,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 14,
+                                width: 250,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 10,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
+                            child: Shimmer.fromColors(
+                              baseColor: Colors.grey.shade300,
+                              highlightColor: Colors.grey.shade100,
+                              child: Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            width: 150,
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            width: 80,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                width: 100,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                width: 120,
+                                                height: 12,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      width: 30,
+                                      height: 30,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (!provider.isLoading || provider.initialLoadDone) ...[
+              SliverToBoxAdapter(child: _buildHeaderSection(provider)),
+              if (provider.showFilters)
+                SliverToBoxAdapter(child: _buildFilterSection(provider)),
+              _buildResultsSection(provider),
+            ],
           ],
         ),
       ),
@@ -306,47 +468,32 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
           children: [
             Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Zone *",
-                    items: provider.zone,
-                    selectedValue: provider.selectedZone,
-                    onChanged: provider.setSelectedZone,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Branch *",
-                    items: provider.branch,
-                    selectedValue: provider.selectedBranch,
-                    onChanged: provider.setSelectedBranch,
-                    hintText: "Select",
-                  ),
-                ),
-              ],
+            CustomSearchDropdownWithSearch(
+              labelText: "Zone *",
+              items: provider.zone,
+              selectedValue: provider.selectedZone,
+              onChanged: provider.setSelectedZone,
+              hintText: "Select",
             ),
             const SizedBox(height: 8),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomSearchDropdownWithSearch(
-                    labelText: "Designation *",
-                    items: provider.designation,
-                    selectedValue: provider.selectedDesignation,
-                    onChanged: provider.setSelectedDesignation,
-                    hintText: "Select",
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(child: SizedBox()),
-              ],
+
+            MultiSelectDropdown(
+              label: "Branch *",
+              items: provider.branch,
+              selectedItems: provider.selectedBranches,
+              onChanged: provider.setSelectedBranches,
+              designationEnableSelectAll: true,
             ),
+            const SizedBox(height: 12),
+
+            MultiSelectDropdown(
+              label: "Designation *",
+              items: provider.designation,
+              selectedItems: provider.selectedDesignations,
+              onChanged: provider.setSelectedDesignations,
+              designationEnableSelectAll: true,
+            ),
+
             const SizedBox(height: 12),
             Row(
               children: [
@@ -430,6 +577,17 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                       : null,
             ),
             child: Center(
+              child:
+              provider.isLoading
+                  ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+                  :Center(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -454,7 +612,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildResultsSection(NoticePeriodProvider provider) {
@@ -462,11 +620,34 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
       return SliverFillRemaining(child: _buildSelectFiltersMessage());
     }
 
-    if (provider.isLoading) {
+    if (provider.isLoading && provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildLoadingState());
     }
 
-    if (provider.filteredEmployees.isEmpty) {
+    if (provider.errorMessage != null && !provider.initialLoadDone) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Text(
+                provider.errorMessage ?? 'Error',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => provider.loadAllFilters(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (provider.paginatedEmployees.isEmpty) {
       return SliverFillRemaining(child: _buildEmptyState());
     }
 
@@ -474,8 +655,12 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
       padding: const EdgeInsets.all(16),
       sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == 0) return _buildResultsHeader(provider);
-          final employee = provider.filteredEmployees[index - 1];
+          if (index == 0) return _buildPageInfo(provider);
+          if (index == 1) return _buildResultsHeader(provider);
+          if (index == provider.paginatedEmployees.length + 2) {
+            return _buildPagination(provider);
+          }
+          final user = provider.paginatedEmployees[index - 2];
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: Duration(milliseconds: 300 + (index * 50)),
@@ -486,9 +671,107 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                 child: Opacity(opacity: value, child: child),
               );
             },
-            child: _buildEmployeeCard(employee),
+            child: _buildEmployeeCard(user),
           );
-        }, childCount: provider.filteredEmployees.length + 1),
+        }, childCount: provider.paginatedEmployees.length + 3),
+      ),
+    );
+  }
+
+  Widget _buildPageInfo(NoticePeriodProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Text(
+              "Page ${provider.currentPage} of ${provider.totalPages}",
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: AppFonts.poppins,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "Total: ${provider.paginatedEmployees.length} on this page",
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontFamily: AppFonts.poppins,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPagination(NoticePeriodProvider provider) {
+    if (provider.totalPages <= 1) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: provider.currentPage > 1 ? provider.previousPage : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          ...List.generate(provider.totalPages > 5 ? 5 : provider.totalPages, (
+            i,
+          ) {
+            int pageNum;
+            if (provider.totalPages <= 5) {
+              pageNum = i + 1;
+            } else {
+              if (provider.currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (provider.currentPage >= provider.totalPages - 2) {
+                pageNum = provider.totalPages - 4 + i;
+              } else {
+                pageNum = provider.currentPage - 2 + i;
+              }
+            }
+            return InkWell(
+              onTap: () => provider.goToPage(pageNum),
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color:
+                      provider.currentPage == pageNum
+                          ? AppColor.primaryColor
+                          : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$pageNum',
+                  style: TextStyle(
+                    color:
+                        provider.currentPage == pageNum
+                            ? Colors.white
+                            : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ),
+            );
+          }),
+          IconButton(
+            onPressed:
+                provider.currentPage < provider.totalPages
+                    ? provider.nextPage
+                    : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
       ),
     );
   }
@@ -671,7 +954,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  "${provider.filteredEmployees.length}",
+                  "${provider.paginatedEmployees.length}",
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -709,7 +992,16 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
     );
   }
 
-  Widget _buildEmployeeCard(dynamic employee) {
+  Widget _buildEmployeeCard(NoticePeriodUser user) {
+    final name = user.fullname ?? user.username ?? 'Employee';
+    final empId = user.employmentId ?? user.userId ?? '';
+    final designation =
+        user.designation?.trim().isNotEmpty == true ? user.designation! : '—';
+    final branch =
+        (user.locationName ?? user.location ?? '').trim().isNotEmpty
+            ? (user.locationName ?? user.location)!
+            : '—';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -733,8 +1025,8 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
               PageRouteBuilder(
                 pageBuilder:
                     (_, __, ___) => NoticePeriodDetailsScreen(
-                      empId: employee.employeeId,
-                      employee: employee,
+                      empId: empId,
+                      noticePeriodUser: user,
                     ),
                 transitionsBuilder: (_, animation, __, child) {
                   return SlideTransition(
@@ -784,9 +1076,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                       ),
                       child: Center(
                         child: Text(
-                          employee.name.isNotEmpty
-                              ? employee.name[0].toUpperCase()
-                              : "E",
+                          name.isNotEmpty ? name[0].toUpperCase() : "E",
                           style: const TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -802,7 +1092,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            employee.name,
+                            name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -823,7 +1113,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: ${employee.employeeId}",
+                              "ID: $empId",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -878,7 +1168,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                       child: _buildInfoItem(
                         icon: Icons.work_outline_rounded,
                         label: "DESIGNATION",
-                        value: employee.designation,
+                        value: designation,
                         color: AppColor.primaryColor,
                       ),
                     ),
@@ -892,7 +1182,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                       child: _buildInfoItem(
                         icon: Icons.location_on_outlined,
                         label: "BRANCH",
-                        value: employee.branch,
+                        value: branch,
                         color: AppColor.secondaryColor,
                       ),
                     ),
