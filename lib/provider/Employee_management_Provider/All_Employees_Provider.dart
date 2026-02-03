@@ -8,6 +8,7 @@ import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/Act
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/AllEmployeeService.dart';
 import '../../core/utils/helper_utils.dart';
 import '../../servicesAPI/LogInService/LogIn_Service.dart';
+import '../../apibaseScreen/Api_Base_Screens.dart';
 
 class AllEmployeesProvider extends ChangeNotifier {
   final AllEmployeeService _allEmployeeService = AllEmployeeService();
@@ -336,7 +337,7 @@ class AllEmployeesProvider extends ChangeNotifier {
                       monthlyCTC: user.monthlyCTC ?? '',
                       payrollCategory: user.payrollCategory ?? '',
                       status: user.status ?? '',
-                      photoUrl: user.avatar,
+                      photoUrl: _getAvatarUrl(user.avatar),
                       recruiterName: user.recruiterName,
                       recruiterPhotoUrl: user.recruiterPhotoUrl,
                       createdByName: user.createdByName,
@@ -662,5 +663,21 @@ class AllEmployeesProvider extends ChangeNotifier {
     fojToController.dispose();
     searchController.dispose();
     super.dispose();
+  }
+
+  /// Helper method to construct full avatar URL from relative path
+  String _getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
+    }
+    final avatarStr = avatar.toString().trim();
+    if (avatarStr.isEmpty) {
+      return '';
+    }
+    if (avatarStr.startsWith('http://') || avatarStr.startsWith('https://')) {
+      return avatarStr;
+    }
+    final cleanPath = avatarStr.startsWith('/') ? avatarStr.substring(1) : avatarStr;
+    return '${ApiBase.baseUrl}$cleanPath';
   }
 }

@@ -1,3 +1,5 @@
+import 'package:floating_bottom_bar/animated_bottom_navigation_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -6,6 +8,8 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
+import '../../../../apibaseScreen/Api_Base_Screens.dart';
+import '../../../../model/Employee_management/ManagementApprovalListModel.dart';
 import 'Emp_management_details.dart';
 
 class ManagementApprovalScreen extends StatefulWidget {
@@ -202,61 +206,28 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
   }
 
   Widget _buildSearchField(ManagementApprovalProvider provider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-      ),
-      child: TextField(
-        controller: provider.searchController,
-        onChanged: provider.onSearchChanged,
-        onSubmitted: (value) {
-          // Immediate search on Enter — show matching cards (same as Active screen)
-          provider.performSearchWithQuery(value);
-        },
-        style: const TextStyle(
-          fontSize: 15,
-          fontFamily: AppFonts.poppins,
-          color: AppColor.textPrimary,
-        ),
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.transparent,
-          hintText: "Search employees...",
-          hintStyle: TextStyle(
-            fontSize: 14,
-            fontFamily: AppFonts.poppins,
-            color: AppColor.textSecondary.withOpacity(0.7),
-          ),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            color: AppColor.textSecondary,
-            size: 22,
-          ),
-          suffixIcon:
-              provider.searchController.text.isNotEmpty
-                  ? IconButton(
-                    onPressed: () => provider.clearSearch(),
-                    icon: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColor.textSecondary.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close_rounded,
-                        color: AppColor.textSecondary,
-                        size: 16,
-                      ),
-                    ),
-                  )
-                  : null,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
+    return TextField(
+      style: TextStyle(fontFamily: AppFonts.poppins),
+      controller: provider.searchController,
+      onChanged: provider.onSearchChanged,
+      onSubmitted: (value) {
+        // Immediate search on Enter - show matching cards
+        provider.performSearchWithQuery(value);
+      },
+      decoration: InputDecoration(
+        hintStyle: TextStyle(fontFamily: AppFonts.poppins),
+        hintText: "Search by name, ID...",
+        prefixIcon: Icon(Icons.search),
+        suffixIcon:
+            provider.searchController.text.isNotEmpty
+                ? IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: provider.clearSearch,
+                )
+                : null,
+        border: OutlineInputBorder(
+          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
@@ -693,7 +664,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
     );
   }
 
-  Widget _buildEmployeeCard(dynamic employee) {
+  Widget _buildEmployeeCard(ManagementApprovalUser employee) {
     return Container(
       key: ValueKey('emp_card_ma_${employee.userId ?? employee.employmentId}'),
       margin: const EdgeInsets.only(bottom: 16),
@@ -745,11 +716,6 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColor.primaryColor, AppColor.secondaryColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
@@ -757,31 +723,74 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                 ),
                 child: Row(
                   children: [
-                    // Avatar
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.2),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          (employee.fullname ?? '').isNotEmpty
-                              ? (employee.fullname ?? '')[0].toUpperCase()
-                              : "E",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            fontFamily: AppFonts.poppins,
+                    // Avatar - Using EXACT same approach as ActiveScreen
+                    Builder(
+                      builder: (context) {
+                        // Try direct avatar first (like ActiveScreen), then fallback to URL construction
+                        final directAvatar = employee.avatar;
+                        final avatarUrl =
+                            (directAvatar != null &&
+                                    directAvatar.isNotEmpty &&
+                                    directAvatar != 'null' &&
+                                    (directAvatar.startsWith('http://') ||
+                                        directAvatar.startsWith('https://')))
+                                ? directAvatar
+                                : _getAvatarUrl(employee.avatar);
+
+                        if (kDebugMode) {
+                          print(
+                            '🖼️ Building avatar for: ${employee.fullname ?? employee.username}',
+                          );
+                          print('   Raw avatar: ${employee.avatar}');
+                          print(
+                            '   Direct avatar check: ${directAvatar?.startsWith('http') ?? false}',
+                          );
+                          print('   Final URL: $avatarUrl');
+                        }
+
+                        return CircleAvatar(
+                          radius: 25,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: ClipOval(
+                            child:
+                                (avatarUrl.isNotEmpty &&
+                                        avatarUrl != "null" &&
+                                        avatarUrl.startsWith("http"))
+                                    ? Image.network(
+                                      avatarUrl,
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+
+                                      // ⭐ prevents RED screen crash
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return _buildDefaultAvatar(
+                                          employee.fullname ?? "E",
+                                        );
+                                      },
+
+                                      // ⭐ shows fallback while loading
+                                      loadingBuilder: (
+                                        context,
+                                        child,
+                                        progress,
+                                      ) {
+                                        if (progress == null) return child;
+                                        return _buildDefaultAvatar(
+                                          employee.fullname ?? "E",
+                                        );
+                                      },
+                                    )
+                                    : _buildDefaultAvatar(
+                                      employee.fullname ?? "E",
+                                    ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 14),
 
@@ -796,7 +805,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               fontFamily: AppFonts.poppins,
-                              color: Colors.white,
+                              color: Colors.black,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -804,47 +813,26 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
+                              horizontal: 8,
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
+                              color: const Color(0xFF8E0E6B).withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              "ECI ID: ${employee.employmentId ?? employee.userId ?? ''}",
-                              style: TextStyle(
-                                fontSize: 12,
+                              "ECI ID: ${employee.employmentId ?? 'N/A'}",
+                              style: const TextStyle(
+                                fontSize: 11,
                                 fontWeight: FontWeight.w500,
+                                color: Color(0xFF8E0E6B),
                                 fontFamily: AppFonts.poppins,
-                                color: Colors.white.withOpacity(0.9),
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-
-                    // Pending Badge
-                    // Container(
-                    //   padding: const EdgeInsets.symmetric(
-                    //     horizontal: 10,
-                    //     vertical: 6,
-                    //   ),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.orange.withOpacity(0.9),
-                    //     borderRadius: BorderRadius.circular(8),
-                    //   ),
-                    //   child: Text(
-                    //     employee.approvalStatus ?? "Pending",
-                    //     style: const TextStyle(
-                    //       fontSize: 11,
-                    //       fontWeight: FontWeight.w600,
-                    //       fontFamily: AppFonts.poppins,
-                    //       color: Colors.white,
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -852,7 +840,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
               // Bottom Section
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(6),
                 child: Row(
                   children: [
                     Expanded(
@@ -934,6 +922,45 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           ),
         ),
       ],
+    );
+  }
+
+  /// Helper method to construct full avatar URL from relative path
+  String _getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
+    }
+
+    // Convert to string and trim
+    final avatarStr = avatar.toString().trim();
+    if (avatarStr.isEmpty) {
+      return '';
+    }
+
+    // If backend already sends full URL
+    if (avatarStr.startsWith('http://') || avatarStr.startsWith('https://')) {
+      return avatarStr;
+    }
+
+    // Relative path → attach base URL
+    // Remove leading slash if present
+    final cleanPath =
+        avatarStr.startsWith('/') ? avatarStr.substring(1) : avatarStr;
+    return '${ApiBase.baseUrl}$cleanPath';
+  }
+
+  Widget _buildDefaultAvatar(String name) {
+    return Container(
+      color: Colors.white24,
+      alignment: Alignment.center,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : "E",
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
     );
   }
 }

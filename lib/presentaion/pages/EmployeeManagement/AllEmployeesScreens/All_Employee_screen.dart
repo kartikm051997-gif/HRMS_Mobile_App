@@ -259,69 +259,28 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
   }
 
   Widget _buildSearchField(AllEmployeesProvider provider) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+    return TextField(
+      style: const TextStyle(fontFamily: AppFonts.poppins),
+      controller: provider.searchController,
+      onChanged: provider.onSearchChanged,
+      onSubmitted: (value) {
+        // Immediate search on Enter - show matching cards
+        provider.performSearchWithQuery(value);
+      },
+      decoration: InputDecoration(
+        hintStyle: const TextStyle(fontFamily: AppFonts.poppins),
+        hintText: "Search by name, ID...",
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon:
+            provider.searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: provider.clearSearch,
+                  )
+                : null,
+        border: OutlineInputBorder(
+          borderSide: BorderSide.none,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColor.borderColor),
-        ),
-        child: TextField(
-          controller: provider.searchController,
-          onChanged: provider.onSearchChanged,
-          onSubmitted: (value) {
-            // Immediate search on Enter - show matching cards
-            provider.performSearchWithQuery(value);
-          },
-          style: const TextStyle(
-            fontSize: 15,
-            fontFamily: AppFonts.poppins,
-            color: AppColor.textPrimary,
-          ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.transparent,
-            hintText: "Search employees by name, ID...",
-            hintStyle: TextStyle(
-              fontSize: 14,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textSecondary.withOpacity(0.7),
-            ),
-            prefixIcon: const Icon(
-              Icons.search_rounded,
-              color: AppColor.textSecondary,
-              size: 22,
-            ),
-            suffixIcon:
-                provider.searchController.text.isNotEmpty
-                    ? IconButton(
-                      onPressed: () => provider.clearSearch(),
-                      icon: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppColor.textSecondary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: AppColor.textSecondary,
-                          size: 16,
-                        ),
-                      ),
-                    )
-                    : null,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            disabledBorder: InputBorder.none,
-            errorBorder: InputBorder.none,
-            focusedErrorBorder: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
-          ),
         ),
       ),
     );

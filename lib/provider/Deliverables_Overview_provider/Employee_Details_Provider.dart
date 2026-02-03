@@ -151,37 +151,55 @@ class EmployeeDetailsProvider extends ChangeNotifier {
 
       // Documents
       "totalDocuments": documents?.totalDocuments ?? 0,
-      "documentList": documents?.documentList?.map((doc) => {
-            "document_name": doc.documentName ?? "",
-            "filename": doc.filename ?? "",
-            "file_url": doc.fileUrl ?? "",
-            "has_file": doc.hasFile ?? false,
-          }).toList() ?? [],
+      "documentList":
+          documents?.documentList
+              ?.map(
+                (doc) => {
+                  "document_name": doc.documentName ?? "",
+                  "filename": doc.filename ?? "",
+                  "file_url": doc.fileUrl ?? "",
+                  "has_file": doc.hasFile ?? false,
+                },
+              )
+              .toList() ??
+          [],
 
       // Letters
       "totalLetters": letters?.totalLetters ?? 0,
-      "letterList": letters?.letterList?.map((letter) => {
-            "letter_id": letter.letterId ?? "",
-            "letter_type": letter.letterType ?? "",
-            "template_name": letter.templateName ?? "",
-            "content": letter.content ?? "",
-            "description": letter.description ?? "",
-            "date": letter.date ?? "",
-            "status": letter.status ?? "",
-          }).toList() ?? [],
+      "letterList":
+          letters?.letterList
+              ?.map(
+                (letter) => {
+                  "letter_id": letter.letterId ?? "",
+                  "letter_type": letter.letterType ?? "",
+                  "template_name": letter.templateName ?? "",
+                  "content": letter.content ?? "",
+                  "description": letter.description ?? "",
+                  "date": letter.date ?? "",
+                  "status": letter.status ?? "",
+                },
+              )
+              .toList() ??
+          [],
 
       // Circulars
       "totalCirculars": circulars?.totalCirculars ?? 0,
-      "circularList": circulars?.circularList?.map((circular) => {
-            "letter_id": circular.letterId ?? "",
-            "letter_type": circular.letterType ?? "",
-            "template_name": circular.templateName ?? "",
-            "content": circular.content ?? "",
-            "description": circular.description ?? "",
-            "date": circular.date ?? "",
-            "status": circular.status ?? "",
-            "circular_for": circular.circularFor ?? "",
-          }).toList() ?? [],
+      "circularList":
+          circulars?.circularList
+              ?.map(
+                (circular) => {
+                  "letter_id": circular.letterId ?? "",
+                  "letter_type": circular.letterType ?? "",
+                  "template_name": circular.templateName ?? "",
+                  "content": circular.content ?? "",
+                  "description": circular.description ?? "",
+                  "date": circular.date ?? "",
+                  "status": circular.status ?? "",
+                  "circular_for": circular.circularFor ?? "",
+                },
+              )
+              .toList() ??
+          [],
     };
   }
 

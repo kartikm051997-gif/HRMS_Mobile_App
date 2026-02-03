@@ -174,7 +174,8 @@ class _MyDetailsMenuScreenState extends State<MyDetailsMenuScreen> {
                             empDesignation: widget.empDesignation,
                             empBranch: widget.empBranch,
                             initialTabIndex: tabIndex,
-                            showDrawer: false, // Don't show drawer when navigated from menu
+                            showDrawer:
+                                false, // Don't show drawer when navigated from menu
                           ),
                     ),
                   );

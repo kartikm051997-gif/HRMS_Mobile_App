@@ -322,7 +322,6 @@ class _AbscondScreenState extends State<AbscondScreen>
     );
   }
 
-
   Widget _buildSearchField(AbscondProvider provider) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),

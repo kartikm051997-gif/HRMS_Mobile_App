@@ -87,11 +87,13 @@ class EmployeeDetailsScreen extends StatefulWidget {
 
     final tabs = isAdmin ? adminTabs : normalUserTabs;
     final index = tabs.indexOf(tabName);
-    
+
     if (kDebugMode) {
-      print("   📍 getTabIndexForMenuItem: '$menuItemName' -> '$tabName' -> index $index");
+      print(
+        "   📍 getTabIndexForMenuItem: '$menuItemName' -> '$tabName' -> index $index",
+      );
     }
-    
+
     return index >= 0 ? index : 0;
   }
 
@@ -141,6 +143,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     });
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   void _initializeTabs() {
     // Get user role
     final loginProvider = Provider.of<LoginProvider>(context, listen: false);
@@ -155,23 +163,47 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
 
     // Filter tabs based on user role
     if (isAdmin) {
-      // Admin sees all tabs
+      // Admin sees all tabs including PF and ESI
       menuItems = List.from(_allMenuItems);
+      if (kDebugMode) {
+        print(
+          "   ✅ Admin user - Showing all ${menuItems.length} tabs including PF and ESI",
+        );
+        print("   ✅ Tabs: ${menuItems.join(" | ")}");
+      }
     } else {
-      // Normal user: exclude admin-only tabs
+      // Normal user: exclude admin-only tabs (Documents, Job Application, PF, ESI)
       menuItems =
           _allMenuItems
               .where((item) => !_adminOnlyTabs.contains(item))
               .toList();
       if (kDebugMode) {
         print(
-          "   Normal user - Filtered tabs: ${menuItems.length} (removed: ${_adminOnlyTabs.join(", ")})",
+          "   ✅ Normal user - Filtered tabs: ${menuItems.length} (removed: ${_adminOnlyTabs.join(", ")})",
         );
+        print("   ✅ Tabs: ${menuItems.join(" | ")}");
+        // Verify PF and ESI are NOT in the list
+        if (menuItems.contains("PF") || menuItems.contains("ESI")) {
+          print("   ❌ ERROR: PF or ESI found in normal user tabs!");
+        } else {
+          print("   ✅ Verified: PF and ESI correctly excluded for normal user");
+        }
       }
     }
 
     // Map initialTabIndex to the correct index in filtered menuItems
+    // For normal users, ensure we always start at a valid tab (index 0 = Employee Details)
     int adjustedIndex = _getAdjustedTabIndex(widget.initialTabIndex, isAdmin);
+
+    // Safety check: ensure adjustedIndex is valid for the filtered menuItems
+    if (adjustedIndex < 0 || adjustedIndex >= menuItems.length) {
+      if (kDebugMode) {
+        print(
+          "   ⚠️ Adjusted index $adjustedIndex is out of range, defaulting to 0",
+        );
+      }
+      adjustedIndex = 0;
+    }
 
     // Initialize TabController with filtered length
     _tabController = TabController(
@@ -183,21 +215,35 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     if (kDebugMode) {
       print("   ✅ TabController initialized with length: ${menuItems.length}");
       print("   ✅ menuItems: ${menuItems.join(" | ")}");
-      print("   ✅ Initial tab index: $adjustedIndex (requested: ${widget.initialTabIndex})");
+      print(
+        "   ✅ Initial tab index: $adjustedIndex (requested: ${widget.initialTabIndex})",
+      );
     }
   }
 
-
   // Adjust tab index - maps from original index to filtered index
   int _getAdjustedTabIndex(int originalIndex, bool isAdmin) {
-    if (isAdmin) {
-      // Admin sees all tabs, so index is direct
-      return originalIndex.clamp(0, menuItems.length - 1);
+    // Ensure we have menuItems initialized
+    if (menuItems.isEmpty) {
+      if (kDebugMode) {
+        print("   ⚠️ menuItems is empty, defaulting to index 0");
+      }
+      return 0;
     }
 
-    // For normal users, if originalIndex refers to a tab name, find it in filtered list
-    // Otherwise, clamp to valid range
-    return originalIndex.clamp(0, menuItems.length - 1);
+    // Clamp to valid range - always start at 0 (Employee Details) if index is invalid
+    final adjustedIndex = originalIndex.clamp(0, menuItems.length - 1);
+
+    if (kDebugMode) {
+      print(
+        "   📍 _getAdjustedTabIndex: $originalIndex -> $adjustedIndex (menuItems.length: ${menuItems.length})",
+      );
+      print(
+        "   📍 First tab will be: ${menuItems.isNotEmpty ? menuItems[adjustedIndex] : 'N/A'}",
+      );
+    }
+
+    return adjustedIndex;
   }
 
   List<Widget> _buildTabViews(
@@ -334,12 +380,6 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   }
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final provider = context.watch<EmployeeDetailsProvider>();
     final data = provider.employeeDetails ?? {};
@@ -408,11 +448,22 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
               fontFamily: AppFonts.poppins,
             ),
             labelPadding: const EdgeInsets.symmetric(horizontal: 16),
-            tabs: menuItems.map((e) => Tab(text: e)).toList(),
+            tabs:
+                menuItems.isNotEmpty
+                    ? menuItems.map((e) => Tab(text: e)).toList()
+                    : [const Tab(text: "Employee Details")], // Fallback
           ),
         ),
       ),
-      body: TabBarView(controller: _tabController, children: currentTabViews),
+      body: TabBarView(
+        controller: _tabController,
+        children:
+            currentTabViews.isNotEmpty
+                ? currentTabViews
+                : [
+                  _buildEmployeeDetailsTab(provider, data, avatarUrl),
+                ], // Fallback
+      ),
     );
   }
 

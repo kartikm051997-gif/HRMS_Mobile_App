@@ -369,14 +369,16 @@ class DocumentsInfo {
 
   factory DocumentsInfo.fromJson(Map<String, dynamic> json) {
     return DocumentsInfo(
-      totalDocuments: json['total_documents'] is int
-          ? json['total_documents']
-          : int.tryParse(json['total_documents']?.toString() ?? '0'),
-      documentList: json['document_list'] != null
-          ? (json['document_list'] as List)
-              .map((item) => DocumentItem.fromJson(item))
-              .toList()
-          : null,
+      totalDocuments:
+          json['total_documents'] is int
+              ? json['total_documents']
+              : int.tryParse(json['total_documents']?.toString() ?? '0'),
+      documentList:
+          json['document_list'] != null
+              ? (json['document_list'] as List)
+                  .map((item) => DocumentItem.fromJson(item))
+                  .toList()
+              : null,
     );
   }
 
@@ -399,16 +401,17 @@ class DocumentItem {
   factory DocumentItem.fromJson(Map<String, dynamic> json) {
     // Handle file_url that might be a JSON string for "Other Document"
     String? parsedFileUrl = json['file_url']?.toString();
-    
+
     // If file_url is a JSON string (like for "Other Document"), try to parse it
     if (parsedFileUrl != null && parsedFileUrl.startsWith('[')) {
       try {
         final List<dynamic> parsed = jsonDecode(parsedFileUrl);
         if (parsed.isNotEmpty && parsed[0] is Map) {
           final firstDoc = parsed[0] as Map<String, dynamic>;
-          parsedFileUrl = firstDoc['fullPath']?.toString() ?? 
-                         firstDoc['path']?.toString() ?? 
-                         parsedFileUrl;
+          parsedFileUrl =
+              firstDoc['fullPath']?.toString() ??
+              firstDoc['path']?.toString() ??
+              parsedFileUrl;
         }
       } catch (e) {
         // If parsing fails, use original URL
@@ -420,7 +423,10 @@ class DocumentItem {
       documentName: json['document_name']?.toString(),
       filename: json['filename']?.toString(),
       fileUrl: parsedFileUrl,
-      hasFile: json['has_file'] == true || json['has_file'] == 1 || json['has_file'] == "1",
+      hasFile:
+          json['has_file'] == true ||
+          json['has_file'] == 1 ||
+          json['has_file'] == "1",
     );
   }
 
@@ -442,14 +448,16 @@ class LettersInfo {
 
   factory LettersInfo.fromJson(Map<String, dynamic> json) {
     return LettersInfo(
-      totalLetters: json['total_letters'] is int
-          ? json['total_letters']
-          : int.tryParse(json['total_letters']?.toString() ?? '0'),
-      letterList: json['letter_list'] != null
-          ? (json['letter_list'] as List)
-              .map((item) => LetterItem.fromJson(item))
-              .toList()
-          : null,
+      totalLetters:
+          json['total_letters'] is int
+              ? json['total_letters']
+              : int.tryParse(json['total_letters']?.toString() ?? '0'),
+      letterList:
+          json['letter_list'] != null
+              ? (json['letter_list'] as List)
+                  .map((item) => LetterItem.fromJson(item))
+                  .toList()
+              : null,
     );
   }
 
@@ -513,14 +521,16 @@ class CircularsInfo {
 
   factory CircularsInfo.fromJson(Map<String, dynamic> json) {
     return CircularsInfo(
-      totalCirculars: json['total_circulars'] is int
-          ? json['total_circulars']
-          : int.tryParse(json['total_circulars']?.toString() ?? '0'),
-      circularList: json['circular_list'] != null
-          ? (json['circular_list'] as List)
-              .map((item) => CircularItem.fromJson(item))
-              .toList()
-          : null,
+      totalCirculars:
+          json['total_circulars'] is int
+              ? json['total_circulars']
+              : int.tryParse(json['total_circulars']?.toString() ?? '0'),
+      circularList:
+          json['circular_list'] != null
+              ? (json['circular_list'] as List)
+                  .map((item) => CircularItem.fromJson(item))
+                  .toList()
+              : null,
     );
   }
 

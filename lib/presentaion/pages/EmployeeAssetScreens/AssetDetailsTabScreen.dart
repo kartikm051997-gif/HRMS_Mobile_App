@@ -39,41 +39,36 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Colors.grey.shade50,
-            Colors.grey.shade100,
-          ],
+          colors: [Colors.grey.shade50, Colors.grey.shade100],
         ),
       ),
-      child: provider.assetList.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
-              itemCount: provider.assetList.length,
-              itemBuilder: (context, index) {
-                final emp = provider.assetList[index];
+      child:
+          provider.assetList.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 100),
+                itemCount: provider.assetList.length,
+                itemBuilder: (context, index) {
+                  final emp = provider.assetList[index];
 
-                return AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    final delay = index * 0.15;
-                    final animationValue = Curves.easeOutCubic.transform(
-                      ((_animationController.value - delay) / (1 - delay))
-                          .clamp(0.0, 1.0),
-                    );
+                  return AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, child) {
+                      final delay = index * 0.15;
+                      final animationValue = Curves.easeOutCubic.transform(
+                        ((_animationController.value - delay) / (1 - delay))
+                            .clamp(0.0, 1.0),
+                      );
 
-                    return Transform.translate(
-                      offset: Offset(0, 30 * (1 - animationValue)),
-                      child: Opacity(
-                        opacity: animationValue,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _buildAssetCard(context, emp, provider, index),
-                );
-              },
-            ),
+                      return Transform.translate(
+                        offset: Offset(0, 30 * (1 - animationValue)),
+                        child: Opacity(opacity: animationValue, child: child),
+                      );
+                    },
+                    child: _buildAssetCard(context, emp, provider, index),
+                  );
+                },
+              ),
     );
   }
 
@@ -154,14 +149,14 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
             children: [
               // Header Section
               _buildCardHeader(context, emp, provider),
-              
+
               // Divider
               Container(
                 height: 1,
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 color: Colors.grey.shade100,
               ),
-              
+
               // Assets Section
               _buildAssetsSection(emp),
             ],
@@ -205,7 +200,7 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
             ),
           ),
           const SizedBox(width: 16),
-          
+
           // Employee Info
           Expanded(
             child: Column(
@@ -224,10 +219,7 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    _buildInfoChip(
-                      icon: Icons.badge_outlined,
-                      text: emp.empId,
-                    ),
+                    _buildInfoChip(icon: Icons.badge_outlined, text: emp.empId),
                     const SizedBox(width: 8),
                     _buildInfoChip(
                       icon: Icons.work_outline,
@@ -238,7 +230,7 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
               ],
             ),
           ),
-          
+
           // Edit Button
           Container(
             decoration: BoxDecoration(
@@ -331,11 +323,7 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.info_outline,
-              size: 16,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.info_outline, size: 16, color: Colors.grey.shade400),
             const SizedBox(width: 8),
             Text(
               'No assets assigned',
@@ -356,14 +344,15 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
-        children: assets.map((asset) {
-          return _buildAssetChip(
-            icon: asset['icon'] as IconData,
-            label: asset['label'] as String,
-            value: asset['value'] as String,
-            color: asset['color'] as Color,
-          );
-        }).toList(),
+        children:
+            assets.map((asset) {
+              return _buildAssetChip(
+                icon: asset['icon'] as IconData,
+                label: asset['label'] as String,
+                value: asset['value'] as String,
+                color: asset['color'] as Color,
+              );
+            }).toList(),
       ),
     );
   }
@@ -379,10 +368,7 @@ class _AssetDetailsTabState extends State<AssetDetailsTab>
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

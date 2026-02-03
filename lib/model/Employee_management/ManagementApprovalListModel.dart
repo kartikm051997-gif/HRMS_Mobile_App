@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ManagementApprovalListModel {
   String? status;
   int? total;
@@ -14,6 +16,19 @@ class ManagementApprovalListModel {
     total = json['total'];
     if (json['data'] != null) {
       data = <ManagementApprovalUser>[];
+      
+      // Debug: Log first employee's structure to see what fields exist
+      if (kDebugMode && json['data'].isNotEmpty) {
+        print('📋 ManagementApproval API Response - First Employee Structure:');
+        print('   Keys: ${json['data'][0].keys.toList()}');
+        print('   Full data: ${json['data'][0]}');
+        if (json['data'][0]['avatar'] != null) {
+          print('   ✅ Avatar field exists: ${json['data'][0]['avatar']}');
+        } else {
+          print('   ❌ Avatar field is NULL or missing');
+        }
+      }
+      
       json['data'].forEach((v) {
         data!.add(ManagementApprovalUser.fromJson(v));
       });
@@ -32,11 +47,14 @@ class ManagementApprovalListModel {
 }
 
 class ManagementApprovalUser {
+  static bool _hasLoggedFirst = false; // Debug flag
+  
   String? userId;
   String? employmentId;
   String? fullname;
   String? username;
   String? mobile;
+  String? avatar;
   String? designation;
   String? department;
   String? location;
@@ -52,6 +70,7 @@ class ManagementApprovalUser {
     this.fullname,
     this.username,
     this.mobile,
+    this.avatar,
     this.designation,
     this.department,
     this.location,
@@ -68,6 +87,19 @@ class ManagementApprovalUser {
     fullname = json['fullname'];
     username = json['username'];
     mobile = json['mobile'];
+    
+    // Try multiple possible field names for avatar
+    // Since API doesn't return avatar field, use created_by.image as fallback (like Details screen)
+    avatar = json['avatar']?.toString() ?? 
+             json['photo']?.toString() ?? 
+             json['image']?.toString() ?? 
+             json['photo_url']?.toString() ?? 
+             json['avatar_url']?.toString() ??
+             // Fallback to created_by.image (same as Details screen uses)
+             (json['created_by'] != null && json['created_by']['image'] != null 
+                ? json['created_by']['image'].toString() 
+                : null);
+    
     designation = json['designation'];
     department = json['department'];
     location = json['location'];
@@ -80,6 +112,21 @@ class ManagementApprovalUser {
     createdBy = json['created_by'] != null
         ? CreatedByInfo.fromJson(json['created_by'])
         : null;
+    
+    // Debug logging for avatar - ALWAYS log first employee
+    if (kDebugMode && !ManagementApprovalUser._hasLoggedFirst) {
+      ManagementApprovalUser._hasLoggedFirst = true;
+      final empName = fullname ?? username ?? "Unknown";
+      final empId = employmentId ?? userId ?? "Unknown";
+      
+      print('📸 ManagementApprovalUser Avatar Parsing (FIRST EMPLOYEE):');
+      print('   User: $empName (ID: $empId)');
+      print('   📋 ALL JSON KEYS: ${json.keys.toList()}');
+      print('   avatar field: ${json['avatar']}');
+      print('   created_by.image: ${json['created_by']?['image']}');
+      print('   recruiter.image: ${json['recruiter']?['image']}');
+      print('   Final avatar value: $avatar');
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -89,6 +136,7 @@ class ManagementApprovalUser {
     data['fullname'] = fullname;
     data['username'] = username;
     data['mobile'] = mobile;
+    data['avatar'] = avatar;
     data['designation'] = designation;
     data['department'] = department;
     data['location'] = location;

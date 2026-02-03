@@ -59,6 +59,20 @@ class AbscondUserService {
           if (jsonResponse is Map) {
             print("📦 Response keys: ${jsonResponse.keys}");
             print("📦 Response status: ${jsonResponse['status']}");
+            // Debug: Check first user's avatar fields
+            if (jsonResponse['data'] != null && jsonResponse['data']['users'] != null && jsonResponse['data']['users'].isNotEmpty) {
+              final firstUser = jsonResponse['data']['users'][0];
+              print("📸 AbscondUserService - First User Avatar Debug:");
+              print("   All keys: ${firstUser.keys.toList()}");
+              print("   avatar field: ${firstUser['avatar']}");
+              print("   photo field: ${firstUser['photo']}");
+              print("   image field: ${firstUser['image']}");
+              print("   created_by: ${firstUser['created_by']}");
+              if (firstUser['created_by'] != null) {
+                print("   created_by.avatar: ${firstUser['created_by']['avatar']}");
+                print("   created_by.image: ${firstUser['created_by']['image']}");
+              }
+            }
           }
         }
         

@@ -127,7 +127,15 @@ class AllEmployeeUser {
         json['annual_professional_fee']?.toString();
     payrollCategory = json['payroll_category'] ?? json['payrollCategory']?.toString();
     status = json['status']?.toString();
-    avatar = json['avatar']?.toString();
+    // Try multiple possible field names for avatar, with created_by.avatar/image as fallback
+    avatar = json['avatar']?.toString() ?? 
+             json['photo']?.toString() ?? 
+             json['image']?.toString() ?? 
+             json['photo_url']?.toString() ?? 
+             json['avatar_url']?.toString() ??
+             (json['created_by'] != null 
+                ? (json['created_by']['avatar']?.toString() ?? json['created_by']['image']?.toString())
+                : null);
     email = json['email']?.toString();
     mobile = json['mobile']?.toString();
     // Handle recruiter object

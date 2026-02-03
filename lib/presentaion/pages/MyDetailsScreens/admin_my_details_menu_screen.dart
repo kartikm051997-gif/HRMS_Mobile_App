@@ -33,12 +33,16 @@ class AdminMyDetailsMenuScreen extends StatefulWidget {
 class _AdminMyDetailsMenuScreenState extends State<AdminMyDetailsMenuScreen> {
   int selectedIndex = -1;
 
-  // Admin menu items (with "Employee Details" as first item - same as normal user)
+  // Admin menu items (with "Employee Details" as first item - includes PF, ESI, Job Application, Documents)
   final List<String> menuItems = [
     "Employee Details",
     "Attendance",
     "Bank",
+    "Documents",
     "Salary",
+    "Job Application",
+    "PF",
+    "ESI",
     "Letters",
     "payslips",
     "assetsdetails",

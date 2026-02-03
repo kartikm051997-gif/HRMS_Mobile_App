@@ -46,7 +46,7 @@ class DocumentListProvider extends ChangeNotifier {
 
       if (employeeDetails != null) {
         final letterList = employeeDetails["letterList"] as List<dynamic>?;
-        
+
         if (letterList != null && letterList.isNotEmpty) {
           for (int i = 0; i < letterList.length; i++) {
             final letterData = letterList[i] as Map<String, dynamic>;
@@ -55,25 +55,27 @@ class DocumentListProvider extends ChangeNotifier {
             final letterType = letterData["letter_type"]?.toString() ?? "";
             final templateName = letterData["template_name"]?.toString() ?? "";
             final content = letterData["content"]?.toString() ?? "";
-            
+
             // Generate a filename based on letter type and date
             final fileName = "${letterType}_${date.replaceAll('/', '_')}.html";
-            
+
             // For now, we'll use a placeholder URL since letters are HTML content
             // In a real scenario, you might want to convert HTML to PDF or serve it as a URL
             final documentUrl = ""; // Letters are HTML content, not PDF URLs
 
-            _letter.add(LetterModel(
-              id: letterId,
-              date: date,
-              letterType: letterType,
-              documentUrl: documentUrl,
-              fileName: fileName,
-              content: content,
-              templateName: templateName,
-              description: letterData["description"]?.toString(),
-              status: letterData["status"]?.toString(),
-            ));
+            _letter.add(
+              LetterModel(
+                id: letterId,
+                date: date,
+                letterType: letterType,
+                documentUrl: documentUrl,
+                fileName: fileName,
+                content: content,
+                templateName: templateName,
+                description: letterData["description"]?.toString(),
+                status: letterData["status"]?.toString(),
+              ),
+            );
           }
         }
       }
@@ -109,7 +111,6 @@ class DocumentListProvider extends ChangeNotifier {
 
       // Check and request storage permission
       if (await _requestStoragePermission()) {
-
         final dio = Dio();
         Directory? directory;
 
@@ -147,7 +148,9 @@ class DocumentListProvider extends ChangeNotifier {
           onReceiveProgress: (received, total) {
             if (total != -1) {
               final progress = received / total;
-              debugPrint('Download progress: ${(progress * 100).toStringAsFixed(0)}%');
+              debugPrint(
+                'Download progress: ${(progress * 100).toStringAsFixed(0)}%',
+              );
             }
           },
         );
@@ -171,12 +174,10 @@ class DocumentListProvider extends ChangeNotifier {
           debugPrint("File was not created at expected location");
           return false;
         }
-
       } else {
         debugPrint("Storage permission denied");
         return false;
       }
-
     } catch (e) {
       debugPrint("Error downloading document: $e");
       return false;
@@ -186,7 +187,11 @@ class DocumentListProvider extends ChangeNotifier {
   }
 
   // Download file method similar to DocumentProvider
-  Future<String> downloadFile(String docId, String htmlContent, String fileName) async {
+  Future<String> downloadFile(
+    String docId,
+    String htmlContent,
+    String fileName,
+  ) async {
     try {
       // Set downloading state
       setDownloading(true, docId);
@@ -250,13 +255,17 @@ class DocumentListProvider extends ChangeNotifier {
       while (await file.exists()) {
         String nameWithoutExt = fileName.split('.').first;
         String extension = fileName.split('.').last;
-        filePath = '${downloadsDirectory.path}/${nameWithoutExt}_$counter.$extension';
+        filePath =
+            '${downloadsDirectory.path}/${nameWithoutExt}_$counter.$extension';
         file = File(filePath);
         counter++;
       }
 
       // Convert HTML to PDF
-      final pdf = await _htmlToPdf(htmlContent, fileName.replaceAll('.pdf', ''));
+      final pdf = await _htmlToPdf(
+        htmlContent,
+        fileName.replaceAll('.pdf', ''),
+      );
       final pdfBytes = await pdf.save();
 
       // Write PDF bytes to file
@@ -280,9 +289,10 @@ class DocumentListProvider extends ChangeNotifier {
         }
 
         // Return success message with file location
-        String location = Platform.isAndroid && downloadsDirectory.path.contains('Download')
-            ? "Downloads folder"
-            : "App documents";
+        String location =
+            Platform.isAndroid && downloadsDirectory.path.contains('Download')
+                ? "Downloads folder"
+                : "App documents";
         return "✅ File saved to $location!";
       } else {
         throw Exception("File was not created successfully");
@@ -307,14 +317,15 @@ class DocumentListProvider extends ChangeNotifier {
   // Convert HTML to PDF
   Future<pw.Document> _htmlToPdf(String htmlContent, String title) async {
     // Strip HTML tags for simple text display
-    final textContent = htmlContent
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .trim();
+    final textContent =
+        htmlContent
+            .replaceAll(RegExp(r'<[^>]*>'), '')
+            .replaceAll('&nbsp;', ' ')
+            .replaceAll('&amp;', '&')
+            .replaceAll('&lt;', '<')
+            .replaceAll('&gt;', '>')
+            .replaceAll('&quot;', '"')
+            .trim();
 
     final pdf = pw.Document();
     pdf.addPage(
@@ -381,4 +392,3 @@ class DocumentListProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

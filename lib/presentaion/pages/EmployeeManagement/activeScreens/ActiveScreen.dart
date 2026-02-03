@@ -7,6 +7,7 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../widgets/MultipleSelectDropDown/MultipleSelectDropDown.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
+import '../../../../apibaseScreen/Api_Base_Screens.dart';
 import 'active_employee_details_screen.dart';
 
 class ActiveScreen extends StatefulWidget {
@@ -982,24 +983,27 @@ class _ActiveScreenState extends State<ActiveScreen> {
               child: Row(
                 children: [
                   // Avatar
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
-                    backgroundImage:
-                        (user.avatar != null && user.avatar!.isNotEmpty)
-                            ? NetworkImage(user.avatar!)
+                  Builder(
+                    builder: (context) {
+                      String? avatarUrl = _getAvatarUrl(user.avatar);
+                      return CircleAvatar(
+                        radius: 28,
+                        backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
+                        backgroundImage: avatarUrl.isNotEmpty
+                            ? NetworkImage(avatarUrl)
                             : null,
-                    child:
-                        (user.avatar == null || user.avatar!.isEmpty)
+                        child: avatarUrl.isEmpty
                             ? Text(
-                              (user.username ?? 'E')[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: Color(0xFF8E0E6B),
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            )
+                                (user.username ?? 'E')[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: Color(0xFF8E0E6B),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              )
                             : null,
+                      );
+                    },
                   ),
                   const SizedBox(width: 14),
 
@@ -1138,5 +1142,21 @@ class _ActiveScreenState extends State<ActiveScreen> {
         ),
       ),
     );
+  }
+
+  /// Helper method to construct full avatar URL from relative path
+  String _getAvatarUrl(String? avatar) {
+    if (avatar == null || avatar.isEmpty || avatar == 'null') {
+      return '';
+    }
+    final avatarStr = avatar.toString().trim();
+    if (avatarStr.isEmpty) {
+      return '';
+    }
+    if (avatarStr.startsWith('http://') || avatarStr.startsWith('https://')) {
+      return avatarStr;
+    }
+    final cleanPath = avatarStr.startsWith('/') ? avatarStr.substring(1) : avatarStr;
+    return '${ApiBase.baseUrl}$cleanPath';
   }
 }

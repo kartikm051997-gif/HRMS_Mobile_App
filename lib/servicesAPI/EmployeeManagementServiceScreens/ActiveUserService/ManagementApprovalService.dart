@@ -61,6 +61,15 @@ class ManagementApprovalService {
       if (response.statusCode == 200) {
         final cleaned = _cleanResponseBody(response.body);
         final jsonResponse = jsonDecode(cleaned);
+        
+        // Debug: Log first employee's data structure
+        if (kDebugMode && jsonResponse['data'] != null && jsonResponse['data'].isNotEmpty) {
+          print('📋 ManagementApproval API Response Structure:');
+          print('   First employee keys: ${jsonResponse['data'][0].keys.toList()}');
+          print('   First employee avatar field: ${jsonResponse['data'][0]['avatar']}');
+          print('   First employee data sample: ${jsonResponse['data'][0]}');
+        }
+        
         return ManagementApprovalListModel.fromJson(jsonResponse);
       }
 

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Model for abscondUserList_api response.
 /// Structure inferred from inactive/active list APIs (status, message, total, data.users, data.pagination).
 class AbscondUserListModelClass {
@@ -63,6 +65,8 @@ class AbscondData {
 }
 
 class AbscondUser {
+  static bool _hasLoggedFirst = false; // Debug flag
+  
   String? userId;
   String? employmentId;
   String? fullname;
@@ -110,9 +114,33 @@ class AbscondUser {
     relievingDate = json['relieving_date'];
     role = json['role'];
     status = json['status'];
-    avatar = json['avatar'];
+    // Try multiple possible field names for avatar, with created_by.avatar/image as fallback
+    avatar = json['avatar']?.toString() ?? 
+             json['photo']?.toString() ?? 
+             json['image']?.toString() ?? 
+             json['photo_url']?.toString() ?? 
+             json['avatar_url']?.toString() ??
+             (json['created_by'] != null 
+                ? (json['created_by']['avatar']?.toString() ?? json['created_by']['image']?.toString())
+                : null);
     email = json['email'];
     mobile = json['mobile'];
+    
+    // Debug logging for avatar parsing (only first user)
+    if (kDebugMode && !AbscondUser._hasLoggedFirst && fullname != null) {
+      AbscondUser._hasLoggedFirst = true;
+      print("📸 AbscondUser.fromJson - FIRST USER: ${fullname}:");
+      print("   All JSON keys: ${json.keys.toList()}");
+      print("   Raw avatar: ${json['avatar']}");
+      print("   Raw photo: ${json['photo']}");
+      print("   Raw image: ${json['image']}");
+      print("   Raw created_by: ${json['created_by']}");
+      if (json['created_by'] != null) {
+        print("   created_by.avatar: ${json['created_by']['avatar']}");
+        print("   created_by.image: ${json['created_by']['image']}");
+      }
+      print("   Final avatar value: $avatar");
+    }
   }
 
   Map<String, dynamic> toJson() {

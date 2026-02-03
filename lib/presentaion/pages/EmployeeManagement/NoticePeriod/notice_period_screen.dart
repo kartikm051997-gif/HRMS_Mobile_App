@@ -342,7 +342,6 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
     );
   }
 
-
   Widget _buildSearchField(NoticePeriodProvider provider) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -537,41 +536,48 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
             ),
             child: Center(
               child:
-              provider.isLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-                  :Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_rounded,
-                    size: 18,
-                    color: canApply ? Colors.white : AppColor.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    canApply ? "Apply Filters" : "Select All Filters",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : AppColor.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                  provider.isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_rounded,
+                              size: 18,
+                              color:
+                                  canApply
+                                      ? Colors.white
+                                      : AppColor.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              canApply ? "Apply Filters" : "Select All Filters",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                                color:
+                                    canApply
+                                        ? Colors.white
+                                        : AppColor.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildResultsSection(NoticePeriodProvider provider) {
