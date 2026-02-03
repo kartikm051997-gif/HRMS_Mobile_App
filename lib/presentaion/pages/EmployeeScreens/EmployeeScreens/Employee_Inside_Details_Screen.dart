@@ -3,6 +3,7 @@ import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../model/AllEmployeeDetailsModel/Employee_Basic_Details.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
 
 class EmployeeInsideDetailsScreen extends StatefulWidget {
   final String empId;
@@ -348,7 +349,7 @@ class _EmployeeInsideDetailsScreenState
                     context,
                     MaterialPageRoute(
                       builder:
-                          (_) => EmployeeDetailsScreen(
+                          (_) => AdminMyDetailsMenuScreen(
                             empId: widget.employee.employeeId,
                             empPhoto: widget.employee.photoUrl ?? "",
                             empName: widget.employee.name,

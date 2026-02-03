@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/presentaion/page_not_found/page_not_found.dart';
 import 'package:hrms_mobile_app/presentaion/pages/AdminScreen/AdminTrackingScreen.dart';
-import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/Deliverables_Overview_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/add_deliverable_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeAssetScreens/EmployeeAssetScreen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
@@ -27,7 +26,6 @@ import 'package:hrms_mobile_app/presentaion/pages/authenticationScreens/loginScr
 import 'package:hrms_mobile_app/provider/AdminTrackingProvider/AdminTrackingProvider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Assets_Details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Circular_Details_Provider.dart';
-import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Deliverables_Overview_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/Task_details_Provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/add_deliverable_provider.dart';
@@ -44,6 +42,8 @@ import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/payslip_
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/pf_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/reference_details_provider.dart';
 import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/salary_details_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/deliverables_provider.dart';
+import 'package:hrms_mobile_app/provider/Deliverables_Overview_provider/automated_payroll_provider.dart';
 import 'package:hrms_mobile_app/provider/EmployeeAssetProvider/EmployeeAssetProvider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Abscond_Provider.dart';
 import 'package:hrms_mobile_app/provider/Employee_management_Provider/Active_Provider.dart';
@@ -126,7 +126,6 @@ class MyApp extends StatelessWidget {
         // 🟢 Use the pre-initialized LoginProvider instance
         ChangeNotifierProvider<LoginProvider>.value(value: loginProvider),
         ChangeNotifierProvider(create: (_) => ForgetPasswordProvider()),
-        ChangeNotifierProvider(create: (_) => DeliverablesOverviewProvider()),
         ChangeNotifierProvider(create: (_) => AddDeliverableProvider()),
         ChangeNotifierProvider(create: (_) => EmployeeDetailsProvider()),
         ChangeNotifierProvider(create: (_) => BankDetailsProvider()),
@@ -147,6 +146,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AssetsDetailsProvider()),
         ChangeNotifierProvider(create: (_) => CircularProvider()),
         ChangeNotifierProvider(create: (_) => TaskDetailsProvider()),
+        ChangeNotifierProvider(create: (_) => DeliverablesProvider()),
+        ChangeNotifierProvider(create: (_) => AutomatedPayrollProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceLogProvider()),
         ChangeNotifierProvider(create: (_) => RemoteAttendanceProvider()),
         ChangeNotifierProvider(create: (_) => MisPunchReportsProvider()),
@@ -234,8 +235,6 @@ class MyApp extends StatelessWidget {
         return const UserTrackingTabViewScreen();
       case AppRoutes.adminTracking:
         return const AdminTrackingScreen();
-      case AppRoutes.deliverablesOverview:
-        return DeliverablesOverviewScreen();
       case AppRoutes.addDeliverable:
         return AddDeliverableScreen();
       case AppRoutes.attendanceLog:
@@ -253,7 +252,7 @@ class MyApp extends StatelessWidget {
       case AppRoutes.paySlips:
         return PaySlipDrawerScreen();
       case AppRoutes.allEmployees:
-        return AllEmployeeScreen();
+        return AllEmployeeScreenLegacy();
       case AppRoutes.professionals:
         return ProfessionalsScreens();
       case AppRoutes.employees:

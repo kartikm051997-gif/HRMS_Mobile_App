@@ -317,6 +317,10 @@ class _InActiveScreenState extends State<InActiveScreen> {
                       style: TextStyle(fontFamily: AppFonts.poppins),
                       controller: inActiveProvider.searchController,
                       onChanged: inActiveProvider.onSearchChanged,
+                      onSubmitted: (value) {
+                        // Immediate search on Enter - show matching cards
+                        inActiveProvider.performSearchWithQuery(value);
+                      },
                       decoration: InputDecoration(
                         hintStyle: TextStyle(fontFamily: AppFonts.poppins),
                         hintText: "Search by name, ID...",

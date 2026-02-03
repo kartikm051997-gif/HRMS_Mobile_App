@@ -90,11 +90,12 @@ class _ProfileTabBarViewState extends State<ProfileTabBarView>
                 controller: _tabController,
                 children: [
                   EmployeePersonalDetailsScreen(
-                    empId: "12345", // Replace with your dynamic employee ID
+                    empId:
+                        widget.empId, // ✅ Use dynamic employee ID from widget
                   ),
-                  EduExpDetailsScreen(empId: "12345"), // Tab 2
-                  OtherDetailsScreen(empId: "12345"),
-                  ReferenceDetailsScreen(empId: "12345"), // Tab 4
+                  EduExpDetailsScreen(empId: widget.empId), // Tab 2
+                  OtherDetailsScreen(empId: widget.empId),
+                  ReferenceDetailsScreen(empId: widget.empId), // Tab 4
                 ],
               ),
             ),

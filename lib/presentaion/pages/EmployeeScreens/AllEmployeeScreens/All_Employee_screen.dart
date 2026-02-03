@@ -8,14 +8,14 @@ import '../../../../widgets/custom_textfield/Custom_date_field.dart';
 import '../../../../widgets/custom_textfield/custom_dropdown_with_search.dart';
 import 'All_Employee_Details_Screen.dart';
 
-class AllEmployeeScreen extends StatefulWidget {
-  const AllEmployeeScreen({super.key});
+class AllEmployeeScreenLegacy extends StatefulWidget {
+  const AllEmployeeScreenLegacy({super.key});
 
   @override
-  State<AllEmployeeScreen> createState() => _AllEmployeeScreenState();
+  State<AllEmployeeScreenLegacy> createState() => _AllEmployeeScreenLegacyState();
 }
 
-class _AllEmployeeScreenState extends State<AllEmployeeScreen>
+class _AllEmployeeScreenLegacyState extends State<AllEmployeeScreenLegacy>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -114,7 +114,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
                 ),
                 const SizedBox(width: 12),
                 // Page Size Dropdown
-                _buildPageSizeDropdown(allEmployeeProvider),
               ],
             ),
             const SizedBox(height: 16),
@@ -191,46 +190,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     );
   }
 
-  Widget _buildPageSizeDropdown(AllEmployeeProvider allEmployeeProvider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: allEmployeeProvider.pageSize,
-          items: [5, 10, 15, 20].map((e) {
-            return DropdownMenuItem(
-              value: e,
-              child: Text(
-                "$e per page",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: AppFonts.poppins,
-                  color: textSecondary,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: (val) {
-            if (val != null) {
-              allEmployeeProvider.setPageSize(val);
-            }
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildSearchField(AllEmployeeProvider allEmployeeProvider) {
     return ClipRRect(

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import '../../model/Employee_management/AbscondUserListModelClass.dart';
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/AbscondUserService.dart';
+import '../../core/utils/helper_utils.dart';
 
 class AbscondProvider extends ChangeNotifier {
   final AbscondUserService _abscondUserService = AbscondUserService();
@@ -99,8 +101,9 @@ class AbscondProvider extends ChangeNotifier {
 
   int get totalPages {
     if (_totalPagesFromServer != null) return _totalPagesFromServer!;
-    if (_filteredEmployees.isEmpty) return 0;
-    return (_filteredEmployees.length / _itemsPerPage).ceil();
+    if (_totalRecords != null && _totalRecords! > 0)
+      return ((_totalRecords! / _itemsPerPage).ceil()).clamp(1, 999999);
+    return 0; // Return 0 if no records
   }
 
   // ✅ SERVER-SIDE PAGINATION: Return current page data directly
@@ -260,19 +263,13 @@ class AbscondProvider extends ChangeNotifier {
         print("📊 Designations: ${_designationList.length}");
       }
 
-      // ✅ LOAD DEFAULT DATA with auto-selected filters
-      if (_selectedZoneId != null &&
-          _selectedBranchIds.isNotEmpty &&
-          _selectedDesignationIds.isNotEmpty) {
-        await fetchAbscondUsers(
-          zoneId: _selectedZoneId,
-          locationsId: _selectedBranchIds.join(','),
-          designationsId: _selectedDesignationIds.join(','),
-          page: 1,
-          perPage: 10,
-        );
-        _hasAppliedFilters = true;
+      // ✅ CRITICAL: Fetch default data WITHOUT selecting filters in UI
+      // Filters remain unselected, but we fetch default data (all data)
+      if (kDebugMode) {
+        print("📊 Fetching default data without filters...");
       }
+      await fetchAbscondUsers(page: 1, perPage: 10);
+      _hasAppliedFilters = false; // Keep filters unselected
 
       _initialLoadDone = true;
       notifyListeners();
@@ -282,11 +279,16 @@ class AbscondProvider extends ChangeNotifier {
           e.toString().contains("TOKEN_EXPIRED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
-        if (kDebugMode) print("⛔ Token expired – clearing session");
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading filters: $e";
       }
+      if (kDebugMode) print("❌ AbscondProvider: $_errorMessage");
+      _initialLoadDone = true;
       if (kDebugMode) print("❌ AbscondProvider: $_errorMessage");
       _initialLoadDone = true;
     } finally {
@@ -333,39 +335,89 @@ class AbscondProvider extends ChangeNotifier {
         search: search ?? searchController.text,
       );
 
-      if (response != null && response.status == 'success') {
-        // ✅ SERVER-SIDE PAGINATION: Store only current page data
-        _allEmployees = response.data?.users ?? [];
-        _filteredEmployees = List.from(_allEmployees);
+      if (response != null) {
+        // Check if response has data (some APIs might return success without status field)
+        if (response.status == 'success' || response.data != null) {
+          // ✅ SERVER-SIDE PAGINATION: Store only current page data
+          _allEmployees = response.data?.users ?? [];
+          // ✅ If search is active, filter results; otherwise show all
+          if (search != null && search.isNotEmpty) {
+            final searchLower = search.toLowerCase();
+            _filteredEmployees = _allEmployees.where((employee) {
+              final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+              final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+              return name.contains(searchLower) || empId.contains(searchLower);
+            }).toList();
+          } else {
+            _filteredEmployees = List.from(_allEmployees);
+          }
 
-        // ✅ Update pagination info from server response
-        if (response.data?.pagination != null) {
-          final p = response.data!.pagination!;
-          _totalRecords = p.total;
-          _totalPagesFromServer =
-              p.lastPage ??
-              (p.total != null ? (p.total! / _itemsPerPage).ceil() : null);
-          _currentPage = p.currentPage ?? _currentPage;
-        }
+          if (kDebugMode) {
+            print("✅ AbscondProvider: Response received");
+            print("   Status: ${response.status}");
+            print("   Users count: ${_allEmployees.length}");
+            print("   Data: ${response.data != null}");
+            print("   Pagination: ${response.data?.pagination != null}");
+            if (response.data?.pagination != null) {
+              final p = response.data!.pagination!;
+              print("   Pagination total: ${p.total}");
+              print("   Pagination lastPage: ${p.lastPage}");
+              print("   Pagination currentPage: ${p.currentPage}");
+            }
+          }
 
-        if (kDebugMode) {
-          print(
-            "✅ AbscondProvider: Loaded ${_allEmployees.length} employees (Page $_currentPage of $totalPages)",
-          );
-          print(
-            "📊 Total Records: $_totalRecords, Total Pages: $_totalPagesFromServer",
-          );
+          // ✅ Update pagination info from server response
+          if (response.data?.pagination != null) {
+            final p = response.data!.pagination!;
+            _totalRecords = p.total ?? 0;
+            _totalPagesFromServer =
+                p.lastPage ??
+                (p.total != null && p.total! > 0
+                    ? (p.total! / _itemsPerPage).ceil()
+                    : 0);
+            _currentPage = p.currentPage ?? _currentPage;
+          } else {
+            // If no pagination data, use the users list length (even if 0)
+            _totalRecords = _allEmployees.length;
+            _totalPagesFromServer = _allEmployees.isNotEmpty ? 1 : 0;
+          }
+
+          // Ensure _totalRecords is set even when 0
+          if (_totalRecords == null) {
+            _totalRecords = 0;
+          }
+
+          if (kDebugMode) {
+            print(
+              "✅ AbscondProvider: Loaded ${_allEmployees.length} employees (Page $_currentPage of $totalPages)",
+            );
+            print(
+              "📊 Total Records: $_totalRecords, Total Pages: $_totalPagesFromServer",
+            );
+          }
+        } else {
+          _errorMessage =
+              response?.message ?? "Failed to load absconded employees";
+          if (kDebugMode) {
+            print("❌ AbscondProvider: Response status not success");
+            print("   Status: ${response.status}");
+            print("   Message: ${response.message}");
+          }
         }
       } else {
-        _errorMessage =
-            response?.message ?? "Failed to load absconded employees";
+        _errorMessage = "No response from server";
+        if (kDebugMode) print("❌ AbscondProvider: Response is null");
       }
     } catch (e) {
       if (e.toString().contains("401") ||
           e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading employees: $e";
       }
@@ -379,6 +431,51 @@ class AbscondProvider extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════════════
   // FILTER SETTERS
   // ═══════════════════════════════════════════════════════════════════════
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // APPLY DEFAULT FILTERS (Select first zone, first branch, first designation)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  void _applyDefaultFilters() {
+    if (kDebugMode) print("🎯 AbscondProvider: Applying default filters...");
+
+    if (_zoneList.isEmpty) {
+      if (kDebugMode) print("❌ No zones available! Cannot apply defaults.");
+      return;
+    }
+
+    // ✅ Select first zone (for UI display, but we'll fetch all data)
+    if (_zoneList.isNotEmpty) {
+      _selectedZoneId = _zoneList.first['id'];
+      _selectedZoneName = _zoneList.first['name'];
+      if (kDebugMode)
+        print("✅ Selected first Zone: $_selectedZoneName (for display)");
+    }
+
+    // ✅ Select ALL branches (not filtered by zone to show all data)
+    _selectedBranchIds = _branchList.map((b) => b['id']!).toList();
+    _selectedBranchNames = _branchList.map((b) => b['name']!).toList();
+    if (kDebugMode) {
+      print(
+        "✅ Selected ALL Branches (${_selectedBranchIds.length}): ${_selectedBranchNames.take(3).join(', ')}${_selectedBranchNames.length > 3 ? '...' : ''}",
+      );
+    }
+
+    // ✅ Select ALL designations
+    _selectedDesignationIds = _designationList.map((d) => d['id']!).toList();
+    _selectedDesignationNames =
+        _designationList.map((d) => d['name']!).toList();
+    if (kDebugMode) {
+      print(
+        "✅ Selected ALL Designations (${_selectedDesignationIds.length}): ${_selectedDesignationNames.take(3).join(', ')}${_selectedDesignationNames.length > 3 ? '...' : ''}",
+      );
+    }
+
+    if (kDebugMode)
+      print(
+        "🎯 Default filters applied successfully! Will fetch ALL abscond users.",
+      );
+  }
 
   void setSelectedZone(String? displayName) {
     _selectedZoneName = displayName;
@@ -442,12 +539,77 @@ class AbscondProvider extends ChangeNotifier {
     );
   }
 
+  Timer? _searchDebounce;
+
+  /// Real-time search: filter cards as user types (like Active screen)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    
+    final trimmedQuery = query.trim();
+    
+    // If search is cleared, show all employees
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filtering for instant results as user types
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Also do server-side search with debounce for fresh data
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
+      _currentPage = 1;
+      fetchAbscondUsers(
+        zoneId: _selectedZoneId,
+        locationsId:
+            _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+        designationsId:
+            _selectedDesignationIds.isNotEmpty
+                ? _selectedDesignationIds.join(',')
+                : null,
+        page: 1,
+        perPage: _itemsPerPage,
+        search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
+      );
+    });
+  }
 
-    _currentPage = 1; // ✅ Reset to first page
-
-    // ✅ SERVER-SIDE SEARCH: Fetch from server with search query
+  /// Perform immediate search (called on Enter key)
+  void performSearchWithQuery(String query) {
+    if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filter first for instant results
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Then fetch fresh data from server
     fetchAbscondUsers(
       zoneId: _selectedZoneId,
       locationsId:
@@ -458,15 +620,18 @@ class AbscondProvider extends ChangeNotifier {
               : null,
       page: 1,
       perPage: _itemsPerPage,
-      search: query.isNotEmpty ? query : null,
+      search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
     );
   }
 
   void clearSearch() {
+    _searchDebounce?.cancel();
     searchController.clear();
     _currentPage = 1;
-
-    // ✅ Fetch first page without search
+    // Show all employees immediately
+    _filteredEmployees = List.from(_allEmployees);
+    notifyListeners();
+    // Then fetch fresh data
     fetchAbscondUsers(
       zoneId: _selectedZoneId,
       locationsId:
@@ -552,6 +717,7 @@ class AbscondProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     searchController.dispose();
     super.dispose();
   }

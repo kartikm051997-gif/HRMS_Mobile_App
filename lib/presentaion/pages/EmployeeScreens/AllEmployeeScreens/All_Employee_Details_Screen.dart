@@ -8,6 +8,8 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../model/AllEmployeeDetailsModel/All_employee_model.dart';
 import '../../../../model/Employee_management/Employee_management.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
+import '../../MyDetailsScreens/my_details_menu_screen.dart';
 
 class AllEmployeeDetailsScreen extends StatefulWidget {
   final String empId;
@@ -240,7 +242,7 @@ class _AllEmployeeDetailsScreenState extends State<AllEmployeeDetailsScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => EmployeeDetailsScreen(
+                      builder: (_) => AdminMyDetailsMenuScreen(
                         empId: widget.employee.employeeId,
                         empPhoto: widget.employee.photoUrl ?? "",
                         empName: widget.employee.name,

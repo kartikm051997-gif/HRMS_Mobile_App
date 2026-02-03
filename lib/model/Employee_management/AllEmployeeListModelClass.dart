@@ -7,9 +7,15 @@ class AllEmployeeListModelClass {
   AllEmployeeListModelClass({this.status, this.message, this.total, this.data});
 
   AllEmployeeListModelClass.fromJson(Map<String, dynamic> json) {
-    status = json['status'];
-    message = json['message'];
-    total = json['total'];
+    // Handle status as boolean or string
+    if (json['status'] is bool) {
+      status = json['status'] == true ? 'success' : 'failed';
+    } else {
+      status = json['status']?.toString();
+    }
+    message = json['message']?.toString();
+    // Handle total or limit field
+    total = json['total'] ?? json['limit'];
     data = json['data'] != null ? AllEmployeeData.fromJson(json['data']) : null;
   }
 
@@ -102,29 +108,44 @@ class AllEmployeeUser {
   });
 
   AllEmployeeUser.fromJson(Map<String, dynamic> json) {
-    userId = json['user_id'];
-    employmentId = json['employment_id'];
-    fullname = json['fullname'];
-    username = json['username'];
-    designation = json['designation'];
-    department = json['department'];
-    location = json['location'];
-    locationName = json['location_name'] ?? json['location'];
-    joiningDate = json['joining_date'];
+    userId = json['user_id']?.toString();
+    employmentId = json['employment_id']?.toString() ?? json['user_id']?.toString();
+    fullname = json['fullname'] ?? json['full_name']?.toString();
+    username = json['username']?.toString();
+    designation = json['designation']?.toString();
+    department = json['department']?.toString();
+    location = json['location']?.toString();
+    locationName = json['location_name'] ?? json['location']?.toString();
+    joiningDate = json['joining_date']?.toString();
     monthlyCTC =
-        json['monthly_ctc']?.toString() ?? json['monthlyCTC']?.toString();
-    annualCTC = json['annual_ctc']?.toString() ?? json['annualCTC']?.toString();
-    payrollCategory = json['payroll_category'] ?? json['payrollCategory'];
-    status = json['status'];
-    avatar = json['avatar'];
-    email = json['email'];
-    mobile = json['mobile'];
-    recruiterName = json['recruiter_name'] ?? json['recruiterName'];
-    recruiterPhotoUrl =
-        json['recruiter_photo_url'] ?? json['recruiterPhotoUrl'];
-    createdByName = json['created_by_name'] ?? json['createdByName'];
-    createdByPhotoUrl =
-        json['created_by_photo_url'] ?? json['createdByPhotoUrl'];
+        json['monthly_ctc']?.toString() ?? 
+        json['monthlyCTC']?.toString() ??
+        json['monthly_professional_fee']?.toString();
+    annualCTC = 
+        json['annual_ctc']?.toString() ?? 
+        json['annualCTC']?.toString() ??
+        json['annual_professional_fee']?.toString();
+    payrollCategory = json['payroll_category'] ?? json['payrollCategory']?.toString();
+    status = json['status']?.toString();
+    avatar = json['avatar']?.toString();
+    email = json['email']?.toString();
+    mobile = json['mobile']?.toString();
+    // Handle recruiter object
+    if (json['recruiter'] is Map) {
+      recruiterName = json['recruiter']?['name']?.toString();
+      recruiterPhotoUrl = json['recruiter']?['id']?.toString();
+    } else {
+      recruiterName = json['recruiter_name'] ?? json['recruiterName']?.toString();
+      recruiterPhotoUrl = json['recruiter_photo_url'] ?? json['recruiterPhotoUrl']?.toString();
+    }
+    // Handle created_by object
+    if (json['created_by'] is Map) {
+      createdByName = json['created_by']?['name']?.toString();
+      createdByPhotoUrl = json['created_by']?['id']?.toString();
+    } else {
+      createdByName = json['created_by_name'] ?? json['createdByName']?.toString();
+      createdByPhotoUrl = json['created_by_photo_url'] ?? json['createdByPhotoUrl']?.toString();
+    }
   }
 
   Map<String, dynamic> toJson() {

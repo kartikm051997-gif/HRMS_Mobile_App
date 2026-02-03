@@ -40,31 +40,88 @@ class LoginService {
     HttpOverrides.global = MyHttpOverrides();
   }
 
+  /// Get valid token - NO refresh logic, just check if token exists
+  /// Token refresh is disabled - token stays valid as long as user is active
   Future<String?> getValidToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString(_keyAuthToken);
 
       if (token == null || token.isEmpty) {
+        if (kDebugMode) print("❌ No token found in storage");
         return null;
       }
 
-      // Check if 5 minutes passed since last refresh
-      if (_lastTokenRefresh == null ||
-          DateTime.now().difference(_lastTokenRefresh!) >
-              Duration(minutes: 5)) {
-        if (kDebugMode) print("🔄 Refreshing token...");
-        final newToken = await refreshToken(token);
-
-        if (newToken != null) {
-          token = newToken;
-          _lastTokenRefresh = DateTime.now();
-        }
-      }
-
+      // ✅ NO TOKEN REFRESH - Token stays valid as long as user is active
+      // Just return the token if it exists
       return token;
     } catch (e) {
-      return await getAuthToken(); // If refresh fails, use old token
+      if (kDebugMode) print("❌ Error in getValidToken: $e");
+      return null;
+    }
+  }
+
+  /// Update last app usage time - call this whenever user uses the app
+  Future<void> updateLastAppUsage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(
+        _keyLastAppUsage,
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      if (kDebugMode) print("✅ Last app usage time updated");
+    } catch (e) {
+      if (kDebugMode) print("❌ Error updating last app usage: $e");
+    }
+  }
+
+  /// Check if user has been inactive for 3 days
+  /// Returns true if user should be logged out (3 days inactive)
+  Future<bool> shouldLogoutDueToInactivity() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastUsageTime = prefs.getInt(_keyLastAppUsage);
+
+      if (lastUsageTime == null) {
+        // If no last usage time, check login time instead
+        final loginTime = prefs.getInt(_keyLoginTime);
+        if (loginTime == null) {
+          return true; // No login time, should logout
+        }
+        final loginDate = DateTime.fromMillisecondsSinceEpoch(loginTime);
+        final hoursSinceLogin = DateTime.now().difference(loginDate).inHours;
+
+        if (hoursSinceLogin >= _inactivityExpiryHours) {
+          if (kDebugMode) {
+            print(
+              "⏰ User inactive for ${hoursSinceLogin} hours (max: $_inactivityExpiryHours) - should logout",
+            );
+          }
+          return true;
+        }
+        return false;
+      }
+
+      final lastUsageDate = DateTime.fromMillisecondsSinceEpoch(lastUsageTime);
+      final hoursSinceLastUsage =
+          DateTime.now().difference(lastUsageDate).inHours;
+
+      if (hoursSinceLastUsage >= _inactivityExpiryHours) {
+        if (kDebugMode) {
+          print(
+            "⏰ User inactive for ${hoursSinceLastUsage} hours (max: $_inactivityExpiryHours) - should logout",
+          );
+        }
+        return true;
+      }
+
+      if (kDebugMode) {
+        print("✅ User active - last usage: ${hoursSinceLastUsage} hours ago");
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) print("❌ Error checking inactivity: $e");
+      return false;
     }
   }
 
@@ -77,7 +134,7 @@ class LoginService {
 
       final response = await http
           .post(
-            Uri.parse(ApiBase.refreshToken), // You need to add this URL
+            Uri.parse(ApiBase.refreshToken),
             headers: {
               'Authorization': 'Bearer $oldToken',
               'Accept': 'application/json',
@@ -85,30 +142,50 @@ class LoginService {
           )
           .timeout(Duration(seconds: 15));
 
+      if (kDebugMode) {
+        print("📡 Refresh token response status: ${response.statusCode}");
+      }
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         // Get new token from response (adjust based on your API)
-        String? newToken = data['token'] ?? data['data']?['token'];
+        String? newToken =
+            data['token'] ?? data['data']?['token'] ?? data['access_token'];
 
-        if (newToken != null) {
+        if (newToken != null && newToken.isNotEmpty) {
           // Save new token
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(_keyAuthToken, newToken);
 
           if (kDebugMode) print("✅ New token saved!");
           return newToken;
+        } else {
+          if (kDebugMode)
+            print("⚠️ Refresh token API returned 200 but no token in response");
+          // If refresh endpoint doesn't exist or returns wrong format, return null to force login
+          return null;
         }
-      } else if (response.statusCode == 401) {
+      } else if (response.statusCode == 401 || response.statusCode == 403) {
         // Token is completely dead - user must login again
-        if (kDebugMode) print("❌ Token expired - need to login again");
+        if (kDebugMode)
+          print(
+            "❌ Token expired (${response.statusCode}) - need to login again",
+          );
+        return null;
+      } else {
+        // Other error (404, 500, etc.) - refresh endpoint might not exist
+        if (kDebugMode)
+          print(
+            "⚠️ Refresh token API returned ${response.statusCode} - endpoint might not exist",
+          );
+        // Return null to force login if refresh endpoint doesn't work
         return null;
       }
-
-      return oldToken; // If anything fails, return old token
     } catch (e) {
       if (kDebugMode) print("❌ Error refreshing token: $e");
-      return oldToken;
+      // Don't return old token if refresh fails - return null to force login
+      return null;
     }
   }
 
@@ -121,6 +198,7 @@ class LoginService {
 
       await prefs.remove(_keyIsLoggedIn);
       await prefs.remove(_keyLoginTime);
+      await prefs.remove(_keyLastAppUsage);
       await prefs.remove(_keyUserData);
       await prefs.remove(_keyEmployeeId);
       await prefs.remove(_keyLoggedInEmpId);
@@ -139,12 +217,14 @@ class LoginService {
   // API timeout duration
   static const Duration _apiTimeout = Duration(seconds: 30);
 
-  // Session expiry duration (2 days)
-  static const int _sessionExpiryMinutes = 2880;
+  // Session expiry duration (3 days of inactivity)
+  static const int _inactivityExpiryHours = 72; // 3 days
 
   // SharedPreferences keys
   static const String _keyIsLoggedIn = 'isLoggedIn';
   static const String _keyLoginTime = 'loginTime';
+  static const String _keyLastAppUsage =
+      'lastAppUsage'; // Track last app usage time
   static const String _keyUserData = 'userData';
   static const String _keyEmployeeId = 'employeeId';
   static const String _keyLoggedInEmpId = 'logged_in_emp_id';
@@ -212,20 +292,32 @@ class LoginService {
           throw Exception(loginModel.message ?? "Invalid credentials");
         }
       } else {
-        // Handle HTTP errors
-        final bodyText =
-            response.body.isNotEmpty && response.body.length > 160
-                ? "${response.body.substring(0, 160)}..."
-                : response.body;
+        // Handle HTTP errors - Parse JSON to get user-friendly message
+        String userFriendlyMessage = "Invalid username or password. Please try again.";
+        
+        try {
+          if (response.body.isNotEmpty) {
+            final jsonResponse = jsonDecode(response.body);
+            if (jsonResponse is Map<String, dynamic>) {
+              // Extract message from JSON response
+              final message = jsonResponse['message']?.toString();
+              if (message != null && message.isNotEmpty) {
+                userFriendlyMessage = message;
+              }
+            }
+          }
+        } catch (e) {
+          // If JSON parsing fails, use default message
+          if (kDebugMode) print("⚠️ Could not parse error response: $e");
+        }
 
         if (kDebugMode) {
           print("❌ Login failed. Status: ${response.statusCode}");
-          print("❌ Body: $bodyText");
+          print("❌ User-friendly message: $userFriendlyMessage");
+          print("❌ Raw body: ${response.body}");
         }
 
-        throw Exception(
-          "Login failed (HTTP ${response.statusCode})${bodyText.isNotEmpty ? ' - $bodyText' : ''}",
-        );
+        throw Exception(userFriendlyMessage);
       }
     } on TimeoutException catch (e) {
       if (kDebugMode) print("❌ Timeout: $e");
@@ -259,7 +351,9 @@ class LoginService {
       // Save entire login response
       await prefs.setString(_keyUserData, jsonEncode(userData));
       await prefs.setBool(_keyIsLoggedIn, true);
-      await prefs.setInt(_keyLoginTime, DateTime.now().millisecondsSinceEpoch);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await prefs.setInt(_keyLoginTime, now);
+      await prefs.setInt(_keyLastAppUsage, now); // Set last app usage on login
 
       // ✅ Extract and save token
       String token = _extractToken(userData);
@@ -367,38 +461,21 @@ class LoginService {
     }
   }
 
-  /// Check if session is valid (not expired)
+  /// Check if session is valid - NO inactivity check, just check if logged in
   Future<bool> isSessionValid() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final isLoggedIn = prefs.getBool(_keyIsLoggedIn) ?? false;
-      final loginTime = prefs.getInt(_keyLoginTime);
 
-      if (!isLoggedIn || loginTime == null) {
-        if (kDebugMode) print("❌ No valid session");
+      if (!isLoggedIn) {
+        if (kDebugMode) print("❌ No valid session - not logged in");
         return false;
       }
 
-      final loginDate = DateTime.fromMillisecondsSinceEpoch(loginTime);
-      final now = DateTime.now();
-      final minutesSinceLogin = now.difference(loginDate).inMinutes;
-
-      if (minutesSinceLogin >= _sessionExpiryMinutes) {
-        if (kDebugMode) {
-          print("❌ Session expired");
-          print(
-            "⏰ Session was ${minutesSinceLogin} minutes old (max: $_sessionExpiryMinutes)",
-          );
-        }
-        await clearSession();
-        return false;
-      }
-
+      // ✅ NO INACTIVITY CHECK - Session stays valid as long as user is logged in
+      // Token expiration will be handled gracefully by API calls (401 errors)
       if (kDebugMode) {
-        print("✅ Session is valid");
-        print(
-          "⏰ Session age: $minutesSinceLogin minutes (expires in ${_sessionExpiryMinutes - minutesSinceLogin} min)",
-        );
+        print("✅ Session is valid - user is logged in");
       }
       return true;
     } catch (e) {

@@ -7,6 +7,7 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/AbscondUserListModelClass.dart';
 import '../../../../provider/Employee_management_Provider/Abscond_Provider.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
 
 class AbscondEmpDetailsScreen extends StatefulWidget {
   final String empId;
@@ -246,7 +247,7 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: $empId",
+                    "ECI ID: $empId",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -393,8 +394,8 @@ class _AbscondEmpDetailsScreenState extends State<AbscondEmpDetailsScreen>
               context,
               PageRouteBuilder(
                 pageBuilder:
-                    (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.empId,
+                    (_, __, ___) => AdminMyDetailsMenuScreen(
+                      empId: u?.userId ?? u?.employmentId ?? widget.empId, // ✅ Prioritize userId for API calls
                       empPhoto: u?.avatar ?? "",
                       empName: _displayName,
                       empDesignation: u?.designation ?? "",

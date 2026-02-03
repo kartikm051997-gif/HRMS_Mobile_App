@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/document_provider.dart';
+import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
+import '../../../../provider/login_provider/login_provider.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
 
 class DocumentsScreen extends StatefulWidget {
@@ -27,8 +30,8 @@ class _DocumentsScreenState extends State<DocumentsScreen>
   late Animation<double> _fadeAnimation;
 
   // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF7C3AED);
-  static const Color secondaryColor = Color(0xFFEC4899);
+  static const Color primaryColor = Color(0xFF8E0E6B);
+  static const Color secondaryColor = Color(0xFFD4145A);
 
   @override
   void initState() {
@@ -42,7 +45,10 @@ class _DocumentsScreenState extends State<DocumentsScreen>
     );
 
     Future.microtask(() {
-      context.read<DocumentProvider>().initializeDocuments();
+      // Fetch employee details to get documents
+      context.read<EmployeeDetailsProvider>().fetchEmployeeDetails(
+        widget.empId,
+      );
       _animationController.forward();
     });
   }
@@ -53,11 +59,234 @@ class _DocumentsScreenState extends State<DocumentsScreen>
     super.dispose();
   }
 
-  Future<void> _openDocument(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      _showSnackBar("Failed to open document", false);
+  Future<void> _openDocument(String url, String title) async {
+    // Check if user is admin
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    final bool isAdmin = loginProvider.userRole == "1";
+
+    if (!isAdmin) {
+      _showSnackBar("Only admin users can view documents", false);
+      return;
     }
+
+    // Show PDF viewer dialog
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding: const EdgeInsets.all(16),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.9,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  // Header with three-dot menu
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Three-dot menu button
+                        PopupMenuButton<String>(
+                          icon: const Icon(
+                            Icons.more_vert_rounded,
+                            color: Colors.white,
+                          ),
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          onSelected: (value) async {
+                            if (value == 'download') {
+                              Navigator.pop(context); // Close PDF viewer first
+                              // Trigger download
+                              final docProvider = Provider.of<DocumentProvider>(
+                                context,
+                                listen: false,
+                              );
+                              final docId =
+                                  "${title}_${DateTime.now().millisecondsSinceEpoch}";
+                              final fileExtension =
+                                  url
+                                      .split('.')
+                                      .last
+                                      .split('?')
+                                      .first
+                                      .toLowerCase();
+                              final fileName =
+                                  "${title.replaceAll(' ', '_').replaceAll('-', '_')}.$fileExtension";
+
+                              try {
+                                final result = await docProvider.downloadFile(
+                                  docId,
+                                  url,
+                                  fileName,
+                                );
+                                final isSuccess = result.contains('✅');
+                                _showSnackBar(result, isSuccess);
+                              } catch (e) {
+                                _showSnackBar(
+                                  "Download failed: ${e.toString()}",
+                                  false,
+                                );
+                              }
+                            }
+                          },
+                          itemBuilder:
+                              (BuildContext context) => [
+                                PopupMenuItem<String>(
+                                  value: 'download',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.download_rounded,
+                                        color: primaryColor,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        "Download",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // PDF Viewer
+                  Expanded(
+                    child: PDF(
+                      enableSwipe: true,
+                      swipeHorizontal: false,
+                      autoSpacing: false,
+                      pageFling: true,
+                      onError: (error) {
+                        _showSnackBar("Failed to load PDF: $error", false);
+                        Navigator.pop(context);
+                      },
+                    ).cachedFromUrl(
+                      url,
+                      placeholder:
+                          (progress) => Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  value: progress,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    primaryColor,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "Loading PDF... ${(progress * 100).toStringAsFixed(0)}%",
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 14,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      errorWidget:
+                          (error) => Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline_rounded,
+                                  size: 48,
+                                  color: Color(0xFFEF4444),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  "Failed to load PDF",
+                                  style: const TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  error.toString(),
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: primaryColor,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    "Close",
+                                    style: TextStyle(
+                                      fontFamily: AppFonts.poppins,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
   }
 
   void _showSnackBar(String message, bool isSuccess) {
@@ -91,130 +320,134 @@ class _DocumentsScreenState extends State<DocumentsScreen>
     );
   }
 
-  Future<void> _handleDownload(
-    DocumentProvider provider,
-    String docId,
-    String url,
-    String title,
-    String fileExtension,
-  ) async {
-    String fileName =
-        "${title.replaceAll(' ', '_').replaceAll('-', '_')}.$fileExtension";
-    final result = await provider.downloadFile(docId, url, fileName);
-    final isSuccess = result.contains('✅');
-    _showSnackBar(result, isSuccess);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    final bool isAdmin = loginProvider.userRole == "1";
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Consumer<DocumentProvider>(
-          builder: (context, provider, child) {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
+        child: Consumer<EmployeeDetailsProvider>(
+          builder: (context, detailsProvider, _) {
+            return Consumer<DocumentProvider>(
+              builder: (context, docProvider, _) {
+                // Load documents from EmployeeDetailsProvider
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (detailsProvider.employeeDetails != null) {
+                    docProvider.loadDocumentsFromProvider(
+                      detailsProvider.employeeDetails,
+                    );
+                  }
+                });
+
+                final provider = docProvider;
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [primaryColor, secondaryColor],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.folder_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
-                        child: Text(
-                          "Documents",
-                          style: TextStyle(
-                            fontFamily: AppFonts.poppins,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 20,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ),
-                      if (!provider.isLoading && provider.documents.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            "${provider.documents.length} Files",
-                            style: const TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: primaryColor,
+                      // Header
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [primaryColor, secondaryColor],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.folder_rounded,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Text(
+                              "Documents",
+                              style: TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 20,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ),
+                          if (!provider.isLoading &&
+                              provider.documents.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "${provider.documents.length} Files",
+                                style: const TextStyle(
+                                  fontFamily: AppFonts.poppins,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: primaryColor,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Content
+                      Expanded(
+                        child:
+                            provider.isLoading
+                                ? const CustomCardShimmer(itemCount: 4)
+                                : provider.documents.isEmpty
+                                ? _buildEmptyState()
+                                : ListView.builder(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: provider.documents.length,
+                                  itemBuilder: (context, index) {
+                                    final doc = provider.documents[index];
+
+                                    return TweenAnimationBuilder<double>(
+                                      tween: Tween(begin: 0.0, end: 1.0),
+                                      duration: Duration(
+                                        milliseconds: 400 + (index * 100),
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      builder: (context, value, child) {
+                                        return Transform.translate(
+                                          offset: Offset(0, 20 * (1 - value)),
+                                          child: Opacity(
+                                            opacity: value,
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                      child: _buildDocumentCard(
+                                        doc,
+                                        provider,
+                                        isAdmin,
+                                      ),
+                                    );
+                                  },
+                                ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Approve Button
+                      _buildApproveButton(),
                     ],
                   ),
-                  const SizedBox(height: 20),
-
-                  // Content
-                  Expanded(
-                    child: provider.isLoading
-                        ? const CustomCardShimmer(itemCount: 4)
-                        : provider.documents.isEmpty
-                            ? _buildEmptyState()
-                            : ListView.builder(
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: provider.documents.length,
-                                itemBuilder: (context, index) {
-                                  final doc = provider.documents[index];
-                                  final isDownloading =
-                                      provider.isDocumentDownloading(doc["id"]);
-
-                                  return TweenAnimationBuilder<double>(
-                                    tween: Tween(begin: 0.0, end: 1.0),
-                                    duration: Duration(
-                                        milliseconds: 400 + (index * 100)),
-                                    curve: Curves.easeOutCubic,
-                                    builder: (context, value, child) {
-                                      return Transform.translate(
-                                        offset: Offset(0, 20 * (1 - value)),
-                                        child: Opacity(
-                                          opacity: value,
-                                          child: child,
-                                        ),
-                                      );
-                                    },
-                                    child: _buildDocumentCard(
-                                      doc,
-                                      isDownloading,
-                                      provider,
-                                    ),
-                                  );
-                                },
-                              ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Approve Button
-                  _buildApproveButton(),
-                ],
-              ),
+                );
+              },
             );
           },
         ),
@@ -270,12 +503,11 @@ class _DocumentsScreenState extends State<DocumentsScreen>
 
   Widget _buildDocumentCard(
     Map<String, dynamic> doc,
-    bool isDownloading,
     DocumentProvider provider,
+    bool isAdmin,
   ) {
     final title = doc["title"] ?? "Document";
-    final uploadDate = doc["uploadDate"] ?? "Unknown";
-    final isDownloadable = doc["isDownloadable"] == true;
+    final uploadDate = doc["uploadDate"] ?? "Available";
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -296,9 +528,7 @@ class _DocumentsScreenState extends State<DocumentsScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [primaryColor, secondaryColor],
-              ),
+              gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -429,84 +659,59 @@ class _DocumentsScreenState extends State<DocumentsScreen>
                   ),
                 ),
 
-                // Action Buttons
-                Row(
-                  children: [
-                    // View Button
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _openDocument(doc["url"]),
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF3B82F6).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF3B82F6).withOpacity(0.3),
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.visibility_rounded,
-                            color: Color(0xFF3B82F6),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    if (isDownloadable) ...[
-                      const SizedBox(width: 10),
-                      // Download Button
+                // Action Buttons - Admin only
+                if (isAdmin)
+                  Row(
+                    children: [
+                      // View Button (Eye icon) - PDF Viewer
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
-                          onTap: isDownloading
-                              ? null
-                              : () => _handleDownload(
-                                    provider,
-                                    doc["id"],
-                                    doc["url"],
-                                    doc["title"] ?? 'document',
-                                    doc["fileExtension"] ?? 'pdf',
-                                  ),
+                          onTap:
+                              () => _openDocument(
+                                doc["url"] ?? "",
+                                doc["title"] ?? "Document",
+                              ),
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [primaryColor, secondaryColor],
-                              ),
+                              color: const Color(0xFF3B82F6).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: primaryColor.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                              border: Border.all(
+                                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                              ),
                             ),
-                            child: isDownloading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.download_rounded,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
+                            child: const Icon(
+                              Icons.visibility_rounded,
+                              color: Color(0xFF3B82F6),
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),
                     ],
-                  ],
-                ),
+                  )
+                else
+                  // Non-admin users see message
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      "Admin only",
+                      style: TextStyle(
+                        fontFamily: AppFonts.poppins,
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -542,11 +747,7 @@ class _DocumentsScreenState extends State<DocumentsScreen>
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.check_circle_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
+              Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
               SizedBox(width: 10),
               Text(
                 "Approve Documents",

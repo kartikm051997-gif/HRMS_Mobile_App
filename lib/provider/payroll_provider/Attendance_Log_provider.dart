@@ -84,7 +84,19 @@ class AttendanceLogProvider extends ChangeNotifier {
     "Student",
   ];
 
-  List<String> get employeeSalaryCategory => _employeeSalaryCategory;
+  // ✅ Deduplicate payroll categories (case-insensitive) to remove duplicates from backend
+  List<String> get employeeSalaryCategory {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final category in _employeeSalaryCategory) {
+      final normalized = category.trim().toLowerCase();
+      if (!seen.contains(normalized)) {
+        seen.add(normalized);
+        unique.add(category);
+      }
+    }
+    return unique;
+  }
 
   String? _selectedEmployeeSalaryCategory;
   String? get selectedEmployeeSalaryCategory => _selectedEmployeeSalaryCategory;

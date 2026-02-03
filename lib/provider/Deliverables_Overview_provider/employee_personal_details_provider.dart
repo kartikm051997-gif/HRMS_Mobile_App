@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../servicesAPI/EmployeeDetailsService/employee_details_service.dart';
 
 class EmployeeInformationProvider extends ChangeNotifier {
+  bool isLoading = false;
 
   File? _selectedFile;
 
@@ -30,6 +32,7 @@ class EmployeeInformationProvider extends ChangeNotifier {
     _selectedJoiningLetter = null;
     notifyListeners();
   }
+
   String _selectedGender = "Male"; // Default value
 
   String get selectedGender => _selectedGender;
@@ -99,9 +102,12 @@ class EmployeeInformationProvider extends ChangeNotifier {
       motherTongueController.text = response["Mother Tongue"] ?? "";
       casteController.text = response["Caste"] ?? "";
       bloodGroupController.text = response["Blood Group"] ?? "";
-      secondaryContactNumberController.text = response["Secondary Contact Number"] ?? "";
-      secondaryContactOccupationController.text = response["Secondary Contact Occupation"] ?? "";
-      secondaryContactMobileController.text = response["Secondary Contact Mobile"] ?? "";
+      secondaryContactNumberController.text =
+          response["Secondary Contact Number"] ?? "";
+      secondaryContactOccupationController.text =
+          response["Secondary Contact Occupation"] ?? "";
+      secondaryContactMobileController.text =
+          response["Secondary Contact Mobile"] ?? "";
       permanentAddressController.text = response["Permanent Address"] ?? "";
       presentAddressController.text = response["Present Address"] ?? "";
 

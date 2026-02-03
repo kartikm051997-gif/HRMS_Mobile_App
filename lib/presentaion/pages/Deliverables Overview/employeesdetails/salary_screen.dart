@@ -98,34 +98,33 @@ class _SalaryScreenState extends State<SalaryScreen>
 
               // Content
               Expanded(
-                child: salaryDetailsProvider.isLoading
-                    ? const CustomCardShimmer(itemCount: 1)
-                    : salaryDetailsProvider.salaryDetails.isEmpty
+                child:
+                    salaryDetailsProvider.isLoading
+                        ? const CustomCardShimmer(itemCount: 1)
+                        : salaryDetailsProvider.salaryDetails.isEmpty
                         ? _buildEmptyState()
                         : ListView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: salaryDetailsProvider.salaryDetails.length,
-                            itemBuilder: (context, index) {
-                              final salary =
-                                  salaryDetailsProvider.salaryDetails[index];
-                              return TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration:
-                                    Duration(milliseconds: 400 + (index * 100)),
-                                curve: Curves.easeOutCubic,
-                                builder: (context, value, child) {
-                                  return Transform.translate(
-                                    offset: Offset(0, 20 * (1 - value)),
-                                    child: Opacity(
-                                      opacity: value,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: _buildSalaryCard(salary, index),
-                              );
-                            },
-                          ),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: salaryDetailsProvider.salaryDetails.length,
+                          itemBuilder: (context, index) {
+                            final salary =
+                                salaryDetailsProvider.salaryDetails[index];
+                            return TweenAnimationBuilder<double>(
+                              tween: Tween(begin: 0.0, end: 1.0),
+                              duration: Duration(
+                                milliseconds: 400 + (index * 100),
+                              ),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, value, child) {
+                                return Transform.translate(
+                                  offset: Offset(0, 20 * (1 - value)),
+                                  child: Opacity(opacity: value, child: child),
+                                );
+                              },
+                              child: _buildSalaryCard(salary, index),
+                            );
+                          },
+                        ),
               ),
             ],
           ),
@@ -294,9 +293,7 @@ class _SalaryScreenState extends State<SalaryScreen>
       decoration: BoxDecoration(
         color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: color.withOpacity(0.2),
-        ),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -306,11 +303,7 @@ class _SalaryScreenState extends State<SalaryScreen>
               color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 22,
-            ),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(

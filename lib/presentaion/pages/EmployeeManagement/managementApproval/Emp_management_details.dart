@@ -9,6 +9,7 @@ import '../../../../model/Employee_management/ManagementApprovalListModel.dart';
 import '../../../../provider/Employee_management_Provider/management_approval_provider.dart';
 import '../../../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ManagementApprovalService.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
 
 class EmployeeManagementApprovalDetailsScreen extends StatefulWidget {
   final String empId;
@@ -388,7 +389,7 @@ class _EmployeeManagementApprovalDetailsScreenState
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: ${employee.employmentId ?? employee.userId ?? ''}",
+                    "ECI ID: ${employee.employmentId ?? employee.userId ?? ''}",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -461,8 +462,8 @@ class _EmployeeManagementApprovalDetailsScreenState
               context,
               PageRouteBuilder(
                 pageBuilder:
-                    (_, __, ___) => EmployeeDetailsScreen(
-                      empId: employee.employmentId ?? employee.userId ?? '',
+                    (_, __, ___) => AdminMyDetailsMenuScreen(
+                      empId: employee.userId ?? employee.employmentId ?? '', // ✅ Prioritize userId for API calls
                       empPhoto: employee.createdBy?.image ?? "",
                       empName: employee.fullname ?? '',
                       empDesignation: employee.designation ?? '',

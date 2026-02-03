@@ -8,6 +8,8 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/NoticePeriodUserListModel.dart';
 import '../../../../provider/Employee_management_Provider/Notice_Period_Provider.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
+import '../../MyDetailsScreens/my_details_menu_screen.dart';
 
 class NoticePeriodDetailsScreen extends StatefulWidget {
   final String empId;
@@ -169,9 +171,8 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
     final photoUrl = u?.avatar;
     final name = _displayName;
     final empId = widget.empId;
-    final designation = u?.designation?.trim().isNotEmpty == true
-        ? u!.designation!
-        : '—';
+    final designation =
+        u?.designation?.trim().isNotEmpty == true ? u!.designation! : '—';
 
     return Container(
       decoration: BoxDecoration(
@@ -215,14 +216,15 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     ),
                   ),
                   child: ClipOval(
-                    child: photoUrl != null && photoUrl.isNotEmpty
-                        ? Image.network(
-                            photoUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildDefaultAvatar(name),
-                          )
-                        : _buildDefaultAvatar(name),
+                    child:
+                        photoUrl != null && photoUrl.isNotEmpty
+                            ? Image.network(
+                              photoUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => _buildDefaultAvatar(name),
+                            )
+                            : _buildDefaultAvatar(name),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -247,7 +249,7 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    "ID: $empId",
+                    "ECI ID: $empId",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -400,8 +402,11 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
               context,
               PageRouteBuilder(
                 pageBuilder:
-                    (_, __, ___) => EmployeeDetailsScreen(
-                      empId: widget.empId,
+                    (_, __, ___) => AdminMyDetailsMenuScreen(
+                      empId:
+                          u?.userId ??
+                          u?.employmentId ??
+                          widget.empId, // ✅ Prioritize userId for API calls
                       empPhoto: u?.avatar ?? "",
                       empName: _displayName,
                       empDesignation: u?.designation ?? "",
@@ -547,17 +552,23 @@ class _NoticePeriodDetailsScreenState extends State<NoticePeriodDetailsScreen>
                   ),
                   _buildDetailRow(
                     "Branch",
-                    widget.noticePeriodUser?.locationName ?? widget.noticePeriodUser?.location ?? '—',
+                    widget.noticePeriodUser?.locationName ??
+                        widget.noticePeriodUser?.location ??
+                        '—',
                     Icons.location_on_rounded,
                   ),
                   _buildDetailRow(
                     "Notice Period Start",
-                    widget.noticePeriodUser?.noticePeriodStart ?? widget.noticePeriodUser?.joiningDate ?? '—',
+                    widget.noticePeriodUser?.noticePeriodStart ??
+                        widget.noticePeriodUser?.joiningDate ??
+                        '—',
                     Icons.calendar_today_rounded,
                   ),
                   _buildDetailRow(
                     "Notice Period End",
-                    widget.noticePeriodUser?.noticePeriodEnd ?? widget.noticePeriodUser?.relievingDate ?? '—',
+                    widget.noticePeriodUser?.noticePeriodEnd ??
+                        widget.noticePeriodUser?.relievingDate ??
+                        '—',
                     Icons.event_rounded,
                   ),
                   _buildDetailRow(

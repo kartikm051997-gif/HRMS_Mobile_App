@@ -6,8 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 import '../../model/deliverables_model/letter_model.dart';
+import '../../model/EmployeeDetailsModel/employee_details_model.dart';
 // import 'package:dio/dio.dart';
 // import 'package:path_provider/path_provider.dart';
 // import 'package:open_file/open_file.dart';
@@ -35,30 +38,65 @@ class DocumentListProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Load letters from EmployeeDetailsProvider
+  void loadLettersFromProvider(Map<String, dynamic>? employeeDetails) {
+    setLoading(true);
+    try {
+      _letter = [];
+
+      if (employeeDetails != null) {
+        final letterList = employeeDetails["letterList"] as List<dynamic>?;
+        
+        if (letterList != null && letterList.isNotEmpty) {
+          for (int i = 0; i < letterList.length; i++) {
+            final letterData = letterList[i] as Map<String, dynamic>;
+            final letterId = letterData["letter_id"]?.toString() ?? "${i + 1}";
+            final date = letterData["date"]?.toString() ?? "";
+            final letterType = letterData["letter_type"]?.toString() ?? "";
+            final templateName = letterData["template_name"]?.toString() ?? "";
+            final content = letterData["content"]?.toString() ?? "";
+            
+            // Generate a filename based on letter type and date
+            final fileName = "${letterType}_${date.replaceAll('/', '_')}.html";
+            
+            // For now, we'll use a placeholder URL since letters are HTML content
+            // In a real scenario, you might want to convert HTML to PDF or serve it as a URL
+            final documentUrl = ""; // Letters are HTML content, not PDF URLs
+
+            _letter.add(LetterModel(
+              id: letterId,
+              date: date,
+              letterType: letterType,
+              documentUrl: documentUrl,
+              fileName: fileName,
+              content: content,
+              templateName: templateName,
+              description: letterData["description"]?.toString(),
+              status: letterData["status"]?.toString(),
+            ));
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        print("Fetched ${_letter.length} letters from EmployeeDetailsProvider");
+      }
+    } catch (e) {
+      debugPrint("Error loading letters: $e");
+      _letter = [];
+    } finally {
+      setLoading(false);
+    }
+  }
+
   Future<void> fetchLetter(String empId) async {
     setLoading(true);
     try {
-      // Dummy API response (replace with real API)
+      // This method is now deprecated - use loadLettersFromProvider instead
       await Future.delayed(const Duration(seconds: 1));
-
-      final response = [
-        {
-          "id": "1",
-          "date": "19-06-2025",
-          "letter_type": "Notice",
-          "document_url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-          "file_name": "notice_19062025.pdf",
-        },
-      ];
-
-      _letter = response.map((doc) => LetterModel.fromJson(doc)).toList();
-
-      if (kDebugMode) {
-        print("Fetched ${_letter.length} documents");
-      }
+      _letter = [];
     } catch (e) {
-      debugPrint("Error fetching documents: $e");
+      debugPrint("Error fetching letters: $e");
       _letter = [];
     } finally {
       setLoading(false);
@@ -145,6 +183,167 @@ class DocumentListProvider extends ChangeNotifier {
     } finally {
       setDownloading(false, '');
     }
+  }
+
+  // Download file method similar to DocumentProvider
+  Future<String> downloadFile(String docId, String htmlContent, String fileName) async {
+    try {
+      // Set downloading state
+      setDownloading(true, docId);
+
+      // Clean filename to avoid path issues
+      fileName = fileName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+
+      // Get download directory with fallback options
+      Directory? downloadsDirectory;
+
+      if (Platform.isAndroid) {
+        // Try multiple directory options for better compatibility
+        List<Directory?> possibleDirs = [
+          // Option 1: Try Downloads folder (requires MANAGE_EXTERNAL_STORAGE on Android 11+)
+          Directory('/storage/emulated/0/Download'),
+          // Option 2: App-specific external directory (works without special permissions)
+          await getExternalStorageDirectory(),
+          // Option 3: App documents directory (always works)
+          await getApplicationDocumentsDirectory(),
+        ];
+
+        for (Directory? dir in possibleDirs) {
+          if (dir != null) {
+            try {
+              // Test if directory exists or can be created
+              bool dirExists = await dir.exists();
+              if (!dirExists) {
+                await dir.create(recursive: true);
+                dirExists = await dir.exists();
+              }
+
+              if (dirExists) {
+                // Test write permission by creating a temp file
+                final testFile = File('${dir.path}/.temp_test');
+                await testFile.writeAsString('test');
+                await testFile.delete();
+
+                downloadsDirectory = dir;
+                break;
+              }
+            } catch (e) {
+              // Continue to next directory option
+              continue;
+            }
+          }
+        }
+      } else {
+        // iOS - use documents directory
+        downloadsDirectory = await getApplicationDocumentsDirectory();
+      }
+
+      if (downloadsDirectory == null) {
+        throw Exception("Could not find accessible download directory");
+      }
+
+      String filePath = '${downloadsDirectory.path}/$fileName';
+
+      // Ensure the file doesn't already exist or create unique name
+      File file = File(filePath);
+      int counter = 1;
+      while (await file.exists()) {
+        String nameWithoutExt = fileName.split('.').first;
+        String extension = fileName.split('.').last;
+        filePath = '${downloadsDirectory.path}/${nameWithoutExt}_$counter.$extension';
+        file = File(filePath);
+        counter++;
+      }
+
+      // Convert HTML to PDF
+      final pdf = await _htmlToPdf(htmlContent, fileName.replaceAll('.pdf', ''));
+      final pdfBytes = await pdf.save();
+
+      // Write PDF bytes to file
+      await file.writeAsBytes(pdfBytes);
+
+      // Verify file was created successfully
+      if (await file.exists()) {
+        // Reset states
+        setDownloading(false, '');
+
+        // Try to open the file after download
+        try {
+          final result = await OpenFile.open(filePath);
+          if (kDebugMode) {
+            print("📄 File opened: ${result.message}");
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("⚠️ Could not open file automatically: $e");
+          }
+        }
+
+        // Return success message with file location
+        String location = Platform.isAndroid && downloadsDirectory.path.contains('Download')
+            ? "Downloads folder"
+            : "App documents";
+        return "✅ File saved to $location!";
+      } else {
+        throw Exception("File was not created successfully");
+      }
+    } catch (e) {
+      // Reset states on error
+      setDownloading(false, '');
+
+      String errorMsg = "❌ Download failed: ";
+      if (e.toString().contains('PathAccessException')) {
+        errorMsg += "No permission to write to directory";
+      } else if (e.toString().contains('SocketException')) {
+        errorMsg += "Network error - check internet connection";
+      } else {
+        errorMsg += e.toString();
+      }
+
+      return errorMsg;
+    }
+  }
+
+  // Convert HTML to PDF
+  Future<pw.Document> _htmlToPdf(String htmlContent, String title) async {
+    // Strip HTML tags for simple text display
+    final textContent = htmlContent
+        .replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .trim();
+
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                title,
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Expanded(
+                child: pw.Text(
+                  textContent,
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    return pdf;
   }
 
   Future<bool> _requestStoragePermission() async {

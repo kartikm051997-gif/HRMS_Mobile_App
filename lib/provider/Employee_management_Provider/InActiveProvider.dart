@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +7,7 @@ import '../../model/Employee_management/InActiveUserListModelClass.dart'
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/InActiveuserListService.dart';
+import '../../core/utils/helper_utils.dart';
 
 class InActiveProvider extends ChangeNotifier {
   // Services
@@ -253,9 +255,13 @@ class InActiveProvider extends ChangeNotifier {
         print("📊 CTC Ranges: ${_ctcList.length}");
       }
 
-      // Load default inactive users (first 10 data) after filters - same as Active screen
-      // ✅ Request only first page (10 records) from server to avoid loading 12,000+ records
+      // ✅ CRITICAL: Fetch default data WITHOUT selecting filters in UI
+      // Filters remain unselected, but we fetch default data (all data)
+      if (kDebugMode) {
+        print("📊 Fetching default data without filters...");
+      }
       await fetchInActiveUsers(page: 1, perPage: 10);
+      _hasAppliedFilters = false; // Keep filters unselected
 
       // ✅ MARK INITIAL LOAD COMPLETE ONLY NOW
       _initialLoadDone = true;
@@ -264,7 +270,7 @@ class InActiveProvider extends ChangeNotifier {
 
       _initialLoadDone = true;
     } catch (e) {
-      // 🚨 Handle auth issues
+      // 🚨 Handle auth issues - navigate to login on token expiration
       if (e.toString().contains("401") ||
           e.toString().contains("UNAUTHORIZED") ||
           e.toString().contains("TOKEN_EXPIRED")) {
@@ -272,10 +278,11 @@ class InActiveProvider extends ChangeNotifier {
         _errorMessage = "Your session has expired. Please login again.";
 
         if (kDebugMode) {
-          print("⛔ Token expired – clearing session");
+          print("⛔ Token expired – clearing session and navigating to login");
         }
 
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading filters: $e";
       }
@@ -391,44 +398,80 @@ class InActiveProvider extends ChangeNotifier {
         search: search ?? searchController.text,
       );
 
-      if (response != null && response.status == 'success') {
-        _inActiveUserListResponse = response;
+      if (response != null) {
+        // Check if response has data (some APIs might return success without status field)
+        if (response.status == 'success' || response.data != null) {
+          _inActiveUserListResponse = response;
 
-        // ✅ SERVER-SIDE PAGINATION: Store only current page data
-        _allEmployees = response.data?.users ?? [];
-        _filteredEmployees = List.from(_allEmployees);
+          // ✅ SERVER-SIDE PAGINATION: Store only current page data
+          _allEmployees = response.data?.users ?? [];
+          // ✅ If search is active, filter results; otherwise show all
+          if (search != null && search.isNotEmpty) {
+            final searchLower = search.toLowerCase();
+            _filteredEmployees = _allEmployees.where((employee) {
+              final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+              final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+              return name.contains(searchLower) || empId.contains(searchLower);
+            }).toList();
+          } else {
+            _filteredEmployees = List.from(_allEmployees);
+          }
 
-        // ✅ Update pagination info from server response
-        if (response.data?.pagination != null) {
-          final pagination = response.data!.pagination!;
-          _totalRecords = pagination.total;
-          _totalPagesFromServer =
-              pagination.lastPage ??
-              (pagination.total != null
-                  ? ((pagination.total! / _itemsPerPage).ceil())
-                  : null);
-          _currentPage = pagination.currentPage ?? _currentPage;
-        }
+          if (kDebugMode) {
+            print("✅ InActiveProvider: Response received");
+            print("   Status: ${response.status}");
+            print("   Users count: ${_allEmployees.length}");
+            print("   Data: ${response.data != null}");
+          }
 
-        _hasAppliedFilters = false;
+          // ✅ Update pagination info from server response
+          if (response.data?.pagination != null) {
+            final pagination = response.data!.pagination!;
+            _totalRecords = pagination.total;
+            _totalPagesFromServer =
+                pagination.lastPage ??
+                (pagination.total != null
+                    ? ((pagination.total! / _itemsPerPage).ceil())
+                    : null);
+            _currentPage = pagination.currentPage ?? _currentPage;
+          } else if (_allEmployees.isNotEmpty) {
+            // If no pagination but we have data, set defaults
+            _totalRecords = _allEmployees.length;
+            _totalPagesFromServer = 1;
+          }
 
-        if (kDebugMode) {
-          print(
-            "✅ InActiveProvider: Loaded ${_allEmployees.length} employees (Page $_currentPage of $totalPages)",
-          );
-          print(
-            "📊 Total Records: $_totalRecords, Total Pages: $_totalPagesFromServer",
-          );
+          _hasAppliedFilters = false;
+
+          if (kDebugMode) {
+            print(
+              "✅ InActiveProvider: Loaded ${_allEmployees.length} employees (Page $_currentPage of $totalPages)",
+            );
+            print(
+              "📊 Total Records: $_totalRecords, Total Pages: $_totalPagesFromServer",
+            );
+          }
+        } else {
+          _errorMessage = response?.message ?? "Failed to load employees";
+          if (kDebugMode) {
+            print("❌ InActiveProvider: Response status not success");
+            print("   Status: ${response.status}");
+            print("   Message: ${response.message}");
+          }
         }
       } else {
-        _errorMessage = response?.message ?? "Failed to load employees";
+        _errorMessage = "No response from server";
+        if (kDebugMode) print("❌ InActiveProvider: Response is null");
       }
     } catch (e) {
       if (e.toString().contains("401") ||
           e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading employees: $e";
       }
@@ -441,6 +484,49 @@ class InActiveProvider extends ChangeNotifier {
   // ═══════════════════════════════════════════════════════════════════════
   // FILTER SETTERS
   // ═══════════════════════════════════════════════════════════════════════
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // APPLY DEFAULT FILTERS (Select first company, first zone, first branch, first designation)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  void _applyDefaultFilters() {
+    if (kDebugMode) print("🎯 InActiveProvider: Applying default filters...");
+
+    // ✅ Select first company (if available)
+    if (_companyList.isNotEmpty) {
+      _selectedCompany = _companyList.first['name'];
+      _selectedCompanyId = _companyList.first['id'];
+      if (kDebugMode) print("✅ Selected first Company: $_selectedCompany");
+    }
+
+    // ✅ Select first zone
+    if (_zoneList.isNotEmpty) {
+      _selectedZoneId = _zoneList.first['id'];
+      _selectedZoneName = _zoneList.first['name'];
+      if (kDebugMode) print("✅ Selected first Zone: $_selectedZoneName");
+    }
+
+    // ✅ Select first branch (filtered by selected zone)
+    if (_selectedZoneId != null) {
+      final zoneBranches = _branchList
+          .where((b) => b['zone_id'] == _selectedZoneId)
+          .toList();
+      if (zoneBranches.isNotEmpty) {
+        _selectedBranchIds = [zoneBranches.first['id']!];
+        _selectedBranchNames = [zoneBranches.first['name']!];
+        if (kDebugMode) print("✅ Selected first Branch: ${_selectedBranchNames.first}");
+      }
+    }
+
+    // ✅ Select first designation
+    if (_designationList.isNotEmpty) {
+      _selectedDesignationIds = [_designationList.first['id']!];
+      _selectedDesignationNames = [_designationList.first['name']!];
+      if (kDebugMode) print("✅ Selected first Designation: ${_selectedDesignationNames.first}");
+    }
+
+    if (kDebugMode) print("🎯 Default filters applied successfully!");
+  }
 
   void setSelectedCompany(String? displayName) {
     _selectedCompany = displayName;
@@ -536,13 +622,82 @@ class InActiveProvider extends ChangeNotifier {
     );
   }
 
+  Timer? _searchDebounce;
+
+  /// Real-time search: filter cards as user types (like Active screen)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    
+    final trimmedQuery = query.trim();
+    
+    // If search is cleared, show all employees
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filtering for instant results as user types
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Also do server-side search with debounce for fresh data
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
+      _currentPage = 1;
+      fetchInActiveUsers(
+        cmpid: _selectedCompanyId,
+        zoneId: _selectedZoneId,
+        locationsId:
+            _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+        designationsId:
+            _selectedDesignationIds.isNotEmpty
+                ? _selectedDesignationIds.join(',')
+                : null,
+        ctcRange: _selectedCTCId,
+        fromdate:
+            dojFromController.text.isNotEmpty ? dojFromController.text : null,
+        todate: fojToController.text.isNotEmpty ? fojToController.text : null,
+        page: 1,
+        perPage: _itemsPerPage,
+        search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
+      );
+    });
+  }
 
-    _currentPage = 1; // ✅ Reset to first page
-
-    // ✅ SERVER-SIDE SEARCH: Fetch from server with search query
-    // Don't filter client-side, let server handle search with pagination
+  /// Perform immediate search (called on Enter key)
+  void performSearchWithQuery(String query) {
+    if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filter first for instant results
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Then fetch fresh data from server
     fetchInActiveUsers(
       cmpid: _selectedCompanyId,
       zoneId: _selectedZoneId,
@@ -558,14 +713,18 @@ class InActiveProvider extends ChangeNotifier {
       todate: fojToController.text.isNotEmpty ? fojToController.text : null,
       page: 1,
       perPage: _itemsPerPage,
-      search: query.isNotEmpty ? query : null,
+      search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
     );
   }
 
   void clearSearch() {
+    _searchDebounce?.cancel();
     searchController.clear();
     _currentPage = 1;
-    // ✅ Fetch first page from server without search
+    // Show all employees immediately
+    _filteredEmployees = List.from(_allEmployees);
+    notifyListeners();
+    // Then fetch fresh data
     fetchInActiveUsers(
       cmpid: _selectedCompanyId,
       zoneId: _selectedZoneId,

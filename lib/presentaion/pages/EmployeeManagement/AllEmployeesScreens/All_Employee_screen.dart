@@ -66,6 +66,83 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
 
             // Results Section
             _buildResultsSection(provider),
+
+            // Pagination
+            if (provider.paginatedEmployees.isNotEmpty &&
+                provider.totalPages > 1)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        onPressed:
+                            provider.currentPage > 1
+                                ? provider.previousPage
+                                : null,
+                        icon: Icon(Icons.chevron_left),
+                      ),
+                      ...List.generate(
+                        provider.totalPages > 5 ? 5 : provider.totalPages,
+                        (index) {
+                          int pageNum;
+                          if (provider.totalPages <= 5) {
+                            pageNum = index + 1;
+                          } else {
+                            if (provider.currentPage <= 3) {
+                              pageNum = index + 1;
+                            } else if (provider.currentPage >=
+                                provider.totalPages - 2) {
+                              pageNum = provider.totalPages - 4 + index;
+                            } else {
+                              pageNum = provider.currentPage - 2 + index;
+                            }
+                          }
+                          return InkWell(
+                            onTap: () => provider.goToPage(pageNum),
+                            child: Container(
+                              margin: EdgeInsets.symmetric(horizontal: 4),
+                              padding: EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color:
+                                    provider.currentPage == pageNum
+                                        ? AppColor.primaryColor
+                                        : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                "$pageNum",
+                                style: TextStyle(
+                                  color:
+                                      provider.currentPage == pageNum
+                                          ? Colors.white
+                                          : Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: AppFonts.poppins,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        onPressed:
+                            provider.currentPage < provider.totalPages
+                                ? provider.nextPage
+                                : null,
+                        icon: Icon(Icons.chevron_right),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: SizedBox(height: 35), // Bottom spacing
+            ),
           ],
         ),
       ),
@@ -94,7 +171,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
               children: [
                 Expanded(child: _buildFilterToggleButton(provider)),
                 const SizedBox(width: 12),
-                _buildPageSizeDropdown(provider),
               ],
             ),
             const SizedBox(height: 16),
@@ -182,51 +258,6 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
     );
   }
 
-  Widget _buildPageSizeDropdown(AllEmployeesProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: provider.pageSize,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColor.textSecondary,
-          ),
-          items:
-              [5, 10, 15, 20].map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(
-                    "$e",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-          onChanged: (val) {
-            if (val != null) provider.setPageSize(val);
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildSearchField(AllEmployeesProvider provider) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
@@ -239,6 +270,10 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
         child: TextField(
           controller: provider.searchController,
           onChanged: provider.onSearchChanged,
+          onSubmitted: (value) {
+            // Immediate search on Enter - show matching cards
+            provider.performSearchWithQuery(value);
+          },
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
@@ -464,39 +499,66 @@ class _AllEmployeeScreenState extends State<AllEmployeeScreen>
   }
 
   Widget _buildResultsSection(AllEmployeesProvider provider) {
-    if (!provider.hasAppliedFilters) {
-      return SliverFillRemaining(child: _buildSelectFiltersMessage());
-    }
-
-    if (provider.isLoading) {
+    // Show loading state
+    if (provider.isLoading && !provider.initialLoadDone) {
       return SliverFillRemaining(child: _buildLoadingState());
     }
 
-    if (provider.filteredEmployees.isEmpty) {
+    // Show data if available (even without filters applied)
+    if (provider.paginatedEmployees.isNotEmpty) {
+      return SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            if (index == 0) {
+              return Padding(
+                padding: EdgeInsets.all(10),
+                child: Text(
+                  "${provider.filteredEmployees.length} Employees Found",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              );
+            }
+            final employee = provider.paginatedEmployees[index - 1];
+            return TweenAnimationBuilder<double>(
+              key: ValueKey('employee_ae_${employee.employeeId ?? index}'),
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 300 + (index * 50)),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildEmployeeCard(employee),
+            );
+          }, childCount: provider.paginatedEmployees.length + 1),
+        ),
+      );
+    }
+
+    // Show "Select Filters" message only if no data and filters not applied
+    if (!provider.hasAppliedFilters && provider.initialLoadDone) {
+      return SliverFillRemaining(child: _buildSelectFiltersMessage());
+    }
+
+    // Show empty state if filters applied but no results
+    if (provider.hasAppliedFilters &&
+        provider.paginatedEmployees.isEmpty &&
+        !provider.isLoading) {
       return SliverFillRemaining(child: _buildEmptyState());
     }
 
-    return SliverPadding(
-      padding: const EdgeInsets.all(16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate((context, index) {
-          if (index == 0) return _buildResultsHeader(provider);
-          final employee = provider.filteredEmployees[index - 1];
-          return TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: Duration(milliseconds: 300 + (index * 50)),
-            curve: Curves.easeOutCubic,
-            builder: (context, value, child) {
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: Opacity(opacity: value, child: child),
-              );
-            },
-            child: _buildEmployeeCard(employee),
-          );
-        }, childCount: provider.filteredEmployees.length + 1),
-      ),
-    );
+    // Default: show loading
+    return SliverFillRemaining(child: _buildLoadingState());
   }
 
   Widget _buildSelectFiltersMessage() {

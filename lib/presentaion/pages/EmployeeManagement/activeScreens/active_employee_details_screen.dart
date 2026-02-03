@@ -7,9 +7,11 @@ import '../../../../core/fonts/fonts.dart';
 import '../../../../model/Employee_management/ActiveUserListModel.dart'
     as models;
 import '../../../../provider/Employee_management_Provider/Active_Provider.dart';
+import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
 import '../../../../apibaseScreen/Api_Base_Screens.dart';
 import '../../../../widgets/avatarZoomIn/SimpleImageZoomViewer.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
 
 class EmployeeManagementDetailsScreen extends StatefulWidget {
   final models.Users user;
@@ -24,6 +26,18 @@ class EmployeeManagementDetailsScreen extends StatefulWidget {
 class _EmployeeManagementDetailsScreenState
     extends State<EmployeeManagementDetailsScreen> {
   // Colors
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch employee details to get recruiter and createdBy data
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final empId = widget.user.userId ?? widget.user.employmentId ?? "";
+      if (empId.isNotEmpty) {
+        context.read<EmployeeDetailsProvider>().fetchEmployeeDetails(empId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +187,7 @@ class _EmployeeManagementDetailsScreenState
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "ID: ${widget.user.employmentId ?? widget.user.userId ?? ""}",
+                            "ECI ID: ${widget.user.employmentId ?? widget.user.userId ?? ""}",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -342,10 +356,12 @@ class _EmployeeManagementDetailsScreenState
                               context,
                               MaterialPageRoute(
                                 builder:
-                                    (_) => EmployeeDetailsScreen(
+                                    (_) => AdminMyDetailsMenuScreen(
                                       empId:
+                                          widget
+                                              .user
+                                              .userId ?? // ✅ Prioritize userId for API calls
                                           widget.user.employmentId ??
-                                          widget.user.userId ??
                                           "",
                                       empPhoto: imageUrl ?? "",
                                       empName: employeeName,
@@ -589,11 +605,40 @@ class _EmployeeManagementDetailsScreenState
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        _infoCard("User ID", widget.user.userId ?? "N/A"),
+                        // Recruiter - Show circular avatar with backend data
+                        Consumer<EmployeeDetailsProvider>(
+                          builder: (context, detailsProvider, _) {
+                            final data = detailsProvider.employeeDetails ?? {};
+                            return _infoCardWithAvatar(
+                              "Recruiter",
+                              (data["recruiter"]?.toString().isNotEmpty ?? false)
+                                  ? data["recruiter"].toString()
+                                  : "N/A",
+                              (data["recruiterAvatar"]?.toString().isNotEmpty ?? false)
+                                  ? data["recruiterAvatar"].toString()
+                                  : null,
+                              Icons.person_search_rounded,
+                            );
+                          },
+                        ),
                         const SizedBox(height: 12),
-                        _infoCard(
-                          "Employment ID",
-                          widget.user.employmentId ?? "N/A",
+                        // Created By - Show circular avatar with backend data
+                        Consumer<EmployeeDetailsProvider>(
+                          builder: (context, detailsProvider, _) {
+                            final data = detailsProvider.employeeDetails ?? {};
+                            return _infoCardWithAvatar(
+                              "Created By",
+                              (data["created_by"]?.toString().isNotEmpty ?? false)
+                                  ? data["created_by"].toString()
+                                  : (data["createdBy"]?.toString().isNotEmpty ?? false)
+                                      ? data["createdBy"].toString()
+                                      : "N/A",
+                              (data["createdByAvatar"]?.toString().isNotEmpty ?? false)
+                                  ? data["createdByAvatar"].toString()
+                                  : null,
+                              Icons.person_add_rounded,
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -706,6 +751,123 @@ class _EmployeeManagementDetailsScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Info card with circular avatar (for Recruiter and Created By)
+  Widget _infoCardWithAvatar(
+    String label,
+    String value,
+    String? imageUrl,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColor.borderColor.withOpacity(0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColor.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: AppColor.primaryColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: AppFonts.poppins,
+                    color: AppColor.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    // ✅ Always show circular avatar (even if imageUrl is null)
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColor.primaryColor.withOpacity(0.2),
+                            AppColor.secondaryColor.withOpacity(0.2),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: AppColor.borderColor.withOpacity(0.5),
+                        ),
+                      ),
+                      child: ClipOval(
+                        child:
+                            (imageUrl != null && imageUrl.isNotEmpty)
+                                ? Image.network(
+                                  imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildSmallDefaultAvatar(value);
+                                  },
+                                )
+                                : _buildSmallDefaultAvatar(
+                                  value,
+                                ), // ✅ Show default avatar when imageUrl is null
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: AppFonts.poppins,
+                          color: AppColor.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build small default circular avatar with gradient
+  Widget _buildSmallDefaultAvatar(String name) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColor.primaryColor, AppColor.secondaryColor],
+        ),
+      ),
+      child: Center(
+        child: Text(
+          (name.isNotEmpty && name != "N/A") ? name[0].toUpperCase() : "?",
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            fontFamily: AppFonts.poppins,
+          ),
+        ),
       ),
     );
   }

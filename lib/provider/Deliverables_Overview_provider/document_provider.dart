@@ -1,86 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
 import 'dart:io';
+import 'dart:convert';
+import '../../servicesAPI/LogInService/LogIn_Service.dart';
 
 class DocumentProvider extends ChangeNotifier {
   final Dio _dio = Dio();
+  final LoginService _loginService = LoginService();
 
   // State variables
   bool _isLoading = true;
   String _downloadProgress = '';
   final Map<String, bool> _downloadingStates = {};
 
-  // Document data
-  final List<Map<String, dynamic>> _documents = [
-    {
-      "id": "1",
-      "title": "Resume",
-      "url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      "isDownloadable": true,
-      "type": "resume",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-01-15",
-      "size": "245 KB",
-    },
-    {
-      "id": "2",
-      "title": "Offer Letter",
-      "url":
-          "https://file-examples.com/storage/fef68e5288c566cbcab4db7/2017/10/file_example_PDF_500_kB.pdf",
-      "isDownloadable": true,
-      "type": "portfolio",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-01-20",
-      "size": "500 KB",
-    },
-    {
-      "id": "3",
-      "title": "Adhar card",
-      "url":
-          "https://www.adobe.com/support/products/enterprise/knowledgecenter/media/c4611_sample_explain.pdf",
-      "isDownloadable": true,
-      "type": "cv",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-01-25",
-      "size": "180 KB",
-    },
-    {
-      "id": "4",
-      "title": "Pan Card",
-      "url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      "isDownloadable": true,
-      "type": "resume",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-02-01",
-      "size": "320 KB",
-    },
-    {
-      "id": "5",
-      "title": "Bank Passbook",
-      "url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      "isDownloadable": true,
-      "type": "cv",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-02-05",
-      "size": "280 KB",
-    },
-    {
-      "id": "6",
-      "title": "Other Document",
-      "url":
-          "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      "isDownloadable": true,
-      "type": "cv",
-      "fileExtension": "pdf",
-      "uploadDate": "2024-02-05",
-      "size": "280 KB",
-    },
-  ];
+  // Document data - Now fetched from EmployeeDetailsProvider
+  List<Map<String, dynamic>> _documents = [];
 
   // Getters
   bool get isLoading => _isLoading;
@@ -88,35 +26,135 @@ class DocumentProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get documents => _documents;
   Map<String, bool> get downloadingStates => _downloadingStates;
 
-  // Initialize documents
+  // Initialize documents - Now fetches from EmployeeDetailsProvider
   Future<void> initializeDocuments() async {
     _isLoading = true;
     notifyListeners();
 
     // Initialize downloading states
     for (var doc in _documents) {
-      _downloadingStates[doc["id"]] = false;
+      _downloadingStates[doc["id"] ?? doc["document_name"]] = false;
     }
-
-    // Simulate loading time
-    await Future.delayed(const Duration(milliseconds: 800));
 
     _isLoading = false;
     notifyListeners();
   }
 
-  // Fetch documents from API (you can implement this later)
+  // Load documents from EmployeeDetailsProvider
+  void loadDocumentsFromProvider(Map<String, dynamic>? employeeDetails) {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      _documents = [];
+      _downloadingStates.clear();
+
+      if (employeeDetails != null) {
+        final documentList = employeeDetails["documentList"] as List<dynamic>?;
+
+        if (documentList != null && documentList.isNotEmpty) {
+          for (int i = 0; i < documentList.length; i++) {
+            final doc = documentList[i] as Map<String, dynamic>;
+            // Clean document name - ensure it's just the name, not JSON
+            String documentName = doc["document_name"]?.toString() ?? "Document ${i + 1}";
+            // Remove any JSON-like content from document name
+            documentName = documentName.split(',').first.trim();
+            if (documentName.length > 50) {
+              documentName = documentName.substring(0, 50);
+            }
+            
+            String fileUrl = doc["file_url"]?.toString() ?? "";
+            String filename = doc["filename"]?.toString() ?? "";
+            final hasFile =
+                doc["has_file"] == true ||
+                doc["has_file"] == 1 ||
+                doc["has_file"] == "1";
+
+            // Handle file_url that might be a JSON string (for "Other Document")
+            if (fileUrl.isNotEmpty && fileUrl.contains('[') && fileUrl.contains('{')) {
+              try {
+                // Extract JSON part from URL
+                final jsonStart = fileUrl.indexOf('[');
+                if (jsonStart != -1) {
+                  final jsonString = fileUrl.substring(jsonStart);
+                  final List<dynamic> parsed = jsonDecode(jsonString);
+                  if (parsed.isNotEmpty && parsed[0] is Map) {
+                    final firstDoc = parsed[0] as Map<String, dynamic>;
+                    // Extract proper file URL
+                    fileUrl = firstDoc['fullPath']?.toString() ?? 
+                             firstDoc['path']?.toString() ?? 
+                             fileUrl;
+                    // Extract filename if not already set
+                    if (filename.isEmpty) {
+                      filename = firstDoc['fileName']?.toString() ?? "";
+                    }
+                  }
+                }
+              } catch (e) {
+                if (kDebugMode) print("⚠️ Could not parse file_url JSON: $e");
+                // If parsing fails, try to extract a clean URL
+                if (fileUrl.contains('http')) {
+                  final urlMatch = RegExp(r'https?://[^\s\[\]]+').firstMatch(fileUrl);
+                  if (urlMatch != null) {
+                    fileUrl = urlMatch.group(0) ?? fileUrl;
+                  }
+                }
+              }
+            }
+
+            // Clean filename - remove any JSON-like content
+            if (filename.isNotEmpty) {
+              filename = filename.split(',').first.trim();
+              if (filename.length > 50) {
+                filename = filename.substring(0, 50);
+              }
+            }
+
+            // Extract file extension from filename or URL
+            String fileExtension = "pdf";
+            if (filename.isNotEmpty) {
+              final parts = filename.split('.');
+              if (parts.length > 1) {
+                fileExtension = parts.last.toLowerCase();
+              }
+            } else if (fileUrl.isNotEmpty) {
+              final urlParts = fileUrl.split('.');
+              if (urlParts.length > 1) {
+                fileExtension = urlParts.last.split('?').first.toLowerCase();
+              }
+            }
+
+            _documents.add({
+              "id": "${documentName}_$i",
+              "title": documentName,
+              "url": fileUrl,
+              "filename": filename,
+              "isDownloadable": hasFile && fileUrl.isNotEmpty,
+              "fileExtension": fileExtension,
+              "hasFile": hasFile,
+            });
+
+            _downloadingStates["${documentName}_$i"] = false;
+          }
+        }
+      }
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Fetch documents from API (legacy method - kept for backward compatibility)
   Future<void> fetchDocuments(String empId) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      // TODO: Replace with actual API call
-      // final response = await _dio.get('/api/documents/$empId');
-      // _documents = response.data;
-
-      // For now, just simulate loading
-      await Future.delayed(const Duration(milliseconds: 1000));
+      // This method is now deprecated - use loadDocumentsFromProvider instead
+      await Future.delayed(const Duration(milliseconds: 500));
 
       _isLoading = false;
       notifyListeners();
@@ -212,10 +250,24 @@ class DocumentProvider extends ChangeNotifier {
         counter++;
       }
 
-      // Download file with progress tracking
+      // Get auth token for authenticated downloads
+      final token = await _loginService.getValidToken();
+
+      // Download file with progress tracking and auth headers
       await _dio.download(
         url,
         filePath,
+        options: Options(
+          headers:
+              token != null
+                  ? {
+                    "Authorization": "Bearer $token",
+                    "Content-Type": "application/json",
+                  }
+                  : {},
+          followRedirects: true,
+          validateStatus: (status) => status! < 500,
+        ),
         onReceiveProgress: (received, total) {
           if (total != -1) {
             _downloadProgress =
@@ -231,6 +283,18 @@ class DocumentProvider extends ChangeNotifier {
         _downloadingStates[docId] = false;
         _downloadProgress = '';
         notifyListeners();
+
+        // Try to open the file after download
+        try {
+          final result = await OpenFile.open(filePath);
+          if (kDebugMode) {
+            print("📄 File opened: ${result.message}");
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            print("⚠️ Could not open file automatically: $e");
+          }
+        }
 
         // Return success message with file location
         String location =

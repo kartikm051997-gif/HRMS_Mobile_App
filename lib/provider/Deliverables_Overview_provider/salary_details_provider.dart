@@ -1,24 +1,51 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../servicesAPI/EmployeeDetailsService/employee_details_service.dart';
 
 class SalaryDetailsProvider extends ChangeNotifier {
   bool isLoading = false;
   List<Map<String, String>> salaryDetails = [];
 
-  /// Fetch bank details (Dummy API for now)
-  Future<void> fetchSalaryDetails(String empId) async {
+  /// Fetch salary details from API
+  Future<void> fetchSalaryDetails(String userId) async {
     isLoading = true;
     notifyListeners();
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(milliseconds: 800));
+      if (kDebugMode) {
+        print("🔄 SalaryDetailsProvider: Fetching salary details for user_id: $userId");
+      }
 
-      // Dummy data — replace with API response later
-      salaryDetails = [
-        {"Annual CTC": "420000", "Monthly Salaryr": "35000"},
-      ];
+      final service = EmployeeDetailsService();
+      final response = await service.getEmployeeDetails(userId);
+
+      if (response.data?.salaryDetails != null) {
+        final salary = response.data!.salaryDetails!;
+        salaryDetails = [
+          {
+            "annual CTC": salary.annualCtc ?? "0.00",
+            "monthly salary": salary.monthlyCtc ?? "0.00",
+            "basic": salary.basic ?? "0.00",
+            "hra": salary.hra ?? "0.00",
+            "pf": salary.pf?.toString() ?? "0",
+            "esi": salary.esi ?? "0.00",
+            "monthly_take_home": salary.monthlyTakeHome ?? "0.00",
+            "monthly_tds": salary.monthlyTds ?? "0.00",
+          },
+        ];
+
+        if (kDebugMode) {
+          print("✅ SalaryDetailsProvider: Salary details fetched successfully");
+          print("   Annual CTC: ${salary.annualCtc ?? 'N/A'}");
+          print("   Monthly CTC: ${salary.monthlyCtc ?? 'N/A'}");
+        }
+      } else {
+        salaryDetails = [];
+        if (kDebugMode) print("⚠️ SalaryDetailsProvider: No salary details in response");
+      }
     } catch (e) {
-      debugPrint("Error fetching bank details: $e");
+      debugPrint("❌ Error fetching salary details: $e");
+      salaryDetails = [];
     } finally {
       isLoading = false;
       notifyListeners();

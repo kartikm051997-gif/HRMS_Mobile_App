@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
@@ -5,9 +7,16 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart';
+import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart'
+    as LogOutApiService;
+import '../../../servicesAPI/LogInService/LogIn_Service.dart';
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
 import '../../../controller/ui_controller/appbar_controllers.dart';
+import '../../../presentaion/pages/Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../../presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
+import '../../../presentaion/pages/MyDetailsScreens/admin_my_details_menu_screen.dart';
+import '../../../presentaion/pages/MyDetailsScreens/normal_user_my_details_menu_screen.dart';
 
 class TabletMobileDrawer extends StatefulWidget {
   const TabletMobileDrawer({super.key});
@@ -100,7 +109,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                     //   index: 0,
                     // ),
 
-                    // 🔹 Deliverables → Everyone
+                    // 🔹 Admin-only items (role == "1")
                     if (isAdmin) ...[
                       _buildNavItem(
                         icon: Icons.inventory_2_rounded,
@@ -108,19 +117,20 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                         route: AppRoutes.paGarBookAdmin,
                         index: 5,
                       ),
+                      _buildNavItem(
+                        icon: Icons.people_alt_rounded,
+                        title: 'Employees Management',
+                        route: AppRoutes.employeeManagement,
+                        index: 3,
+                      ),
                     ],
 
-                    _buildNavItem(
-                      icon: Icons.people_alt_rounded,
-                      title: 'Employee Management',
-                      route: AppRoutes.employeeManagement,
-                      index: 3,
-                    ),
-                    _buildNavItem(
+                    // 🔹 My Details → Navigate to EmployeeDetailsScreen for all users
+                    _buildMyDetailsNavItem(
                       icon: Icons.dashboard_rounded,
-                      title: 'Deliverables Overview',
-                      route: AppRoutes.deliverablesOverview,
+                      title: 'My Details',
                       index: 2,
+                      user: user,
                     ),
 
                     // 🔹 Admin-only menus
@@ -169,8 +179,20 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
               ),
             ),
 
-            // Footer
-            // _buildFooter(),
+            // Logout Button - Fixed at bottom, visible to all users
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                border: Border(
+                  top: BorderSide(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: _buildLogoutButton(loginProvider),
+            ),
           ],
         ),
       ),
@@ -375,6 +397,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
     required String title,
     required String route,
     required int index,
+    VoidCallback? onTap,
   }) {
     final AppBarController appBarController = Get.find<AppBarController>();
 
@@ -398,8 +421,163 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
             child: InkWell(
               onTap: () {
                 Navigator.of(context).pop();
-                // Get.offNamed(route);
-                Get.toNamed(route);
+                if (onTap != null) {
+                  onTap();
+                } else {
+                  // Get.offNamed(route);
+                  Get.toNamed(route);
+                }
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected
+                          ? primaryColor.withOpacity(0.1)
+                          : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                      isSelected
+                          ? Border.all(color: primaryColor.withOpacity(0.3))
+                          : null,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color:
+                            isSelected
+                                ? primaryColor.withOpacity(0.15)
+                                : subtextColor.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        icon,
+                        color: isSelected ? primaryColor : subtextColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: isSelected ? primaryColor : textColor,
+                          fontSize: 14,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                    if (isSelected)
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildMyDetailsNavItem({
+    required IconData icon,
+    required String title,
+    required int index,
+    required dynamic user,
+  }) {
+    final AppBarController appBarController = Get.find<AppBarController>();
+
+    return Obx(() {
+      // Check if EmployeeDetailsScreen is selected (using a custom route check)
+      bool isSelected = appBarController.selectedPage.value == '/employeeDetails';
+
+      return TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: Duration(milliseconds: 300 + (index * 50)),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) {
+          return Transform.translate(
+            offset: Offset(-20 * (1 - value), 0),
+            child: Opacity(opacity: value, child: child),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 2),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.of(context).pop();
+                // Navigate to appropriate menu screen based on user role
+                final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+                final String roleId = loginProvider.userRole?.trim() ?? "";
+                final bool isAdmin = roleId == "1";
+                
+                // Debug logging
+                if (kDebugMode) {
+                  print("🔍 Drawer - My Details clicked");
+                  print("   Raw roleId from user: ${user?.roleId}");
+                  print("   Processed roleId: '$roleId'");
+                  print("   Role ID length: ${roleId.length}");
+                  print("   Is Admin: $isAdmin");
+                  print("   User ID: ${user?.userId}");
+                  print("   Full user data: ${user?.toJson()}");
+                }
+                
+                final empId = user?.userId ?? "";
+                final empPhoto = (user?.avatar != null && user!.avatar!.isNotEmpty)
+                    ? "https://app.draravindsivf.com/hrms/${user.avatar}"
+                    : "";
+                final empName = user?.fullname ?? "N/A";
+                final empDesignation = "N/A"; // User model doesn't have designation
+                final empBranch = user?.locationName ?? "N/A";
+
+                // Use separate screens for admin vs normal user
+                if (isAdmin) {
+                  if (kDebugMode) print("   → Navigating to AdminMyDetailsMenuScreen");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdminMyDetailsMenuScreen(
+                        empId: empId,
+                        empPhoto: empPhoto,
+                        empName: empName,
+                        empDesignation: empDesignation,
+                        empBranch: empBranch,
+                      ),
+                    ),
+                  );
+                } else {
+                  if (kDebugMode) print("   → Navigating to NormalUserMyDetailsMenuScreen");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => NormalUserMyDetailsMenuScreen(
+                        empId: empId,
+                        empPhoto: empPhoto,
+                        empName: empName,
+                        empDesignation: empDesignation,
+                        empBranch: empBranch,
+                      ),
+                    ),
+                  );
+                }
               },
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
@@ -1075,5 +1253,214 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
       AppRoutes.offerLetters,
     ];
     return recruitmentRoutes.contains(currentRoute);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // LOGOUT BUTTON (Visible to all users)
+  // ═══════════════════════════════════════════════════════════════════════
+
+  Widget _buildLogoutButton(LoginProvider loginProvider) {
+    return Container(
+      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.withOpacity(0.3), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showLogoutDialog(loginProvider),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    "Logout",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: AppFonts.poppins,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(LoginProvider loginProvider) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.red,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Are you sure you want to logout?",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                color: subtextColor,
+              ),
+            ),
+            actions: [
+              // Cancel button
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    color: subtextColor,
+                  ),
+                ),
+              ),
+              // Logout button
+              ElevatedButton(
+                onPressed: () async {
+                  if (kDebugMode) print("🚪 Logout button pressed");
+                  
+                  // Close dialog first
+                  Navigator.pop(context);
+                  if (kDebugMode) print("✅ Dialog closed");
+                  
+                  // Close drawer if still open
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                    if (kDebugMode) print("✅ Drawer closed");
+                  }
+                  
+                  // Small delay to ensure UI is fully closed
+                  await Future.delayed(const Duration(milliseconds: 300));
+                  
+                  // Call logout API if token exists
+                  try {
+                    final prefs = await SharedPreferences.getInstance();
+                    final token = prefs.getString('authToken');
+                    if (token != null && token.isNotEmpty) {
+                      try {
+                        final response = await LogOutApiService.ApiService.logoutUser(token);
+                        if (kDebugMode) {
+                          print("✅ Logout API called successfully");
+                          print("📋 Response status: ${response.status}");
+                          print("📋 Response message: ${response.message}");
+                        }
+                      } catch (e) {
+                        // Continue with logout even if API call fails
+                        if (kDebugMode) print("⚠️ Logout API call failed: $e");
+                      }
+                    } else {
+                      if (kDebugMode) print("⚠️ No token found for logout API");
+                    }
+                  } catch (e) {
+                    if (kDebugMode) print("⚠️ Error calling logout API: $e");
+                  }
+                  
+                  // Step 1: Clear session data
+                  try {
+                    final loginService = LoginService();
+                    await loginService.clearSession();
+                    if (kDebugMode) print("✅ Session cleared");
+                  } catch (e) {
+                    if (kDebugMode) print("❌ Error clearing session: $e");
+                  }
+                  
+                  // Step 2: Navigate to login screen IMMEDIATELY
+                  // Use Navigator with rootNavigator to bypass drawer context
+                  try {
+                    if (kDebugMode) print("🔄 Navigating to login screen...");
+                    
+                    // Close drawer first if it's open
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                      await Future.delayed(const Duration(milliseconds: 100));
+                    }
+                    
+                    // Navigate using rootNavigator
+                    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) => const LoginScreen(),
+                      ),
+                      (route) => false, // Remove all routes
+                    );
+                    
+                    if (kDebugMode) print("✅ Navigation completed");
+                  } catch (e) {
+                    if (kDebugMode) print("❌ Navigation error: $e");
+                    
+                    // Fallback: Try GetX navigation
+                    try {
+                      Get.offAllNamed(AppRoutes.loginScreen);
+                      if (kDebugMode) print("✅ Fallback navigation via GetX");
+                    } catch (e2) {
+                      if (kDebugMode) print("❌ GetX navigation also failed: $e2");
+                    }
+                  }
+                  
+                  // Step 3: Clear provider state (this won't navigate since we already did)
+                  // But we'll skip calling logout() to avoid double navigation
+                  // The session is already cleared, so login screen will detect no session
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 }

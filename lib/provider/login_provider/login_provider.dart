@@ -22,7 +22,14 @@ class LoginProvider extends ChangeNotifier {
   bool _rememberMe = false;
 
   String get userRole {
-    return _loginData?.user?.roleId?.toString() ?? "";
+    final roleId = _loginData?.user?.roleId?.toString()?.trim() ?? "";
+    if (kDebugMode) {
+      print("🔍 LoginProvider.userRole getter called");
+      print("   Raw roleId: ${_loginData?.user?.roleId}");
+      print("   Processed roleId: '$roleId'");
+      print("   Is Admin: ${roleId == "1"}");
+    }
+    return roleId;
   }
 
   // Getters
@@ -131,14 +138,41 @@ class LoginProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 500));
       Get.offAllNamed(AppRoutes.bottomNav);
     } catch (e) {
-      // Handle error
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      // Handle error - Extract user-friendly message
+      String errorMessage = "Invalid username or password. Please try again.";
+
+      final errorString = e.toString();
+
+      // Remove "Exception: " prefix if present
+      String extractedMessage = errorString;
+      if (errorString.contains('Exception: ')) {
+        extractedMessage = errorString.replaceFirst('Exception: ', '').trim();
+      } else {
+        extractedMessage = errorString.trim();
+      }
+
+      // Check if message contains technical details (JSON, HTTP codes, etc.)
+      final hasTechnicalDetails =
+          extractedMessage.contains('HTTP') ||
+          extractedMessage.contains('{') ||
+          extractedMessage.contains('"status"') ||
+          extractedMessage.contains('"message"') ||
+          extractedMessage.startsWith('Login failed');
+
+      // If message is user-friendly and doesn't contain technical details, use it
+      if (extractedMessage.isNotEmpty && !hasTechnicalDetails) {
+        errorMessage = extractedMessage;
+      }
+      // Otherwise, use default user-friendly message
+
+      _errorMessage = errorMessage;
       _showSnackBar(_errorMessage!, isError: true);
 
       if (kDebugMode) {
         print("═══════════════════════════════════════");
         print("❌ LOGIN FAILED");
-        print("Error: $_errorMessage");
+        print("User-friendly error: $_errorMessage");
+        print("Raw error: $e");
         print("═══════════════════════════════════════");
       }
     } finally {
@@ -183,17 +217,18 @@ class LoginProvider extends ChangeNotifier {
 
   /// Initialize session on app start
   /// Returns true if valid session exists, false otherwise
+  /// NO inactivity check - session stays valid as long as user is logged in
   Future<bool> initializeSession() async {
     try {
       if (kDebugMode) print("🔄 Initializing session...");
 
-      // Check if session is valid
+      // Check if session is valid (just checks if logged in, NO inactivity check)
       final isValid = await _authService.isSessionValid();
 
       if (!isValid) {
         _loginData = null;
         notifyListeners();
-        if (kDebugMode) print("❌ No valid session found");
+        if (kDebugMode) print("❌ No valid session found - user not logged in");
         return false;
       }
 
@@ -298,7 +333,9 @@ class LoginProvider extends ChangeNotifier {
   Future<void> debugTestGetters() async {
     if (!kDebugMode) return;
 
-    print("═══════════════════════════════════════");
+    if (kDebugMode) {
+      print("═══════════════════════════════════════");
+    }
     print("🧪 TESTING ALL GETTERS");
     print("═══════════════════════════════════════");
     print("Token: ${await getAuthToken()}");

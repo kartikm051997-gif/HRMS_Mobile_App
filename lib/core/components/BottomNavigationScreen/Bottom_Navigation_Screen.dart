@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -8,9 +9,10 @@ import '../../../presentaion/pages/UserTrackingScreens/Tracking_History_TabView_
 import '../../../provider/UserTrackingProvider/UserTrackingProvider.dart';
 import '../../../provider/login_provider/login_provider.dart';
 import '../../../core/fonts/fonts.dart';
-import '../../../presentaion/pages/Deliverables Overview/Deliverables_Overview_screen.dart';
 import '../../../presentaion/pages/EmployeeManagement/EmployeemangementTabViewScreen/Employee_Management_Tabview.dart';
 import '../../../presentaion/pages/UserProfileScreens/User_Profile_Screen.dart';
+import '../../../presentaion/pages/MyDetailsScreens/admin_my_details_menu_screen.dart';
+import '../../../presentaion/pages/MyDetailsScreens/normal_user_my_details_menu_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});
@@ -67,6 +69,24 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    // ✅ Ensure non-admin users start on NormalUserMyDetailsMenuScreen (index 0)
+    final String roleId = loginProvider.userRole?.trim() ?? "";
+    final bool isAdmin = roleId == "1";
+    
+    if (kDebugMode) {
+      print("🔍 BottomNavScreen didChangeDependencies");
+      print("   Role ID: '$roleId'");
+      print("   Is Admin: $isAdmin");
+    }
+    
+    // Non-admin users have no bottom nav items, so keep index at 0
+    if (!isAdmin && _selectedIndex != 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() => _selectedIndex = 0);
+        }
+      });
+    }
   }
 
   // ✅ Handle back button press
@@ -85,13 +105,32 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   @override
   Widget build(BuildContext context) {
     final user = loginProvider.loginData?.user;
+    final String roleId = loginProvider.userRole?.trim() ?? "";
+    final bool isAdmin = roleId == "1";
+    
+    // Debug logging
+    if (kDebugMode) {
+      print("🔍 BottomNavScreen build");
+      print("   Raw roleId from user: ${user?.roleId}");
+      print("   Processed roleId: '$roleId'");
+      print("   Role ID length: ${roleId.length}");
+      print("   Is Admin: $isAdmin");
+      print("   User ID: ${user?.userId}");
+    }
 
-    final List<Widget> screens = const [
-      PaGarBookAdminScreen(),
-      DeliverablesOverviewScreen(),
-      EmployeeManagementTabviewScreen(),
-      UserProfileScreen(),
-    ];
+    // ✅ Screens list - order matches bottom nav indices
+    // For admin (role == "1"): [Home, Employees, Profile]
+    // For non-admin: [NormalUserMyDetailsMenuScreen] (shows current user's menu)
+    final List<Widget> screens = isAdmin
+        ? const [
+            PaGarBookAdminScreen(),
+            EmployeeManagementTabviewScreen(),
+            UserProfileScreen(),
+          ]
+        : [
+            // Normal user: Show NormalUserMyDetailsMenuScreen with current user's details
+            _buildEmployeeDetailsScreenForCurrentUser(user),
+          ];
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -102,10 +141,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
             // ✅ Add Drawer
             drawer: _buildDrawer(context, user),
 
-            body: screens[_selectedIndex],
+            body: screens[_selectedIndex.clamp(0, screens.length - 1)],
 
-            // ---------------- FAB -----------------
-            floatingActionButton: Container(
+            // ---------------- FAB ----------------- (only for admin)
+            floatingActionButton: isAdmin
+                ? Container(
               width: 60,
               height: 60,
               decoration: BoxDecoration(
@@ -140,10 +180,12 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                   child: const Icon(Icons.add, color: Colors.white, size: 32),
                 ),
               ),
-            ),
+                )
+                : null,
 
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.centerDocked,
+            floatingActionButtonLocation: isAdmin
+                ? FloatingActionButtonLocation.centerDocked
+                : null,
 
             // ---------------- Bottom Navigation -----------------
             bottomNavigationBar: Container(
@@ -164,37 +206,34 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 shape: const CircularNotchedRectangle(),
                 child: SizedBox(
                   height: 65,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: Icons.home_rounded,
-                          label: 'Home',
-                          index: 0,
+                  child: isAdmin
+                      ? Row(
+                          children: [
+                            Expanded(
+                              child: _buildNavItem(
+                                icon: Icons.home_rounded,
+                                label: 'Home',
+                                index: 0,
+                              ),
+                            ),
+                            const SizedBox(width: 40), // Space for FAB
+                            Expanded(
+                              child: _buildNavItem(
+                                icon: Icons.people_rounded,
+                                label: 'Employees',
+                                index: 1,
+                              ),
+                            ),
+                            Expanded(
+                              child: _buildProfileNavItem(user: user, index: 2),
+                            ),
+                          ],
+                        )
+                      : Row(
+                          // Non-admin: No bottom nav items (can access via drawer)
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [],
                         ),
-                      ),
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: (Icons.list_rounded),
-                          label: 'Deliverables',
-                          index: 1,
-                        ),
-                      ),
-
-                      const SizedBox(width: 40), // ⭐ Space for FAB
-
-                      Expanded(
-                        child: _buildNavItem(
-                          icon: (Icons.people_rounded),
-                          label: 'Employees',
-                          index: 2,
-                        ),
-                      ),
-                      Expanded(
-                        child: _buildProfileNavItem(user: user, index: 3),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -286,19 +325,11 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                       },
                     ),
                     _buildDrawerItem(
-                      icon: Icons.list_rounded,
-                      title: 'Deliverables',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() => _selectedIndex = 1);
-                      },
-                    ),
-                    _buildDrawerItem(
                       icon: Icons.people_rounded,
                       title: 'Employees',
                       onTap: () {
                         Navigator.pop(context);
-                        setState(() => _selectedIndex = 2);
+                        setState(() => _selectedIndex = 1);
                       },
                     ),
                     _buildDrawerItem(
@@ -306,7 +337,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                       title: 'Profile',
                       onTap: () {
                         Navigator.pop(context);
-                        setState(() => _selectedIndex = 3);
+                        setState(() => _selectedIndex = 2);
                       },
                     ),
                     const Divider(color: Colors.white24, thickness: 1),
@@ -544,6 +575,26 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // Helper method to build appropriate menu screen for current user
+  Widget _buildEmployeeDetailsScreenForCurrentUser(dynamic user) {
+    final empId = user?.userId ?? "";
+    final empPhoto = (user?.avatar != null && user!.avatar!.isNotEmpty)
+        ? "https://app.draravindsivf.com/hrms/${user.avatar}"
+        : "";
+    final empName = user?.fullname ?? "N/A";
+    final empDesignation = "N/A"; // User model doesn't have designation
+    final empBranch = user?.locationName ?? "N/A";
+
+    // Normal users see NormalUserMyDetailsMenuScreen
+    return NormalUserMyDetailsMenuScreen(
+      empId: empId,
+      empPhoto: empPhoto,
+      empName: empName,
+      empDesignation: empDesignation,
+      empBranch: empBranch,
     );
   }
 }

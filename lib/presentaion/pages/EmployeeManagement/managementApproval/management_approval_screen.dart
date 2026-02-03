@@ -65,20 +65,24 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
             if (provider.showFilters)
               SliverToBoxAdapter(child: _buildFilterSection(provider)),
 
-            // ✅ Show shimmer ONLY during initial filter load
-            if (provider.isLoadingFilters && !provider.initialLoadDone)
+            // ✅ Show shimmer during initial filter load OR data loading
+            if ((provider.isLoadingFilters && !provider.initialLoadDone) ||
+                (provider.isLoading && !provider.initialLoadDone))
               SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => _buildShimmerCard(),
-                    childCount: 5,
+                    (context, index) =>
+                        _buildShimmerCard(key: ValueKey('shimmer_ma_$index')),
+                    childCount:
+                        10, // Show 10 shimmer cards like Active User screen
                   ),
                 ),
               ),
 
-            // ✅ Show results section when filters loaded
-            if (!provider.isLoadingFilters || provider.initialLoadDone)
+            // ✅ Show results section when filters loaded and not loading
+            if ((!provider.isLoadingFilters || provider.initialLoadDone) &&
+                (!provider.isLoading || provider.initialLoadDone))
               _buildResultsSection(provider),
           ],
         ),
@@ -388,65 +392,58 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
             ),
             child: Center(
               child:
-              provider.isLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-                  : Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_rounded,
-                    size: 18,
-                    color: canApply ? Colors.white : AppColor.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    canApply ? "Apply Filters" : "Select All Filters",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : AppColor.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                  provider.isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_rounded,
+                            size: 18,
+                            color:
+                                canApply
+                                    ? Colors.white
+                                    : AppColor.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            canApply ? "Apply Filters" : "Select All Filters",
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: AppFonts.poppins,
+                              color:
+                                  canApply
+                                      ? Colors.white
+                                      : AppColor.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildResultsSection(ManagementApprovalProvider provider) {
     // ✅ Show loading during data fetch (not filter load)
     if (provider.isLoading && !provider.initialLoadDone) {
-      return SliverFillRemaining(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColor.primaryColor,
-                ),
-              ),
-              SizedBox(height: 16),
-              Text(
-                "Loading approvals...",
-                style: TextStyle(
-                  color: AppColor.textSecondary,
-                  fontFamily: AppFonts.poppins,
-                ),
-              ),
-            ],
+      return SliverPadding(
+        padding: const EdgeInsets.all(16),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (context, index) =>
+                _buildShimmerCard(key: ValueKey('shimmer_ma_results_$index')),
+            childCount: 10, // Show 10 shimmer cards
           ),
         ),
       );
@@ -470,6 +467,9 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           }
           final employee = provider.paginatedEmployees[index - 1];
           return TweenAnimationBuilder<double>(
+            key: ValueKey(
+              'employee_ma_${employee.userId ?? employee.employmentId ?? index}',
+            ),
             tween: Tween(begin: 0.0, end: 1.0),
             duration: Duration(milliseconds: 300 + (index * 50)),
             curve: Curves.easeOutCubic,
@@ -486,8 +486,9 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
     );
   }
 
-  Widget _buildShimmerCard() {
+  Widget _buildShimmerCard({Key? key}) {
     return Shimmer.fromColors(
+      key: key,
       baseColor: Colors.grey.shade300,
       highlightColor: Colors.grey.shade100,
       child: Container(
@@ -631,45 +632,61 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
     if (provider.totalPages <= 1) return const SizedBox.shrink();
 
     return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
             onPressed: provider.currentPage > 1 ? provider.previousPage : null,
-            icon: const Icon(Icons.chevron_left),
-            color:
-                provider.currentPage > 1
-                    ? AppColor.primaryColor
-                    : AppColor.textSecondary,
+            icon: Icon(Icons.chevron_left),
           ),
-          const SizedBox(width: 8),
-          Text(
-            "Page ${provider.currentPage} of ${provider.totalPages}",
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              fontFamily: AppFonts.poppins,
-              color: AppColor.textPrimary,
-            ),
-          ),
-          const SizedBox(width: 8),
+          ...List.generate(provider.totalPages > 5 ? 5 : provider.totalPages, (
+            index,
+          ) {
+            int pageNum;
+            if (provider.totalPages <= 5) {
+              pageNum = index + 1;
+            } else {
+              if (provider.currentPage <= 3) {
+                pageNum = index + 1;
+              } else if (provider.currentPage >= provider.totalPages - 2) {
+                pageNum = provider.totalPages - 4 + index;
+              } else {
+                pageNum = provider.currentPage - 2 + index;
+              }
+            }
+            return InkWell(
+              onTap: () => provider.goToPage(pageNum),
+              child: Container(
+                margin: EdgeInsets.symmetric(horizontal: 4),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color:
+                      provider.currentPage == pageNum
+                          ? AppColor.primaryColor
+                          : Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "$pageNum",
+                  style: TextStyle(
+                    color:
+                        provider.currentPage == pageNum
+                            ? Colors.white
+                            : Colors.black,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: AppFonts.poppins,
+                  ),
+                ),
+              ),
+            );
+          }),
           IconButton(
             onPressed:
                 provider.currentPage < provider.totalPages
                     ? provider.nextPage
                     : null,
-            icon: const Icon(Icons.chevron_right),
-            color:
-                provider.currentPage < provider.totalPages
-                    ? AppColor.primaryColor
-                    : AppColor.textSecondary,
+            icon: Icon(Icons.chevron_right),
           ),
         ],
       ),
@@ -678,6 +695,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
 
   Widget _buildEmployeeCard(dynamic employee) {
     return Container(
+      key: ValueKey('emp_card_ma_${employee.userId ?? employee.employmentId}'),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: AppColor.cardColor,
@@ -794,7 +812,7 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: ${employee.employmentId ?? employee.userId ?? ''}",
+                              "ECI ID: ${employee.employmentId ?? employee.userId ?? ''}",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -808,25 +826,25 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
                     ),
 
                     // Pending Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        employee.approvalStatus ?? "Pending",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: const EdgeInsets.symmetric(
+                    //     horizontal: 10,
+                    //     vertical: 6,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.orange.withOpacity(0.9),
+                    //     borderRadius: BorderRadius.circular(8),
+                    //   ),
+                    //   child: Text(
+                    //     employee.approvalStatus ?? "Pending",
+                    //     style: const TextStyle(
+                    //       fontSize: 11,
+                    //       fontWeight: FontWeight.w600,
+                    //       fontFamily: AppFonts.poppins,
+                    //       color: Colors.white,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

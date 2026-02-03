@@ -6,6 +6,8 @@ import '../../model/Employee_management/ManagementApprovalListModel.dart'
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ManagementApprovalService.dart';
+import '../../servicesAPI/LogInService/LogIn_Service.dart';
+import '../../core/utils/helper_utils.dart';
 
 class ManagementApprovalProvider extends ChangeNotifier {
   final ManagementApprovalService _approvalService =
@@ -252,6 +254,12 @@ class ManagementApprovalProvider extends ChangeNotifier {
           e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
+        final authService = LoginService();
+        await authService.clearSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading filters: ${e.toString()}";
       }
@@ -397,7 +405,17 @@ class ManagementApprovalProvider extends ChangeNotifier {
       if (response != null && response.status == "success") {
         _approvalListResponse = response;
         _allEmployees = response.data ?? [];
-        _filteredEmployees = List.from(_allEmployees);
+        // ✅ If search is active, filter results; otherwise show all
+        if (search != null && search.isNotEmpty) {
+          final searchLower = search.toLowerCase();
+          _filteredEmployees = _allEmployees.where((employee) {
+            final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+            final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+            return name.contains(searchLower) || empId.contains(searchLower);
+          }).toList();
+        } else {
+          _filteredEmployees = List.from(_allEmployees);
+        }
         _totalRecords = response.total ?? 0;
         _currentPage = page ?? _currentPage;
         _hasAppliedFilters = true;
@@ -492,20 +510,36 @@ class ManagementApprovalProvider extends ChangeNotifier {
     _fetchCurrentPage();
   }
 
-  /// Server-side search: fetch page 1 with search query (same as Active screen).
-  /// Shows matching cards for name or ID; debounced so one request with full term.
+  /// Real-time search: filter cards as user types (like Active screen)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
     _searchDebounce?.cancel();
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) {
+    
+    final trimmedQuery = query.trim();
+    
+    // If search is cleared, show all employees
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
       _currentPage = 1;
-      _fetchCurrentPageWithSearch('');
+      notifyListeners();
       return;
     }
-    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+    
+    // Client-side filtering for instant results as user types
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Also do server-side search with debounce for fresh data
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
       _currentPage = 1;
-      _fetchCurrentPageWithSearch(trimmed);
+      _fetchCurrentPageWithSearch(trimmedQuery);
     });
   }
 
@@ -528,8 +562,28 @@ class ManagementApprovalProvider extends ChangeNotifier {
   void performSearchWithQuery(String query) {
     if (!_initialLoadDone) return;
     _searchDebounce?.cancel();
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filter first for instant results
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
     _currentPage = 1;
-    _fetchCurrentPageWithSearch(query.trim());
+    notifyListeners();
+    
+    // Then fetch fresh data from server
+    _fetchCurrentPageWithSearch(trimmedQuery);
   }
 
   void clearSearch() {

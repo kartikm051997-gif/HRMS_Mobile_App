@@ -10,6 +10,7 @@ import '../../../../model/Employee_management/Employee_management.dart';
 import '../../../../provider/Employee_management_Provider/All_Employees_Provider.dart';
 import '../../../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/AllEmployeeService.dart';
 import '../../Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
+import '../../MyDetailsScreens/admin_my_details_menu_screen.dart';
 
 class AllEmployeeDetailsScreens extends StatefulWidget {
   final String empId;
@@ -619,8 +620,8 @@ class _AllEmployeeDetailsScreensState extends State<AllEmployeeDetailsScreens>
               context,
               PageRouteBuilder(
                 pageBuilder:
-                    (_, __, ___) => EmployeeDetailsScreen(
-                      empId: employee.employeeId,
+                    (_, __, ___) => AdminMyDetailsMenuScreen(
+                      empId: employee.userId ?? employee.employeeId, // ✅ Prioritize userId for API calls
                       empPhoto: employee.photoUrl ?? "",
                       empName: employee.name,
                       empDesignation: employee.designation,

@@ -19,7 +19,19 @@ class PayrollCategoryTypeProvider extends ChangeNotifier{
     "By Employee",
     "By Employee F-11",
   ];
-  List<String> get payrollCategoryType => _payrollCategoryType;
+  // ✅ Deduplicate payroll categories (case-insensitive) to remove duplicates
+  List<String> get payrollCategoryType {
+    final seen = <String>{};
+    final unique = <String>[];
+    for (final category in _payrollCategoryType) {
+      final normalized = category.trim().toLowerCase();
+      if (!seen.contains(normalized)) {
+        seen.add(normalized);
+        unique.add(category);
+      }
+    }
+    return unique;
+  }
 
   String? _selectedPayrollCategoryType;
   String? get selectedPayrollCategoryType => _selectedPayrollCategoryType;

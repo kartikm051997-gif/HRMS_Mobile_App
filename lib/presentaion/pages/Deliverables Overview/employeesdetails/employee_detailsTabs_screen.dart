@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/circular_details_screen.dart';
 import 'package:hrms_mobile_app/presentaion/pages/Deliverables%20Overview/employeesdetails/emplo_Personal_information_TabBar.dart';
@@ -9,6 +10,7 @@ import '../../../../core/components/drawer/drawer.dart';
 import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
+import '../../../../provider/login_provider/login_provider.dart';
 
 // Import all tab screens
 import 'Assets_Details_screen.dart';
@@ -25,6 +27,8 @@ class EmployeeDetailsScreen extends StatefulWidget {
   final String empName;
   final String empDesignation;
   final String empBranch;
+  final int initialTabIndex;
+  final bool showDrawer; // Option to show/hide drawer
 
   const EmployeeDetailsScreen({
     super.key,
@@ -33,7 +37,63 @@ class EmployeeDetailsScreen extends StatefulWidget {
     required this.empName,
     required this.empDesignation,
     required this.empBranch,
+    this.initialTabIndex = 0,
+    this.showDrawer = true, // Default to showing drawer
   });
+
+  // Static helper method to get correct tab index for menu items
+  // This handles mapping from menu screen item names to actual tab names
+  static int getTabIndexForMenuItem(String menuItemName, bool isAdmin) {
+    // Map menu item names to tab names
+    final Map<String, String> menuToTabName = {
+      "Letters": "Letter",
+      "payslips": "Payslip",
+      "assetsdetails": "Assets Details",
+      "Circulars": "Circular",
+      "Deliverables": "Task Details",
+    };
+
+    // Get the actual tab name
+    final tabName = menuToTabName[menuItemName] ?? menuItemName;
+
+    // Define tab order for admin and normal users
+    final List<String> adminTabs = [
+      "Employee Details",
+      "Attendance",
+      "Bank",
+      "Documents",
+      "Salary",
+      "Job Application",
+      "PF",
+      "ESI",
+      "Letter",
+      "Payslip",
+      "Assets Details",
+      "Circular",
+      "Task Details",
+    ];
+
+    final List<String> normalUserTabs = [
+      "Employee Details",
+      "Attendance",
+      "Bank",
+      "Salary",
+      "Letter",
+      "Payslip",
+      "Assets Details",
+      "Circular",
+      "Task Details",
+    ];
+
+    final tabs = isAdmin ? adminTabs : normalUserTabs;
+    final index = tabs.indexOf(tabName);
+    
+    if (kDebugMode) {
+      print("   📍 getTabIndexForMenuItem: '$menuItemName' -> '$tabName' -> index $index");
+    }
+    
+    return index >= 0 ? index : 0;
+  }
 
   @override
   State<EmployeeDetailsScreen> createState() => _EmployeeDetailsScreenState();
@@ -42,16 +102,18 @@ class EmployeeDetailsScreen extends StatefulWidget {
 class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<String> menuItems = [];
 
-  final List<String> menuItems = [
+  // All available tabs (admin sees all)
+  final List<String> _allMenuItems = [
     "Employee Details",
     "Attendance",
     "Bank",
     "Documents",
     "Salary",
-    "Job Application",
-    "PF",
-    "ESI",
+    "Job Application", // Admin only
+    "PF", // Admin only
+    "ESI", // Admin only
     "Letter",
     "Payslip",
     "Assets Details",
@@ -59,16 +121,216 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     "Task Details",
   ];
 
+  // Admin-only tabs (hidden for normal users)
+  final List<String> _adminOnlyTabs = [
+    "Job Application",
+    "PF",
+    "ESI",
+    "Documents",
+  ];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: menuItems.length, vsync: this);
+    _initializeTabs();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<EmployeeDetailsProvider>().fetchEmployeeDetails(
         widget.empId,
       );
     });
+  }
+
+  void _initializeTabs() {
+    // Get user role
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    final String roleId = loginProvider.userRole?.trim() ?? "";
+    final bool isAdmin = roleId == "1";
+
+    if (kDebugMode) {
+      print("🔍 EmployeeDetailsScreen - Initializing tabs");
+      print("   Role ID: '$roleId'");
+      print("   Is Admin: $isAdmin");
+    }
+
+    // Filter tabs based on user role
+    if (isAdmin) {
+      // Admin sees all tabs
+      menuItems = List.from(_allMenuItems);
+    } else {
+      // Normal user: exclude admin-only tabs
+      menuItems =
+          _allMenuItems
+              .where((item) => !_adminOnlyTabs.contains(item))
+              .toList();
+      if (kDebugMode) {
+        print(
+          "   Normal user - Filtered tabs: ${menuItems.length} (removed: ${_adminOnlyTabs.join(", ")})",
+        );
+      }
+    }
+
+    // Map initialTabIndex to the correct index in filtered menuItems
+    int adjustedIndex = _getAdjustedTabIndex(widget.initialTabIndex, isAdmin);
+
+    // Initialize TabController with filtered length
+    _tabController = TabController(
+      length: menuItems.length,
+      vsync: this,
+      initialIndex: adjustedIndex,
+    );
+
+    if (kDebugMode) {
+      print("   ✅ TabController initialized with length: ${menuItems.length}");
+      print("   ✅ menuItems: ${menuItems.join(" | ")}");
+      print("   ✅ Initial tab index: $adjustedIndex (requested: ${widget.initialTabIndex})");
+    }
+  }
+
+
+  // Adjust tab index - maps from original index to filtered index
+  int _getAdjustedTabIndex(int originalIndex, bool isAdmin) {
+    if (isAdmin) {
+      // Admin sees all tabs, so index is direct
+      return originalIndex.clamp(0, menuItems.length - 1);
+    }
+
+    // For normal users, if originalIndex refers to a tab name, find it in filtered list
+    // Otherwise, clamp to valid range
+    return originalIndex.clamp(0, menuItems.length - 1);
+  }
+
+  List<Widget> _buildTabViews(
+    bool isAdmin,
+    EmployeeDetailsProvider provider,
+    Map<String, dynamic> data,
+    String avatarUrl,
+  ) {
+    // Build views in the EXACT same order as menuItems
+    final views = <Widget>[];
+
+    for (String tabName in menuItems) {
+      Widget view;
+      switch (tabName) {
+        case "Employee Details":
+          view = _buildEmployeeDetailsTab(provider, data, avatarUrl);
+          break;
+        case "Attendance":
+          view = AttendanceCalendarScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Bank":
+          view = BankScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Documents":
+          view = DocumentsScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Salary":
+          view = SalaryScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Job Application":
+          view = ProfileTabBarView(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "PF":
+          view = PfScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "ESI":
+          view = ESIScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Letter":
+          view = LetterScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Payslip":
+          view = PaySlipScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Assets Details":
+          view = AssetsDetailsScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Circular":
+          view = CircularDetailsScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        case "Task Details":
+          view = TaskDetailsScreen(
+            empId: widget.empId,
+            empPhoto: widget.empPhoto,
+            empName: widget.empName,
+            empDesignation: widget.empDesignation,
+            empBranch: widget.empBranch,
+          );
+          break;
+        default:
+          view = _buildEmployeeDetailsTab(provider, data, avatarUrl);
+          break;
+      }
+      views.add(view);
+    }
+
+    return views;
   }
 
   @override
@@ -82,6 +344,11 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     final provider = context.watch<EmployeeDetailsProvider>();
     final data = provider.employeeDetails ?? {};
 
+    // Get user role for building tab views
+    final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+    final String roleId = loginProvider.userRole?.trim() ?? "";
+    final bool isAdmin = roleId == "1";
+
     const String defaultPhoto =
         "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
@@ -92,30 +359,30 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             ? data["photo"]
             : defaultPhoto;
 
+    // Build tab views based on current role
+    final currentTabViews = _buildTabViews(isAdmin, provider, data, avatarUrl);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      drawer: const TabletMobileDrawer(),
+      drawer: widget.showDrawer ? const TabletMobileDrawer() : null,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(95),
-        child:AppBar(
+        child: AppBar(
           iconTheme: IconThemeData(color: AppColor.whiteColor),
           centerTitle: true,
           elevation: 0,
-          backgroundColor: Colors.transparent, // important
+          backgroundColor: Colors.transparent,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Color(0xFF8E0E6B),
-                  Color(0xFFD4145A),
-                ],
+                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
             ),
           ),
           title: const Text(
-            "Deliverables Overview",
+            "Employee Details",
             style: TextStyle(
               fontFamily: AppFonts.poppins,
               fontWeight: FontWeight.w600,
@@ -143,103 +410,9 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             labelPadding: const EdgeInsets.symmetric(horizontal: 16),
             tabs: menuItems.map((e) => Tab(text: e)).toList(),
           ),
-        )
-
-      ),
-      body: MediaQuery.removePadding(
-        context: context,
-        removeTop: true,
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildEmployeeDetailsTab(provider, data, avatarUrl),
-            AttendanceCalendarScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            BankScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            DocumentsScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            SalaryScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            ProfileTabBarView(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            PfScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            ESIScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            LetterScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            PaySlipScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            AssetsDetailsScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            CircularDetailsScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-            TaskDetailsScreen(
-              empId: widget.empId,
-              empPhoto: widget.empPhoto,
-              empName: widget.empName,
-              empDesignation: widget.empDesignation,
-              empBranch: widget.empBranch,
-            ),
-          ],
         ),
       ),
+      body: TabBarView(controller: _tabController, children: currentTabViews),
     );
   }
 
@@ -318,20 +491,24 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return _buildDefaultAvatar(
-                                  widget.empName.isNotEmpty
-                                      ? widget.empName
-                                      : (data["name"] ?? "E"),
+                                  (data["name"]?.toString().isNotEmpty ?? false)
+                                      ? data["name"].toString()
+                                      : (widget.empName.isNotEmpty
+                                          ? widget.empName
+                                          : "E"),
                                 );
                               },
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Employee Name
+                        // Employee Name - ✅ Prioritize backend data
                         Text(
-                          widget.empName.isNotEmpty
-                              ? widget.empName
-                              : (data["name"] ?? "John Doe"),
+                          (data["name"]?.toString().isNotEmpty ?? false)
+                              ? data["name"].toString()
+                              : (widget.empName.isNotEmpty
+                                  ? widget.empName
+                                  : "N/A"),
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w700,
@@ -341,7 +518,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        // Employee ID Badge
+                        // Employee ID Badge - ✅ Prioritize backend data
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -352,7 +529,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            "ID: ${widget.empId}",
+                            "ECI ID: ${(data["empId"]?.toString().isNotEmpty ?? false) ? data["empId"].toString() : (widget.empId.isNotEmpty ? widget.empId : "N/A")}",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -362,11 +539,14 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Designation
+                        // Designation - ✅ Prioritize backend data
                         Text(
-                          widget.empDesignation.isNotEmpty
-                              ? widget.empDesignation
-                              : (data["designation"] ?? "Software Engineer"),
+                          (data["designation"]?.toString().isNotEmpty ?? false)
+                              ? data["designation"].toString()
+                              : (widget.empDesignation.isNotEmpty &&
+                                      widget.empDesignation != "N/A"
+                                  ? widget.empDesignation
+                                  : "N/A"),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -375,7 +555,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Branch
+                        // Branch - ✅ Prioritize backend data
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -386,9 +566,12 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              widget.empBranch.isNotEmpty
-                                  ? widget.empBranch
-                                  : (data["branch"] ?? "Chennai Branch"),
+                              (data["branch"]?.toString().isNotEmpty ?? false)
+                                  ? data["branch"].toString()
+                                  : (widget.empBranch.isNotEmpty &&
+                                          widget.empBranch != "N/A"
+                                      ? widget.empBranch
+                                      : "N/A"),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.white.withOpacity(0.9),
@@ -442,36 +625,39 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   Icons.person_outline_rounded,
                   [
                     _buildInfoRow(
-                      "Employee ID",
-                      (data["empId"]?.toString() ?? widget.empId).isNotEmpty
-                          ? (data["empId"]?.toString() ?? widget.empId)
-                          : "EMP12345",
-                      Icons.badge_outlined,
-                    ),
-                    _buildInfoRow(
                       "Full Name",
-                      widget.empName.isNotEmpty
-                          ? widget.empName
-                          : (data["name"] ?? "John Doe"),
+                      (data["name"]?.toString().isNotEmpty ?? false)
+                          ? data["name"].toString()
+                          : (widget.empName.isNotEmpty
+                              ? widget.empName
+                              : "N/A"),
                       Icons.person_outline,
                     ),
                     _buildInfoRow(
                       "Designation",
-                      widget.empDesignation.isNotEmpty
-                          ? widget.empDesignation
-                          : (data["designation"] ?? "Software Engineer"),
+                      (data["designation"]?.toString().isNotEmpty ?? false)
+                          ? data["designation"].toString()
+                          : (widget.empDesignation.isNotEmpty &&
+                                  widget.empDesignation != "N/A"
+                              ? widget.empDesignation
+                              : "N/A"),
                       Icons.work_outline,
                     ),
                     _buildInfoRow(
                       "Branch",
-                      widget.empBranch.isNotEmpty
-                          ? widget.empBranch
-                          : (data["branch"] ?? "Chennai Branch"),
+                      (data["branch"]?.toString().isNotEmpty ?? false)
+                          ? data["branch"].toString()
+                          : (widget.empBranch.isNotEmpty &&
+                                  widget.empBranch != "N/A"
+                              ? widget.empBranch
+                              : "N/A"),
                       Icons.location_on_outlined,
                     ),
                     _buildInfoRow(
                       "Joining Date",
-                      data["joiningDate"] ?? "2024-01-01",
+                      (data["joiningDate"]?.toString().isNotEmpty ?? false)
+                          ? data["joiningDate"].toString()
+                          : "N/A",
                       Icons.calendar_today_outlined,
                       isLast: true,
                     ),
@@ -488,22 +674,37 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   [
                     _buildInfoRow(
                       "Mobile",
-                      data["mobile"] ?? "+91 98765 43210",
+                      (data["mobile"]?.toString().isNotEmpty ?? false)
+                          ? data["mobile"].toString()
+                          : "N/A",
                       Icons.phone_outlined,
                     ),
                     _buildInfoRow(
                       "Email",
-                      data["email"] ?? "john.doe@example.com",
+                      (data["email"]?.toString().isNotEmpty ?? false)
+                          ? data["email"].toString()
+                          : "N/A",
                       Icons.email_outlined,
                     ),
                     _buildInfoRow(
                       "Present Address",
-                      data["present_address"] ?? "Not provided",
+                      (data["present_address"]?.toString().isNotEmpty ?? false)
+                          ? data["present_address"].toString()
+                          : (data["presentAddress"]?.toString().isNotEmpty ??
+                              false)
+                          ? data["presentAddress"].toString()
+                          : "N/A",
                       Icons.home_outlined,
                     ),
                     _buildInfoRow(
                       "Permanent Address",
-                      data["permanent_address"] ?? "Not provided",
+                      (data["permanent_address"]?.toString().isNotEmpty ??
+                              false)
+                          ? data["permanent_address"].toString()
+                          : (data["permanentAddress"]?.toString().isNotEmpty ??
+                              false)
+                          ? data["permanentAddress"].toString()
+                          : "N/A",
                       Icons.location_city_outlined,
                       isLast: true,
                     ),
@@ -520,27 +721,42 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   [
                     _buildInfoRow(
                       "Date of Birth",
-                      data["dob"] ?? "1995-06-21",
+                      (data["dob"]?.toString().isNotEmpty ?? false)
+                          ? data["dob"].toString()
+                          : (data["dateOfBirth"]?.toString().isNotEmpty ??
+                              false)
+                          ? data["dateOfBirth"].toString()
+                          : "N/A",
                       Icons.cake_outlined,
                     ),
                     _buildInfoRow(
                       "Gender",
-                      data["gender"] ?? "Male",
+                      (data["gender"]?.toString().isNotEmpty ?? false)
+                          ? data["gender"].toString()
+                          : "N/A",
                       Icons.people_outline,
                     ),
                     _buildInfoRow(
                       "Marital Status",
-                      data["maritalStatus"] ?? "Single",
+                      (data["maritalStatus"]?.toString().isNotEmpty ?? false)
+                          ? data["maritalStatus"].toString()
+                          : "N/A",
                       Icons.favorite_outline,
                     ),
                     _buildInfoRow(
                       "Aadhar Number",
-                      data["aadhar"] ?? "1234-5678-9012",
+                      (data["aadhar"]?.toString().isNotEmpty ?? false)
+                          ? data["aadhar"].toString()
+                          : "N/A",
                       Icons.credit_card_outlined,
                     ),
                     _buildInfoRow(
                       "PAN Number",
-                      data["pan"] ?? "ABCDE1234F",
+                      (data["pan"]?.toString().isNotEmpty ?? false)
+                          ? data["pan"].toString()
+                          : (data["panNumber"]?.toString().isNotEmpty ?? false)
+                          ? data["panNumber"].toString()
+                          : "N/A",
                       Icons.description_outlined,
                       isLast: true,
                     ),
@@ -557,24 +773,48 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                   [
                     _buildInfoRow(
                       "Payroll Category",
-                      data["payroll_category"] ?? "Regular",
+                      (data["payroll_category"]?.toString().isNotEmpty ?? false)
+                          ? data["payroll_category"].toString()
+                          : (data["payrollCategory"]?.toString().isNotEmpty ??
+                              false)
+                          ? data["payrollCategory"].toString()
+                          : "N/A",
                       Icons.category_outlined,
                     ),
                     _buildInfoRow(
                       "Education",
-                      data["education"] ?? "MBA",
+                      (data["education"]?.toString().isNotEmpty ?? false)
+                          ? data["education"].toString()
+                          : (data["educationQualification"]
+                                  ?.toString()
+                                  .isNotEmpty ??
+                              false)
+                          ? data["educationQualification"].toString()
+                          : "N/A",
                       Icons.school_outlined,
                     ),
+                    // Recruiter - Show circular avatar with backend data
                     _buildInfoRowWithAvatar(
                       "Recruiter",
-                      data["recruiter"] ?? "Not assigned",
-                      "https://i.pravatar.cc/150?img=3",
+                      (data["recruiter"]?.toString().isNotEmpty ?? false)
+                          ? data["recruiter"].toString()
+                          : "N/A",
+                      (data["recruiterAvatar"]?.toString().isNotEmpty ?? false)
+                          ? data["recruiterAvatar"].toString()
+                          : null,
                       Icons.person_search_rounded,
                     ),
+                    // Created By - Show circular avatar with backend data
                     _buildInfoRowWithAvatar(
                       "Created By",
-                      data["created_by"] ?? "Unknown",
-                      "https://i.pravatar.cc/150?img=7",
+                      (data["created_by"]?.toString().isNotEmpty ?? false)
+                          ? data["created_by"].toString()
+                          : (data["createdBy"]?.toString().isNotEmpty ?? false)
+                          ? data["createdBy"].toString()
+                          : "N/A",
+                      (data["createdByAvatar"]?.toString().isNotEmpty ?? false)
+                          ? data["createdByAvatar"].toString()
+                          : null,
                       Icons.person_add_rounded,
                       isLast: true,
                     ),
@@ -677,7 +917,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child:  Icon(icon, color: Colors.white, size: 20),
+                  child: Icon(icon, color: Colors.white, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -810,32 +1050,40 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        if (imageUrl != null && imageUrl.isNotEmpty)
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [
-                                  primaryColor.withOpacity(0.2),
-                                  secondaryColor.withOpacity(0.2),
-                                ],
-                              ),
-                              border: Border.all(color: borderColor),
+                        // ✅ Always show circular avatar (even if imageUrl is null)
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [
+                                primaryColor.withOpacity(0.2),
+                                secondaryColor.withOpacity(0.2),
+                              ],
                             ),
-                            child: ClipOval(
-                              child: Image.network(
-                                imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return _buildSmallDefaultAvatar(value);
-                                },
-                              ),
-                            ),
+                            border: Border.all(color: borderColor),
                           ),
-                        if (imageUrl != null && imageUrl.isNotEmpty)
-                          const SizedBox(width: 10),
+                          child: ClipOval(
+                            child:
+                                (imageUrl != null && imageUrl.isNotEmpty)
+                                    ? Image.network(
+                                      imageUrl,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (
+                                        context,
+                                        error,
+                                        stackTrace,
+                                      ) {
+                                        return _buildSmallDefaultAvatar(value);
+                                      },
+                                    )
+                                    : _buildSmallDefaultAvatar(
+                                      value,
+                                    ), // ✅ Show default avatar when imageUrl is null
+                          ),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             value,
@@ -870,7 +1118,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
       ),
       child: Center(
         child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : "?",
+          (name.isNotEmpty && name != "N/A") ? name[0].toUpperCase() : "?",
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -882,4 +1130,3 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     );
   }
 }
-

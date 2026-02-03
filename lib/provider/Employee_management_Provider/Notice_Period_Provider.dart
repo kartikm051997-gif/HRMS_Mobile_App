@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/utils/helper_utils.dart';
 import '../../model/Employee_management/NoticePeriodUserListModel.dart';
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
@@ -224,7 +226,11 @@ class NoticePeriodProvider extends ChangeNotifier {
           e.toString().contains("TOKEN_EXPIRED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading filters: $e";
       }
@@ -261,7 +267,17 @@ class NoticePeriodProvider extends ChangeNotifier {
 
       if (response != null && response.status == 'success') {
         _allEmployees = response.data?.users ?? [];
-        _filteredEmployees = List.from(_allEmployees);
+        // ✅ If search is active, filter results; otherwise show all
+        if (search != null && search.isNotEmpty) {
+          final searchLower = search.toLowerCase();
+          _filteredEmployees = _allEmployees.where((employee) {
+            final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+            final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+            return name.contains(searchLower) || empId.contains(searchLower);
+          }).toList();
+        } else {
+          _filteredEmployees = List.from(_allEmployees);
+        }
 
         if (response.data?.pagination != null) {
           final p = response.data!.pagination!;
@@ -285,7 +301,11 @@ class NoticePeriodProvider extends ChangeNotifier {
           e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading employees: $e";
       }
@@ -340,22 +360,91 @@ class NoticePeriodProvider extends ChangeNotifier {
     );
   }
 
+  Timer? _searchDebounce;
+
+  /// Real-time search: filter cards as user types (like Active screen)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    
+    final trimmedQuery = query.trim();
+    
+    // If search is cleared, show all employees
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filtering for instant results as user types
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
     _currentPage = 1;
+    notifyListeners();
+    
+    // Also do server-side search with debounce for fresh data
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
+      _currentPage = 1;
+      fetchNoticePeriodUsers(
+        zoneId: _selectedZoneId,
+        locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
+        designationsId: _selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null,
+        page: 1,
+        perPage: _itemsPerPage,
+        search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
+      );
+    });
+  }
+
+  /// Perform immediate search (called on Enter key)
+  void performSearchWithQuery(String query) {
+    if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filter first for instant results
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Then fetch fresh data from server
     fetchNoticePeriodUsers(
       zoneId: _selectedZoneId,
       locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
       designationsId: _selectedDesignationIds.isNotEmpty ? _selectedDesignationIds.join(',') : null,
       page: 1,
       perPage: _itemsPerPage,
-      search: query.isNotEmpty ? query : null,
+      search: trimmedQuery.isNotEmpty ? trimmedQuery : null,
     );
   }
 
   void clearSearch() {
+    _searchDebounce?.cancel();
     searchController.clear();
     _currentPage = 1;
+    // Show all employees immediately
+    _filteredEmployees = List.from(_allEmployees);
+    notifyListeners();
+    // Then fetch fresh data
     fetchNoticePeriodUsers(
       zoneId: _selectedZoneId,
       locationsId: _selectedBranchIds.isNotEmpty ? _selectedBranchIds.join(',') : null,
@@ -401,6 +490,7 @@ class NoticePeriodProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     searchController.dispose();
     super.dispose();
   }

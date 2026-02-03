@@ -113,13 +113,13 @@ class _EmployeeManagementTabviewScreenState
           body: TabBarView(
             controller: _tabController,
             children: [
-              const ActiveScreen(), // this is your filter + pagination screen
-              const ManagementApprovalScreen(),
-              const AbscondScreen(),
-              const NoticePeriodScreen(),
-              const InActiveScreen(),
-              const AllEmployeeScreen(),
-              const NewEmployeeScreen(empId: "12345"),
+              ActiveScreen(key: const ValueKey('active_screen')), // this is your filter + pagination screen
+              ManagementApprovalScreen(key: const ValueKey('management_approval_screen')),
+              AbscondScreen(key: const ValueKey('abscond_screen')),
+              NoticePeriodScreen(key: const ValueKey('notice_period_screen')),
+              InActiveScreen(key: const ValueKey('inactive_screen')),
+              AllEmployeeScreen(key: const ValueKey('all_employee_screen')),
+              NewEmployeeScreen(key: const ValueKey('new_employee_screen'), empId: "12345"),
             ],
           ),
         );

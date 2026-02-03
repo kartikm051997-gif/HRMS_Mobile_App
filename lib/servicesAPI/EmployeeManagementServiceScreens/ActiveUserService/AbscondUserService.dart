@@ -53,9 +53,42 @@ class AbscondUserService {
       if (response.statusCode == 200) {
         final cleaned = _cleanResponseBody(response.body);
         final jsonResponse = jsonDecode(cleaned);
+        
+        if (kDebugMode) {
+          print("📦 AbscondUserService Response type: ${jsonResponse.runtimeType}");
+          if (jsonResponse is Map) {
+            print("📦 Response keys: ${jsonResponse.keys}");
+            print("📦 Response status: ${jsonResponse['status']}");
+          }
+        }
+        
+        // Handle case where API returns List directly instead of Map
+        if (jsonResponse is List) {
+          if (kDebugMode) {
+            print("⚠️ API returned List directly, wrapping in expected format");
+            print("📦 List length: ${jsonResponse.length}");
+          }
+          // Wrap list in expected structure
+          return AbscondUserListModelClass.fromJson({
+            'status': 'success',
+            'message': 'Data retrieved successfully',
+            'total': jsonResponse.length,
+            'data': {
+              'users': jsonResponse,
+              'pagination': null,
+            },
+          });
+        }
+        
+        // Normal Map response
         return AbscondUserListModelClass.fromJson(jsonResponse);
       }
 
+      // Log response body for debugging
+      if (kDebugMode) {
+        print("❌ AbscondUserService ${response.statusCode} Response: ${response.body}");
+      }
+      
       throw Exception("API Error ${response.statusCode}");
     } catch (e) {
       if (kDebugMode) {

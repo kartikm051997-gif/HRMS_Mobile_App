@@ -255,7 +255,6 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
               children: [
                 Expanded(child: _buildFilterToggleButton(provider)),
                 const SizedBox(width: 12),
-                _buildPageSizeDropdown(provider),
               ],
             ),
             const SizedBox(height: 16),
@@ -343,50 +342,6 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
     );
   }
 
-  Widget _buildPageSizeDropdown(NoticePeriodProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: provider.pageSize,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColor.textSecondary,
-          ),
-          items:
-              [5, 10, 15, 20].map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(
-                    "$e",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-          onChanged: (val) {
-            if (val != null) provider.setPageSize(val);
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildSearchField(NoticePeriodProvider provider) {
     return ClipRRect(
@@ -400,6 +355,10 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
         child: TextField(
           controller: provider.searchController,
           onChanged: (value) => provider.onSearchChanged(value),
+          onSubmitted: (value) {
+            // Immediate search on Enter - show matching cards
+            provider.performSearchWithQuery(value);
+          },
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
@@ -1113,7 +1072,7 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: $empId",
+                              "ECI ID: $empId",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -1126,36 +1085,6 @@ class _NoticePeriodScreenState extends State<NoticePeriodScreen>
                       ),
                     ),
                     // Notice Period Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFED7AA).withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            size: 14,
-                            color: Color(0xFFEA580C),
-                          ),
-                          SizedBox(width: 4),
-                          Text(
-                            "Notice",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: AppFonts.poppins,
-                              color: Color(0xFFEA580C),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),

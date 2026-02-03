@@ -1,3 +1,5 @@
+import 'package:get/get.dart';
+import 'package:flutter/foundation.dart';
 import '../routes/routes.dart';
 
 class HelperUtil {
@@ -9,7 +11,6 @@ class HelperUtil {
       AppRoutes.loginScreen,
       AppRoutes.userTrackingScreen,
       AppRoutes.adminTracking,
-      AppRoutes.deliverablesOverview,
       AppRoutes.attendanceLog,
       AppRoutes.remoteAttendance,
       AppRoutes.mispunchReports,
@@ -44,5 +45,20 @@ class HelperUtil {
   static String normalizeUrl(String url) {
     String path = Uri.parse(url).path.replaceAll(RegExp(r'/+'), '/');
     return path.startsWith('/') ? path : '/$path';
+  }
+
+  /// Navigate to login screen when token expires
+  /// This clears all navigation stack and goes to login
+  static void navigateToLoginOnTokenExpiry() {
+    if (kDebugMode) {
+      print("🚨 Token expired - Navigating to login screen");
+    }
+    try {
+      Get.offAllNamed(AppRoutes.loginScreen);
+    } catch (e) {
+      if (kDebugMode) {
+        print("❌ Error navigating to login: $e");
+      }
+    }
   }
 }

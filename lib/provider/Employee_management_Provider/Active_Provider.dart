@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/utils/helper_utils.dart';
 import '../../model/Employee_management/ActiveUserListModel.dart' as models;
 import '../../model/Employee_management/getAllFiltersModel.dart';
 import '../../servicesAPI/EmployeeManagementServiceScreens/ActiveUserService/ActiveUserFilterService.dart';
@@ -329,7 +331,7 @@ class ActiveProvider extends ChangeNotifier {
 
       _initialLoadDone = true;
     } catch (e) {
-      // 🚨 Handle auth issues
+      // 🚨 Handle auth issues - navigate to login on token expiration
       if (e.toString().contains("401") ||
           e.toString().contains("UNAUTHORIZED") ||
           e.toString().contains("TOKEN_EXPIRED")) {
@@ -337,10 +339,11 @@ class ActiveProvider extends ChangeNotifier {
         _errorMessage = "Your session has expired. Please login again.";
 
         if (kDebugMode) {
-          print("⛔ Token expired – clearing session");
+          print("⛔ Token expired – clearing session and navigating to login");
         }
 
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading filters: $e";
       }
@@ -437,7 +440,12 @@ class ActiveProvider extends ChangeNotifier {
       _isTokenExpired = false;
       notifyListeners();
 
-      if (kDebugMode) print("🔄 ActiveProvider: Fetching active users (page ${page ?? _currentPage}, perPage ${perPage ?? _itemsPerPage})...");
+      if (kDebugMode) {
+        print("🔄 ActiveProvider: Fetching active users (page ${page ?? _currentPage}, perPage ${perPage ?? _itemsPerPage})...");
+        if (search != null && search.isNotEmpty) {
+          print("🔍 Search query: '$search'");
+        }
+      }
 
       // 🔥 Request only current page from backend (default 10) – same concept as Management Approval
       final response = await _activeUserService.getActiveUsers(
@@ -451,9 +459,9 @@ class ActiveProvider extends ChangeNotifier {
         dolpTodate: dolpTodate,
         fromdate: fromdate ?? (dojFromController.text.isNotEmpty ? dojFromController.text : null),
         todate: todate ?? (fojToController.text.isNotEmpty ? fojToController.text : null),
-        page: page ?? _currentPage,
-        perPage: perPage ?? _itemsPerPage,
-        search: search ?? searchController.text,
+      page: page ?? _currentPage,
+      perPage: perPage ?? _itemsPerPage,
+      search: search?.isNotEmpty == true ? search : (searchController.text.isNotEmpty ? searchController.text : null),
       );
 
       if (response != null && response.status == 'success') {
@@ -466,14 +474,22 @@ class ActiveProvider extends ChangeNotifier {
           _totalRecords = pagination.total;
           _totalPagesFromServer = pagination.lastPage ?? (pagination.total != null ? ((pagination.total! / _itemsPerPage).ceil()) : null);
           _currentPage = pagination.currentPage ?? _currentPage;
+          _allEmployees = response.data?.users ?? [];
+          // ✅ Always set filtered employees to match all employees (API already filtered by search)
           _filteredEmployees = List.from(_allEmployees);
         } else {
           _paginationFromServer = false;
+          _allEmployees = response.data?.users ?? [];
           _totalRecords = _allEmployees.length;
           _totalPagesFromServer = (_allEmployees.length / _itemsPerPage).ceil().clamp(1, 999999);
-          final start = (_currentPage - 1) * _itemsPerPage;
-          final end = (start + _itemsPerPage).clamp(0, _allEmployees.length);
-          _filteredEmployees = start < _allEmployees.length ? _allEmployees.sublist(start, end) : [];
+          // ✅ For search results, show all matching employees (no pagination slicing)
+          if (search != null && search.isNotEmpty) {
+            _filteredEmployees = List.from(_allEmployees);
+          } else {
+            final start = (_currentPage - 1) * _itemsPerPage;
+            final end = (start + _itemsPerPage).clamp(0, _allEmployees.length);
+            _filteredEmployees = start < _allEmployees.length ? _allEmployees.sublist(start, end) : [];
+          }
         }
 
         final summary = response.data?.summary;
@@ -490,6 +506,9 @@ class ActiveProvider extends ChangeNotifier {
 
         if (kDebugMode) {
           print("✅ ActiveProvider: Loaded ${_allEmployees.length} employees (page $_currentPage of $totalPages, total $_totalRecords)");
+          if (search != null && search.isNotEmpty) {
+            print("🔍 Search results: ${_allEmployees.length} employees found for '$search'");
+          }
         }
       } else {
         _errorMessage = response?.message ?? "Failed to load employees";
@@ -499,7 +518,11 @@ class ActiveProvider extends ChangeNotifier {
           e.toString().contains("UNAUTHORIZED")) {
         _isTokenExpired = true;
         _errorMessage = "Your session has expired. Please login again.";
+        if (kDebugMode) {
+          print("⛔ Token expired – clearing session and navigating to login");
+        }
         await _clearAuthSession();
+        HelperUtil.navigateToLoginOnTokenExpiry();
       } else {
         _errorMessage = "Error loading employees: $e";
       }
@@ -609,14 +632,76 @@ class ActiveProvider extends ChangeNotifier {
     );
   }
 
-  /// Server-side search: fetch page 1 with search query (same concept as Management Approval)
+  Timer? _searchDebounce;
+
+  /// Real-time search: filter cards as user types (like Management Approval)
   void onSearchChanged(String query) {
     if (!_initialLoadDone) return;
+    
+    // Cancel previous debounce timer
+    _searchDebounce?.cancel();
+    
+    final trimmedQuery = query.trim();
+    
+    // If search is cleared, show all employees
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filtering for instant results as user types
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
     _currentPage = 1;
-    _fetchCurrentPageWithSearch(query);
+    notifyListeners();
+    
+    // Also do server-side search with debounce for fresh data
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
+      _currentPage = 1;
+      _fetchCurrentPageWithSearch(trimmedQuery);
+    });
+  }
+
+  /// Perform immediate search (called on Enter key or search button)
+  void performSearchWithQuery(String query) {
+    if (!_initialLoadDone) return;
+    _searchDebounce?.cancel();
+    final trimmedQuery = query.trim();
+    
+    if (trimmedQuery.isEmpty) {
+      _filteredEmployees = List.from(_allEmployees);
+      _currentPage = 1;
+      notifyListeners();
+      return;
+    }
+    
+    // Client-side filter first for instant results
+    final searchLower = trimmedQuery.toLowerCase();
+    _filteredEmployees = _allEmployees.where((employee) {
+      final name = (employee.fullname ?? employee.username ?? '').toLowerCase();
+      final empId = (employee.employmentId ?? employee.userId ?? '').toLowerCase();
+      return name.contains(searchLower) || empId.contains(searchLower);
+    }).toList();
+    
+    _currentPage = 1;
+    notifyListeners();
+    
+    // Then fetch fresh data from server
+    _fetchCurrentPageWithSearch(trimmedQuery);
   }
 
   void _fetchCurrentPageWithSearch(String searchQuery) {
+    if (kDebugMode) {
+      print("🔍 Searching for: '$searchQuery'");
+    }
+    // Search works with or without filters - show matching employees from all data
     fetchActiveUsers(
       cmpid: _selectedCompanyId,
       zoneId: _selectedZoneIds.isNotEmpty ? _selectedZoneIds.join(',') : null,
@@ -627,13 +712,18 @@ class ActiveProvider extends ChangeNotifier {
       todate: fojToController.text.isNotEmpty ? fojToController.text : null,
       page: 1,
       perPage: _itemsPerPage,
-      search: searchQuery.isNotEmpty ? searchQuery : null,
+      search: searchQuery.trim().isNotEmpty ? searchQuery.trim() : null,
     );
   }
 
   void clearSearch() {
+    _searchDebounce?.cancel();
     searchController.clear();
     _currentPage = 1;
+    // Show all employees immediately
+    _filteredEmployees = List.from(_allEmployees);
+    notifyListeners();
+    // Then fetch fresh data
     _fetchCurrentPage();
   }
 
@@ -720,6 +810,7 @@ class ActiveProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     dojFromController.dispose();
     fojToController.dispose();
     searchController.dispose();

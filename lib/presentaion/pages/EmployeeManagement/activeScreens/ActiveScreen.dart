@@ -451,6 +451,10 @@ class _ActiveScreenState extends State<ActiveScreen> {
                       style: TextStyle(fontFamily: AppFonts.poppins),
                       controller: activeProvider.searchController,
                       onChanged: activeProvider.onSearchChanged,
+                      onSubmitted: (value) {
+                        // Immediate search on Enter - show matching cards
+                        activeProvider.performSearchWithQuery(value);
+                      },
                       decoration: InputDecoration(
                         hintStyle: TextStyle(fontFamily: AppFonts.poppins),
                         hintText: "Search by name, ID...",

@@ -234,7 +234,6 @@ class _AbscondScreenState extends State<AbscondScreen>
                 children: [
                   Expanded(child: _buildFilterToggleButton(provider)),
                   const SizedBox(width: 12),
-                  _buildPageSizeDropdown(provider),
                 ],
               ),
               const SizedBox(height: 16),
@@ -323,43 +322,6 @@ class _AbscondScreenState extends State<AbscondScreen>
     );
   }
 
-  Widget _buildPageSizeDropdown(AbscondProvider provider) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColor.cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.borderColor),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: provider.pageSize,
-          icon: const Icon(
-            Icons.keyboard_arrow_down_rounded,
-            color: AppColor.textSecondary,
-          ),
-          items:
-              [5, 10, 15, 20].map((e) {
-                return DropdownMenuItem(
-                  value: e,
-                  child: Text(
-                    "$e",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontFamily: AppFonts.poppins,
-                      color: AppColor.textPrimary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                );
-              }).toList(),
-          onChanged: (val) {
-            if (val != null) provider.setPageSize(val);
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildSearchField(AbscondProvider provider) {
     return ClipRRect(
@@ -373,6 +335,10 @@ class _AbscondScreenState extends State<AbscondScreen>
         child: TextField(
           controller: provider.searchController,
           onChanged: (value) => provider.onSearchChanged(value),
+          onSubmitted: (value) {
+            // Immediate search on Enter - show matching cards
+            provider.performSearchWithQuery(value);
+          },
           style: const TextStyle(
             fontSize: 15,
             fontFamily: AppFonts.poppins,
@@ -550,41 +516,48 @@ class _AbscondScreenState extends State<AbscondScreen>
             ),
             child: Center(
               child:
-              provider.isLoading
-                  ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-                  :Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_rounded,
-                    size: 18,
-                    color: canApply ? Colors.white : AppColor.textSecondary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    canApply ? "Apply Filters" : "Select All Filters",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: AppFonts.poppins,
-                      color: canApply ? Colors.white : AppColor.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
+                  provider.isLoading
+                      ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                      : Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.search_rounded,
+                              size: 18,
+                              color:
+                                  canApply
+                                      ? Colors.white
+                                      : AppColor.textSecondary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              canApply ? "Apply Filters" : "Select All Filters",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                                color:
+                                    canApply
+                                        ? Colors.white
+                                        : AppColor.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   // ══════════════════════════════════════════════════════════════════════
@@ -1022,7 +995,7 @@ class _AbscondScreenState extends State<AbscondScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "ID: $empId",
+                              "ECI ID: $empId",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -1032,25 +1005,6 @@ class _AbscondScreenState extends State<AbscondScreen>
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFDC2626).withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        "Absconded",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: AppFonts.poppins,
-                          color: Colors.white,
-                        ),
                       ),
                     ),
                   ],

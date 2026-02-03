@@ -68,6 +68,58 @@ class InActiveUserService {
       if (response.statusCode == 200) {
         final cleaned = _cleanResponseBody(response.body);
         final jsonResponse = jsonDecode(cleaned);
+        
+        if (kDebugMode) {
+          print("📦 InActiveUserService Response type: ${jsonResponse.runtimeType}");
+          if (jsonResponse is Map) {
+            print("📦 Response keys: ${jsonResponse.keys}");
+            print("📦 Response status: ${jsonResponse['status']}");
+            if (jsonResponse['data'] != null) {
+              print("📦 Data type: ${jsonResponse['data'].runtimeType}");
+              if (jsonResponse['data'] is Map && jsonResponse['data']['users'] != null) {
+                print("📦 Users count: ${(jsonResponse['data']['users'] as List).length}");
+              } else if (jsonResponse['data'] is List) {
+                print("📦 Data is List, length: ${(jsonResponse['data'] as List).length}");
+              }
+            }
+          } else if (jsonResponse is List) {
+            print("📦 List length: ${jsonResponse.length}");
+          }
+        }
+        
+        // Handle case where API returns List directly instead of Map
+        if (jsonResponse is List) {
+          if (kDebugMode) {
+            print("⚠️ API returned List directly, wrapping in expected format");
+          }
+          // Wrap list in expected structure
+          return InActiveUserListModelClass.fromJson({
+            'status': 'success',
+            'message': 'Data retrieved successfully',
+            'total': jsonResponse.length,
+            'data': {
+              'users': jsonResponse,
+              'pagination': null,
+            },
+          });
+        }
+        
+        // Handle case where data field is a List instead of Map
+        if (jsonResponse is Map && jsonResponse['data'] is List) {
+          if (kDebugMode) {
+            print("⚠️ API returned data as List, wrapping in expected format");
+            print("📦 List length: ${(jsonResponse['data'] as List).length}");
+          }
+          // Wrap data list in expected structure
+          final wrappedResponse = Map<String, dynamic>.from(jsonResponse);
+          wrappedResponse['data'] = {
+            'users': jsonResponse['data'],
+            'pagination': null,
+          };
+          return InActiveUserListModelClass.fromJson(wrappedResponse);
+        }
+        
+        // Normal Map response with data as Map
         return InActiveUserListModelClass.fromJson(jsonResponse);
       }
 
