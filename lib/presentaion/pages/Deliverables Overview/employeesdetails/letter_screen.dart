@@ -32,10 +32,6 @@ class _LetterScreenState extends State<LetterScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF7C3AED);
-  static const Color secondaryColor = Color(0xFFEC4899);
-
   @override
   void initState() {
     super.initState();
@@ -48,7 +44,6 @@ class _LetterScreenState extends State<LetterScreen>
     );
 
     Future.delayed(Duration.zero, () {
-      // Fetch employee details to get letters
       context.read<EmployeeDetailsProvider>().fetchEmployeeDetails(
         widget.empId,
       );
@@ -65,14 +60,13 @@ class _LetterScreenState extends State<LetterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF5F7FA), // ✅ Changed background color
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Consumer<EmployeeDetailsProvider>(
           builder: (context, detailsProvider, _) {
             return Consumer<DocumentListProvider>(
               builder: (context, documentProvider, _) {
-                // Load letters from EmployeeDetailsProvider
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (detailsProvider.employeeDetails != null) {
                     documentProvider.loadLettersFromProvider(
@@ -88,11 +82,11 @@ class _LetterScreenState extends State<LetterScreen>
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
+                            color: const Color(0xFF10B981).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const CircularProgressIndicator(
-                            color: primaryColor,
+                            color: Color(0xFF10B981),
                             strokeWidth: 3,
                           ),
                         ),
@@ -119,51 +113,35 @@ class _LetterScreenState extends State<LetterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header
+                      // ✅ Changed Header Design
                       Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [primaryColor, secondaryColor],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.mail_rounded,
-                              color: Colors.white,
-                              size: 24,
+                          const Text(
+                            "Letters",
+                            style: TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 24,
+                              color: Color(0xFF1A1A1A),
                             ),
                           ),
-                          const SizedBox(width: 14),
-                          const Expanded(
-                            child: Text(
-                              "Letters",
-                              style: TextStyle(
-                                fontFamily: AppFonts.poppins,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                          ),
+                          const Spacer(),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
+                              horizontal: 14,
+                              vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
+                              color: const Color(0xFF10B981),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              "${documentProvider.letter.length} Letters",
+                              "${documentProvider.letter.length}",
                               style: const TextStyle(
                                 fontFamily: AppFonts.poppins,
-                                fontSize: 12,
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
-                                color: primaryColor,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -215,36 +193,32 @@ class _LetterScreenState extends State<LetterScreen>
     );
   }
 
+  // ✅ Changed Empty State Design
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.1),
-                  secondaryColor.withOpacity(0.1),
-                ],
-              ),
+              color: const Color(0xFFD1FAE5),
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.mail_outline_rounded,
-              size: 48,
-              color: primaryColor,
+              Icons.mail_outline,
+              size: 64,
+              color: Color(0xFF10B981),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           const Text(
             "No Letters Available",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: Color(0xFF475569),
+              color: Color(0xFF1A1A1A),
             ),
           ),
           const SizedBox(height: 8),
@@ -253,7 +227,7 @@ class _LetterScreenState extends State<LetterScreen>
             style: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
-              color: Colors.grey[500],
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -261,53 +235,43 @@ class _LetterScreenState extends State<LetterScreen>
     );
   }
 
+  // ✅ Changed Card Design ONLY - Same function signature
   Widget _buildLetterCard(
     dynamic document,
     bool isDownloading,
     DocumentListProvider documentProvider,
   ) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
       ),
-      child: Column(
-        children: [
-          // Card Header
-          Container(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _openLetterContent(context, document, documentProvider),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
             child: Row(
               children: [
+                // Icon
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: const Color(0xFFD1FAE5),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.description_rounded,
-                    color: Colors.white,
-                    size: 20,
+                    Icons.description_outlined,
+                    color: Color(0xFF10B981),
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
+                // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,26 +280,28 @@ class _LetterScreenState extends State<LetterScreen>
                         document.letterType,
                         style: const TextStyle(
                           fontFamily: AppFonts.poppins,
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                          color: Color(0xFF1A1A1A),
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(
-                            Icons.calendar_today_rounded,
-                            color: Colors.white70,
-                            size: 12,
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.grey[500],
                           ),
                           const SizedBox(width: 6),
                           Text(
                             document.date,
                             style: TextStyle(
                               fontFamily: AppFonts.poppins,
-                              fontSize: 12,
-                              color: Colors.white.withOpacity(0.85),
+                              fontSize: 13,
+                              color: Colors.grey[600],
                             ),
                           ),
                         ],
@@ -343,140 +309,28 @@ class _LetterScreenState extends State<LetterScreen>
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          // Card Content
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Date Info
-                Expanded(
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF3B82F6).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.calendar_month_rounded,
-                          color: Color(0xFF3B82F6),
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Issue Date",
-                              style: TextStyle(
-                                fontFamily: AppFonts.poppins,
-                                fontSize: 11,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                            Text(
-                              document.date,
-                              style: const TextStyle(
-                                fontFamily: AppFonts.poppins,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF1E293B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Letter Type Badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.verified_rounded,
-                        color: Color(0xFF10B981),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "Official",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF10B981),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(width: 12),
-
-                // View Button (Eye icon) - HTML Viewer
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap:
-                        () => _openLetterContent(
-                          context,
-                          document,
-                          documentProvider,
-                        ),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3B82F6).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: const Color(0xFF3B82F6).withOpacity(0.3),
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.visibility_rounded,
-                        color: Color(0xFF3B82F6),
-                        size: 20,
-                      ),
-                    ),
-                  ),
+                // Arrow Icon
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey[400],
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
+  // ✅ Keep all original functions unchanged
   Future<void> _openLetterContent(
     BuildContext context,
     dynamic document,
     DocumentListProvider provider,
   ) async {
-    // All users can view letters
     final htmlContent = document.content ?? "";
     final title = "${document.letterType} - ${document.date}";
-
-    // Convert HTML to PDF and show in PDF viewer
     await _showPdfViewer(context, title, htmlContent, document);
   }
 
@@ -486,16 +340,14 @@ class _LetterScreenState extends State<LetterScreen>
     String htmlContent,
     dynamic document,
   ) async {
-    // Convert HTML to PDF
     final pdf = await _htmlToPdf(htmlContent, title);
     final pdfBytes = await pdf.save();
-
-    // Save PDF to temporary file
     final tempDir = await getTemporaryDirectory();
-    final tempFile = File('${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    final tempFile = File(
+      '${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
     await tempFile.writeAsBytes(pdfBytes);
 
-    // Show PDF viewer dialog with download button
     if (!context.mounted) return;
     showDialog(
       context: context,
@@ -511,13 +363,10 @@ class _LetterScreenState extends State<LetterScreen>
               ),
               child: Column(
                 children: [
-                  // Header with three-dot menu
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                      ),
+                      color: const Color(0xFF10B981), // ✅ Changed color
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
@@ -538,7 +387,6 @@ class _LetterScreenState extends State<LetterScreen>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // Three-dot menu button
                         PopupMenuButton<String>(
                           icon: const Icon(
                             Icons.more_vert_rounded,
@@ -550,23 +398,25 @@ class _LetterScreenState extends State<LetterScreen>
                           ),
                           onSelected: (value) async {
                             if (value == 'download') {
-                              Navigator.pop(context); // Close PDF viewer first
-                              // Trigger download using provider
-                              final letterProvider = Provider.of<DocumentListProvider>(
-                                context,
-                                listen: false,
-                              );
-                              final docId = "${document.id}_${DateTime.now().millisecondsSinceEpoch}";
-                              final fileName = document.fileName.isNotEmpty
-                                  ? document.fileName.replaceAll('.html', '.pdf')
-                                  : "letter_${document.id}_${document.date.replaceAll('/', '_')}.pdf";
+                              Navigator.pop(context);
+                              final letterProvider =
+                                  Provider.of<DocumentListProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                              final docId =
+                                  "${document.id}_${DateTime.now().millisecondsSinceEpoch}";
+                              final fileName =
+                                  document.fileName.isNotEmpty
+                                      ? document.fileName.replaceAll(
+                                        '.html',
+                                        '.pdf',
+                                      )
+                                      : "letter_${document.id}_${document.date.replaceAll('/', '_')}.pdf";
 
                               try {
-                                final result = await letterProvider.downloadFile(
-                                  docId,
-                                  htmlContent,
-                                  fileName,
-                                );
+                                final result = await letterProvider
+                                    .downloadFile(docId, htmlContent, fileName);
                                 final isSuccess = result.contains('✅');
                                 _showSnackBar(context, isSuccess, result);
                               } catch (e) {
@@ -578,30 +428,31 @@ class _LetterScreenState extends State<LetterScreen>
                               }
                             }
                           },
-                          itemBuilder: (BuildContext context) => [
-                            PopupMenuItem<String>(
-                              value: 'download',
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.download_rounded,
-                                    color: primaryColor,
-                                    size: 20,
+                          itemBuilder:
+                              (BuildContext context) => [
+                                PopupMenuItem<String>(
+                                  value: 'download',
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.download_rounded,
+                                        color: Color(0xFF10B981),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        "Download",
+                                        style: TextStyle(
+                                          fontFamily: AppFonts.poppins,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    "Download",
-                                    style: TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                                ),
+                              ],
                         ),
                         IconButton(
                           onPressed: () => Navigator.pop(context),
@@ -613,7 +464,6 @@ class _LetterScreenState extends State<LetterScreen>
                       ],
                     ),
                   ),
-                  // PDF Viewer
                   Expanded(
                     child: PDF(
                       enableSwipe: true,
@@ -621,12 +471,14 @@ class _LetterScreenState extends State<LetterScreen>
                       autoSpacing: false,
                       pageFling: true,
                       onError: (error) {
-                        _showSnackBar(context, false, "Failed to load PDF: $error");
+                        _showSnackBar(
+                          context,
+                          false,
+                          "Failed to load PDF: $error",
+                        );
                         Navigator.pop(context);
                       },
-                    ).fromPath(
-                      tempFile.path,
-                    ),
+                    ).fromPath(tempFile.path),
                   ),
                 ],
               ),
@@ -636,15 +488,15 @@ class _LetterScreenState extends State<LetterScreen>
   }
 
   Future<pw.Document> _htmlToPdf(String htmlContent, String title) async {
-    // Strip HTML tags for simple text display
-    final textContent = htmlContent
-        .replaceAll(RegExp(r'<[^>]*>'), '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&quot;', '"')
-        .trim();
+    final textContent =
+        htmlContent
+            .replaceAll(RegExp(r'<[^>]*>'), '')
+            .replaceAll('&nbsp;', ' ')
+            .replaceAll('&amp;', '&')
+            .replaceAll('&lt;', '<')
+            .replaceAll('&gt;', '>')
+            .replaceAll('&quot;', '"')
+            .trim();
 
     final pdf = pw.Document();
     pdf.addPage(
@@ -682,8 +534,6 @@ class _LetterScreenState extends State<LetterScreen>
     String htmlContent,
   ) async {
     try {
-      // All users can download letters
-      // Get download directory
       Directory? directory;
       if (Platform.isAndroid) {
         directory = await getExternalStorageDirectory();
@@ -703,13 +553,13 @@ class _LetterScreenState extends State<LetterScreen>
         return;
       }
 
-      final fileName = document.fileName.isNotEmpty
-          ? document.fileName
-          : "letter_${document.id}_${document.date.replaceAll('/', '_')}.html";
+      final fileName =
+          document.fileName.isNotEmpty
+              ? document.fileName
+              : "letter_${document.id}_${document.date.replaceAll('/', '_')}.html";
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
 
-      // Write HTML content to file
       await file.writeAsString(htmlContent);
 
       if (await file.exists()) {

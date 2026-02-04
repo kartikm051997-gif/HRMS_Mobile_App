@@ -25,10 +25,6 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF7C3AED);
-  static const Color secondaryColor = Color(0xFFEC4899);
-
   @override
   void initState() {
     super.initState();
@@ -57,7 +53,7 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
     final assetsDetailsProvider = Provider.of<AssetsDetailsProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Padding(
@@ -65,35 +61,19 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Simple Header
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.devices_rounded,
-                      color: Colors.white,
-                      size: 24,
+                  const Text(
+                    "Assets Details",
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text(
-                      "Assets Details",
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                  ),
+                  const Spacer(),
                   if (!assetsDetailsProvider.isLoading &&
                       assetsDetailsProvider.assetsDetails.isNotEmpty)
                     Container(
@@ -102,54 +82,39 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: primaryColor.withOpacity(0.1),
+                        color: const Color(0xFF7C3AED),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        "${assetsDetailsProvider.assetsDetails.length} Items",
+                        "${assetsDetailsProvider.assetsDetails.length}",
                         style: const TextStyle(
                           fontFamily: AppFonts.poppins,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: primaryColor,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Content
               Expanded(
                 child: assetsDetailsProvider.isLoading
                     ? const CustomCardShimmer(itemCount: 1)
                     : assetsDetailsProvider.assetsDetails.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            itemCount:
-                                assetsDetailsProvider.assetsDetails.length,
-                            itemBuilder: (context, index) {
-                              final asset =
-                                  assetsDetailsProvider.assetsDetails[index];
-                              return TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration:
-                                    Duration(milliseconds: 400 + (index * 100)),
-                                curve: Curves.easeOutCubic,
-                                builder: (context, value, child) {
-                                  return Transform.translate(
-                                    offset: Offset(0, 20 * (1 - value)),
-                                    child: Opacity(
-                                      opacity: value,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: _buildAssetCard(asset, index),
-                              );
-                            },
-                          ),
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount:
+                  assetsDetailsProvider.assetsDetails.length,
+                  itemBuilder: (context, index) {
+                    final asset =
+                    assetsDetailsProvider.assetsDetails[index];
+                    return _buildAssetCard(asset);
+                  },
+                ),
               ),
             ],
           ),
@@ -164,39 +129,34 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.1),
-                  secondaryColor.withOpacity(0.1),
-                ],
-              ),
+              color: const Color(0xFFE8EEFF),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.devices_other_rounded,
               size: 48,
-              color: primaryColor,
+              color: Color(0xFF7C3AED),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const Text(
-            "No Assets Found",
+            "No Assets",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: Color(0xFF475569),
+              color: Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             "Asset information will appear here",
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontFamily: AppFonts.poppins,
-              color: Colors.grey[500],
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -204,215 +164,142 @@ class _AssetsDetailsScreenState extends State<AssetsDetailsScreen>
     );
   }
 
-  Widget _buildAssetCard(Map<String, dynamic> asset, int index) {
+  Widget _buildAssetCard(Map<String, dynamic> asset) {
     final date = asset["date"] ?? "N/A";
     final laptop = _getAssetValue(asset, "Laptop");
     final simNumber = _getAssetValue(asset, "Sim Number");
     final tablet = _getAssetValue(asset, "Tablet");
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
       ),
-      child: Column(
-        children: [
-          // Card Header
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.inventory_2_rounded,
-                    color: Colors.white,
-                    size: 22,
+                const Text(
+                  "Assigned Assets",
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Assigned Assets",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "Issued on: $date",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.85),
-                        ),
-                      ),
-                    ],
+                const Spacer(),
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: Colors.grey[500],
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  date,
+                  style: TextStyle(
+                    fontFamily: AppFonts.poppins,
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 16),
 
-          // Card Content - Asset Grid
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildAssetItem(
-                        Icons.laptop_mac_rounded,
-                        "Laptop",
-                        laptop,
-                        const Color(0xFF3B82F6),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildAssetItem(
-                        Icons.sim_card_rounded,
-                        "SIM Number",
-                        simNumber,
-                        const Color(0xFF10B981),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildAssetItem(
-                        Icons.tablet_mac_rounded,
-                        "Tablet",
-                        tablet,
-                        const Color(0xFFF59E0B),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildAssetItem(
-                        Icons.calendar_today_rounded,
-                        "Issue Date",
-                        date,
-                        primaryColor,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            // Assets Grid
+            _buildAssetItem(
+              Icons.laptop_mac,
+              "Laptop",
+              laptop,
+              const Color(0xFF3B82F6),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            _buildAssetItem(
+              Icons.sim_card,
+              "SIM Number",
+              simNumber,
+              const Color(0xFF10B981),
+            ),
+            const SizedBox(height: 12),
+            _buildAssetItem(
+              Icons.tablet_mac,
+              "Tablet",
+              tablet,
+              const Color(0xFFF59E0B),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAssetItem(
-    IconData icon,
-    String label,
-    String value,
-    Color color,
-  ) {
+      IconData icon,
+      String label,
+      String value,
+      Color color,
+      ) {
     final bool hasValue = value != "Not Found" && value != "N/A";
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: color.withOpacity(0.2),
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: 20,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 18,
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontSize: 11,
+                  color: Colors.grey[600],
                 ),
               ),
-              const Spacer(),
-              if (hasValue)
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.4),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: hasValue ? const Color(0xFF1A1A1A) : Colors.grey[400],
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: AppFonts.poppins,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[500],
+        ),
+        if (hasValue)
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981),
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: AppFonts.poppins,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: hasValue ? const Color(0xFF1E293B) : Colors.grey[400],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+      ],
     );
   }
 

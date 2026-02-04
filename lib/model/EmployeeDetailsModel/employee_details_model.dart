@@ -39,6 +39,7 @@ class EmployeeDetailsData {
   final DocumentsInfo? documents;
   final LettersInfo? letters;
   final CircularsInfo? circulars;
+  final PayslipsInfo? payslips;
 
   EmployeeDetailsData({
     this.basicInfo,
@@ -51,6 +52,7 @@ class EmployeeDetailsData {
     this.documents,
     this.letters,
     this.circulars,
+    this.payslips,
   });
 
   factory EmployeeDetailsData.fromJson(Map<String, dynamic> json) {
@@ -95,6 +97,10 @@ class EmployeeDetailsData {
           json['circulars'] != null
               ? CircularsInfo.fromJson(json['circulars'])
               : null,
+      payslips:
+          json['payslips'] != null
+              ? PayslipsInfo.fromJson(json['payslips'])
+              : null,
     );
   }
 
@@ -110,6 +116,186 @@ class EmployeeDetailsData {
       'documents': documents?.toJson(),
       'letters': letters?.toJson(),
       'circulars': circulars?.toJson(),
+      'payslips': payslips?.toJson(),
+    };
+  }
+}
+
+class PayslipsInfo {
+  final int? totalPayslips;
+  final List<PayslipItem>? payslipList;
+
+  PayslipsInfo({this.totalPayslips, this.payslipList});
+
+  factory PayslipsInfo.fromJson(Map<String, dynamic> json) {
+    return PayslipsInfo(
+      totalPayslips:
+          json['total_payslips'] is int
+              ? json['total_payslips']
+              : int.tryParse(json['total_payslips']?.toString() ?? '0'),
+      payslipList:
+          json['payslip_list'] != null
+              ? (json['payslip_list'] as List)
+                  .map((item) => PayslipItem.fromJson(item))
+                  .toList()
+              : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'total_payslips': totalPayslips,
+      'payslip_list': payslipList?.map((item) => item.toJson()).toList(),
+    };
+  }
+}
+
+class PayslipItem {
+  final String? payslipId;
+  final String? salaryMonth;
+  final String? createdDate;
+  final String? grossSalary;
+  final String? basic;
+  final String? hra;
+  final String? incentiveBonus;
+  final String? claim;
+  final String? allowance;
+  final String? allowanceComments;
+  final String? pf;
+  final String? pt;
+  final String? esi;
+  final String? securityDeposit;
+  final String? lop;
+  final String? loanAdvance;
+  final String? training;
+  final String? others;
+  final String? othersComments;
+  final String? tds;
+  final String? totalAllowances;
+  final String? totalDeductions;
+  final String? netSalary;
+  final String? totalDays;
+  final String? lopDays;
+  final int? leaveDays;
+  final String? workedDays;
+  final String? employeeCategoryType;
+  final String? status;
+  final String? statusComments;
+  final String? isManualLop;
+  final String? isNeftReady;
+  final String? payslipPdfUrl;
+
+  PayslipItem({
+    this.payslipId,
+    this.salaryMonth,
+    this.createdDate,
+    this.grossSalary,
+    this.basic,
+    this.hra,
+    this.incentiveBonus,
+    this.claim,
+    this.allowance,
+    this.allowanceComments,
+    this.pf,
+    this.pt,
+    this.esi,
+    this.securityDeposit,
+    this.lop,
+    this.loanAdvance,
+    this.training,
+    this.others,
+    this.othersComments,
+    this.tds,
+    this.totalAllowances,
+    this.totalDeductions,
+    this.netSalary,
+    this.totalDays,
+    this.lopDays,
+    this.leaveDays,
+    this.workedDays,
+    this.employeeCategoryType,
+    this.status,
+    this.statusComments,
+    this.isManualLop,
+    this.isNeftReady,
+    this.payslipPdfUrl,
+  });
+
+  factory PayslipItem.fromJson(Map<String, dynamic> json) {
+    return PayslipItem(
+      payslipId: json['payslip_id']?.toString(),
+      salaryMonth: json['salary_month']?.toString(),
+      createdDate: json['created_date']?.toString(),
+      grossSalary: json['gross_salary']?.toString(),
+      basic: json['basic']?.toString(),
+      hra: json['hra']?.toString(),
+      incentiveBonus: json['incentive_bonus']?.toString(),
+      claim: json['claim']?.toString(),
+      allowance: json['allowance']?.toString(),
+      allowanceComments: json['allowance_comments']?.toString(),
+      pf: json['pf']?.toString(),
+      pt: json['pt']?.toString(),
+      esi: json['esi']?.toString(),
+      securityDeposit: json['security_deposit']?.toString(),
+      lop: json['lop']?.toString(),
+      loanAdvance: json['loan_advance']?.toString(),
+      training: json['training']?.toString(),
+      others: json['others']?.toString(),
+      othersComments: json['others_comments']?.toString(),
+      tds: json['tds']?.toString(),
+      totalAllowances: json['total_allowances']?.toString(),
+      totalDeductions: json['total_deductions']?.toString(),
+      netSalary: json['net_salary']?.toString(),
+      totalDays: json['total_days']?.toString(),
+      lopDays: json['lop_days']?.toString(),
+      leaveDays: json['leave_days'] is int
+          ? json['leave_days']
+          : int.tryParse(json['leave_days']?.toString() ?? '0'),
+      workedDays: json['worked_days']?.toString(),
+      employeeCategoryType: json['employee_category_type']?.toString(),
+      status: json['status']?.toString(),
+      statusComments: json['status_comments']?.toString(),
+      isManualLop: json['is_manual_lop']?.toString(),
+      isNeftReady: json['is_neft_ready']?.toString(),
+      payslipPdfUrl: json['payslip_pdf_url']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'payslip_id': payslipId,
+      'salary_month': salaryMonth,
+      'created_date': createdDate,
+      'gross_salary': grossSalary,
+      'basic': basic,
+      'hra': hra,
+      'incentive_bonus': incentiveBonus,
+      'claim': claim,
+      'allowance': allowance,
+      'allowance_comments': allowanceComments,
+      'pf': pf,
+      'pt': pt,
+      'esi': esi,
+      'security_deposit': securityDeposit,
+      'lop': lop,
+      'loan_advance': loanAdvance,
+      'training': training,
+      'others': others,
+      'others_comments': othersComments,
+      'tds': tds,
+      'total_allowances': totalAllowances,
+      'total_deductions': totalDeductions,
+      'net_salary': netSalary,
+      'total_days': totalDays,
+      'lop_days': lopDays,
+      'leave_days': leaveDays,
+      'worked_days': workedDays,
+      'employee_category_type': employeeCategoryType,
+      'status': status,
+      'status_comments': statusComments,
+      'is_manual_lop': isManualLop,
+      'is_neft_ready': isNeftReady,
+      'payslip_pdf_url': payslipPdfUrl,
     };
   }
 }
@@ -271,7 +457,7 @@ class SalaryDetails {
   final String? monthlyCtc;
   final String? basic;
   final String? hra;
-  final int? pf;
+  final String? pf; // Changed to String to handle "101525703211"
   final String? esi;
   final String? monthlyTakeHome;
   final String? monthlyTds;
@@ -293,10 +479,7 @@ class SalaryDetails {
       monthlyCtc: json['monthly_ctc']?.toString(),
       basic: json['basic']?.toString(),
       hra: json['hra']?.toString(),
-      pf:
-          json['pf'] is int
-              ? json['pf']
-              : int.tryParse(json['pf']?.toString() ?? '0'),
+      pf: json['pf']?.toString(), // Keep as string to preserve full PF number
       esi: json['esi']?.toString(),
       monthlyTakeHome: json['monthly_take_home']?.toString(),
       monthlyTds: json['monthly_tds']?.toString(),

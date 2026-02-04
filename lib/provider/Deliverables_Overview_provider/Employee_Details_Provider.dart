@@ -21,6 +21,7 @@ class EmployeeDetailsProvider extends ChangeNotifier {
   DocumentsInfo? get documents => _employeeDetailsModel?.data?.documents;
   LettersInfo? get letters => _employeeDetailsModel?.data?.letters;
   CircularsInfo? get circulars => _employeeDetailsModel?.data?.circulars;
+  PayslipsInfo? get payslips => _employeeDetailsModel?.data?.payslips;
 
   /// ✅ Fetch employee details by userId/empId using API
   /// Note: API expects user_id, but we accept empId which might be userId or employmentId

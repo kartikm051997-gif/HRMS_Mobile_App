@@ -1,31 +1,93 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../servicesAPI/EmployeeDetailsService/employee_details_service.dart';
+import '../../../model/EmployeeDetailsModel/employee_details_model.dart';
+
+class PfDetail {
+  final String date;
+  final String pfMonth;
+  final String pfAmount;
+
+  PfDetail({
+    required this.date,
+    required this.pfMonth,
+    required this.pfAmount,
+  });
+}
 
 class PfProvider extends ChangeNotifier {
   bool isLoading = false;
-  List<Map<String, String>> pfDetails = [];
+  List<PfDetail> pfDetails = [];
 
-  /// Fetch bank details (Dummy API for now)
-  Future<void> fetchPfDetails(String empId) async {
+  /// Fetch PF amounts from payslips
+  Future<void> fetchPfDetails(String userId) async {
     isLoading = true;
     notifyListeners();
 
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(milliseconds: 800));
+      if (kDebugMode) {
+        print("🔄 PfProvider: Fetching PF details from payslips for user_id: $userId");
+      }
 
-      // Dummy data — replace with API response later
-      pfDetails = [
-        {
-          "Date": "11-02-2025",
-          "PF Month	": "January 2025",
-          "PF Amount": "0.00",
-        },
-      ];
+      final service = EmployeeDetailsService();
+      final response = await service.getEmployeeDetails(userId);
+
+      pfDetails = [];
+
+      if (response.data?.payslips != null && response.data!.payslips!.payslipList != null) {
+        final payslipList = response.data!.payslips!.payslipList!;
+        
+        for (var payslip in payslipList) {
+          if (payslip.pf != null && payslip.pf!.isNotEmpty && payslip.pf != "0.00") {
+            // Format month (e.g., "2025-01" -> "January 2025")
+            String formattedMonth = _formatMonth(payslip.salaryMonth ?? '');
+            String date = payslip.createdDate ?? '';
+            
+            pfDetails.add(PfDetail(
+              date: date,
+              pfMonth: formattedMonth,
+              pfAmount: payslip.pf!,
+            ));
+          }
+        }
+        
+        // Sort by date descending (newest first)
+        pfDetails.sort((a, b) => b.date.compareTo(a.date));
+        
+        if (kDebugMode) {
+          print("✅ PfProvider: Fetched ${pfDetails.length} PF records");
+        }
+      } else {
+        if (kDebugMode) {
+          print("⚠️ PfProvider: No payslips found");
+        }
+      }
     } catch (e) {
-      debugPrint("Error fetching bank details: $e");
+      debugPrint("❌ Error fetching PF details: $e");
+      pfDetails = [];
     } finally {
       isLoading = false;
       notifyListeners();
     }
+  }
+
+  String _formatMonth(String? salaryMonth) {
+    if (salaryMonth == null || salaryMonth.isEmpty) return 'N/A';
+    
+    try {
+      final parts = salaryMonth.split('-');
+      if (parts.length == 2) {
+        final year = parts[0];
+        final monthNum = int.tryParse(parts[1]) ?? 1;
+        final monthNames = [
+          '', 'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        return '${monthNames[monthNum]} $year';
+      }
+    } catch (e) {
+      // Keep original format if parsing fails
+    }
+    return salaryMonth;
   }
 }

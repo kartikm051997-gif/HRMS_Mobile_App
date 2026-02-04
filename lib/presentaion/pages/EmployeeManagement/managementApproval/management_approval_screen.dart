@@ -249,7 +249,6 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
           children: [
             Divider(color: AppColor.borderColor.withOpacity(0.5), height: 1),
             const SizedBox(height: 12),
-
             // Zone
             MultiSelectDropdown(
               label: "Zone *",
@@ -258,7 +257,6 @@ class _ManagementApprovalScreenState extends State<ManagementApprovalScreen>
               onChanged: provider.setSelectedZones,
             ),
             const SizedBox(height: 12),
-
             // Branch
             MultiSelectDropdown(
               label: "Branch *",

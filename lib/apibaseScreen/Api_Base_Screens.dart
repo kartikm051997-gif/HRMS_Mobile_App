@@ -1,4 +1,4 @@
-class ApiBase {
+  class ApiBase {
   static const String baseUrl = "https://app.draravindsivf.com/hrms/";
 
   // Auth & HRMS

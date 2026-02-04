@@ -58,7 +58,7 @@ class _PfScreenState extends State<PfScreen>
     final pfDetailsProvider = context.watch<PfProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Padding(
@@ -67,33 +67,14 @@ class _PfScreenState extends State<PfScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.savings_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Text(
-                    "PF Details",
-                    style: TextStyle(
-                      fontFamily: AppFonts.poppins,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                ],
+              const Text(
+                "PF Details",
+                style: TextStyle(
+                  fontFamily: AppFonts.poppins,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  color: Color(0xFF1E293B),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -103,29 +84,7 @@ class _PfScreenState extends State<PfScreen>
                     ? const CustomCardShimmer(itemCount: 1)
                     : pfDetailsProvider.pfDetails.isEmpty
                         ? _buildEmptyState()
-                        : ListView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: pfDetailsProvider.pfDetails.length,
-                            itemBuilder: (context, index) {
-                              final pf = pfDetailsProvider.pfDetails[index];
-                              return TweenAnimationBuilder<double>(
-                                tween: Tween(begin: 0.0, end: 1.0),
-                                duration:
-                                    Duration(milliseconds: 400 + (index * 100)),
-                                curve: Curves.easeOutCubic,
-                                builder: (context, value, child) {
-                                  return Transform.translate(
-                                    offset: Offset(0, 20 * (1 - value)),
-                                    child: Opacity(
-                                      opacity: value,
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: _buildPfCard(pf, index),
-                              );
-                            },
-                          ),
+                        : _buildPfTable(pfDetailsProvider),
               ),
             ],
           ),
@@ -180,127 +139,62 @@ class _PfScreenState extends State<PfScreen>
     );
   }
 
-  Widget _buildPfCard(Map<String, dynamic> pf, int index) {
-    final date = pf["date"] ?? "N/A";
-    final pfMonth = pf["pF Month\t"] ?? pf["pF Month"] ?? "N/A";
-    final pfAmount = pf["pF Amount"] ?? "0.00";
-
+  Widget _buildPfTable(PfProvider provider) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: Column(
         children: [
-          // Card Header
+          // Table Header
           Container(
-            padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
               ),
             ),
-            child: Row(
+            child: Table(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.shield_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Provident Fund",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        pfMonth,
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    "₹ $pfAmount",
-                    style: const TextStyle(
-                      fontFamily: AppFonts.poppins,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: primaryColor,
-                    ),
-                  ),
+                TableRow(
+                  children: [
+                    _buildHeaderCell('Date'),
+                    _buildHeaderCell('PF Month'),
+                    _buildHeaderCell('PF Amount'),
+                  ],
                 ),
               ],
             ),
           ),
-
-          // Card Content
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                _buildDetailRow(
-                  Icons.calendar_today_rounded,
-                  "Date",
-                  date,
-                  const Color(0xFF3B82F6),
-                ),
-                const SizedBox(height: 14),
-                _buildDetailRow(
-                  Icons.date_range_rounded,
-                  "PF Month",
-                  pfMonth,
-                  const Color(0xFF10B981),
-                ),
-                const SizedBox(height: 14),
-                _buildDetailRow(
-                  Icons.currency_rupee_rounded,
-                  "PF Amount",
-                  "₹ $pfAmount",
-                  primaryColor,
-                ),
-              ],
+          // Table Body
+          Expanded(
+            child: ListView.builder(
+              itemCount: provider.pfDetails.length,
+              itemBuilder: (context, index) {
+                final pf = provider.pfDetails[index];
+                return Container(
+                  decoration: BoxDecoration(
+                    color: index % 2 == 0 ? Colors.white : Colors.grey[50],
+                    border: Border(
+                      bottom: BorderSide(color: Colors.grey[300]!),
+                    ),
+                  ),
+                  child: Table(
+                    children: [
+                      TableRow(
+                        children: [
+                          _buildDataCell(pf.date, TextAlign.left),
+                          _buildDataCell(pf.pfMonth, TextAlign.left),
+                          _buildDataCell(_formatAmount(pf.pfAmount), TextAlign.right),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -308,54 +202,42 @@ class _PfScreenState extends State<PfScreen>
     );
   }
 
-  Widget _buildDetailRow(
-    IconData icon,
-    String label,
-    String value,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+  Widget _buildHeaderCell(String text) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontFamily: AppFonts.poppins,
+          fontSize: 13,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF1E293B),
         ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: AppFonts.poppins,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[500],
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontFamily: AppFonts.poppins,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
+  }
+
+  Widget _buildDataCell(String text, TextAlign align) {
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Text(
+        text,
+        textAlign: align,
+        style: const TextStyle(
+          fontFamily: AppFonts.poppins,
+          fontSize: 12,
+          color: Color(0xFF475569),
+        ),
+      ),
+    );
+  }
+
+  String _formatAmount(String amount) {
+    try {
+      final num = double.tryParse(amount.replaceAll(',', '')) ?? 0.0;
+      return num.toStringAsFixed(2);
+    } catch (e) {
+      return amount;
+    }
   }
 }

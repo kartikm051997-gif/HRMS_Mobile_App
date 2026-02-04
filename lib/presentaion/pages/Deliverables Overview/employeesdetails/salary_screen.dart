@@ -25,10 +25,6 @@ class _SalaryScreenState extends State<SalaryScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF7C3AED);
-  static const Color secondaryColor = Color(0xFFEC4899);
-
   @override
   void initState() {
     super.initState();
@@ -57,7 +53,7 @@ class _SalaryScreenState extends State<SalaryScreen>
     final salaryDetailsProvider = context.watch<SalaryDetailsProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Padding(
@@ -65,66 +61,59 @@ class _SalaryScreenState extends State<SalaryScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
+              // Simple Header
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.payments_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
                   const Text(
-                    "Salary Details",
+                    "Salary",
                     style: TextStyle(
                       fontFamily: AppFonts.poppins,
                       fontWeight: FontWeight.w600,
                       fontSize: 20,
-                      color: Color(0xFF1E293B),
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
+                  const Spacer(),
+                  if (!salaryDetailsProvider.isLoading &&
+                      salaryDetailsProvider.salaryDetails.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7C3AED),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "${salaryDetailsProvider.salaryDetails.length}",
+                        style: const TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Content
               Expanded(
-                child:
-                    salaryDetailsProvider.isLoading
-                        ? const CustomCardShimmer(itemCount: 1)
-                        : salaryDetailsProvider.salaryDetails.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: salaryDetailsProvider.salaryDetails.length,
-                          itemBuilder: (context, index) {
-                            final salary =
-                                salaryDetailsProvider.salaryDetails[index];
-                            return TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: Duration(
-                                milliseconds: 400 + (index * 100),
-                              ),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, value, child) {
-                                return Transform.translate(
-                                  offset: Offset(0, 20 * (1 - value)),
-                                  child: Opacity(opacity: value, child: child),
-                                );
-                              },
-                              child: _buildSalaryCard(salary, index),
-                            );
-                          },
-                        ),
+                child: salaryDetailsProvider.isLoading
+                    ? const CustomCardShimmer(itemCount: 1)
+                    : salaryDetailsProvider.salaryDetails.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: salaryDetailsProvider.salaryDetails.length,
+                  itemBuilder: (context, index) {
+                    final salary =
+                    salaryDetailsProvider.salaryDetails[index];
+                    return _buildSalaryCard(salary);
+                  },
+                ),
               ),
             ],
           ),
@@ -139,39 +128,34 @@ class _SalaryScreenState extends State<SalaryScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.1),
-                  secondaryColor.withOpacity(0.1),
-                ],
-              ),
+              color: const Color(0xFFE8EEFF),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.payments_outlined,
               size: 48,
-              color: primaryColor,
+              color: Color(0xFF7C3AED),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const Text(
-            "No Salary Details Found",
+            "No Salary Details",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: Color(0xFF475569),
+              color: Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             "Salary information will appear here",
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontFamily: AppFonts.poppins,
-              color: Colors.grey[500],
+              color: Colors.grey[600],
             ),
           ),
         ],
@@ -179,72 +163,57 @@ class _SalaryScreenState extends State<SalaryScreen>
     );
   }
 
-  Widget _buildSalaryCard(Map<String, dynamic> salary, int index) {
+  Widget _buildSalaryCard(Map<String, dynamic> salary) {
     final annualCTC = salary["annual CTC"] ?? "0";
     final monthlySalary = salary["monthly salary"] ?? "0";
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
       ),
-      child: Column(
-        children: [
-          // Card Header
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-              ),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Annual CTC
+            Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFFE8EEFF),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
-                    Icons.account_balance_wallet_rounded,
-                    color: Colors.white,
-                    size: 22,
+                    Icons.calendar_today,
+                    color: Color(0xFF7C3AED),
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 14),
-                const Expanded(
+                const SizedBox(width: 12),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Salary Information",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        "Current Package",
+                        "Annual CTC",
                         style: TextStyle(
                           fontFamily: AppFonts.poppins,
                           fontSize: 12,
-                          color: Colors.white70,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "₹ $annualCTC",
+                        style: const TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
                         ),
                       ),
                     ],
@@ -252,87 +221,52 @@ class _SalaryScreenState extends State<SalaryScreen>
                 ),
               ],
             ),
-          ),
-
-          // Salary Summary Cards
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+            const Divider(height: 24),
+            // Monthly Salary
+            Row(
               children: [
-                // Annual CTC Card
-                _buildSalaryInfoCard(
-                  "Annual CTC",
-                  "₹ $annualCTC",
-                  Icons.calendar_today_rounded,
-                  const Color(0xFF10B981),
-                ),
-                const SizedBox(height: 12),
-                // Monthly Salary Card
-                _buildSalaryInfoCard(
-                  "Monthly Salary",
-                  "₹ $monthlySalary",
-                  Icons.today_rounded,
-                  primaryColor,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSalaryInfoCard(
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8EEFF),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.today,
+                    color: Color(0xFF7C3AED),
+                    size: 20,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: color,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Monthly Salary",
+                        style: TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "₹ $monthlySalary",
+                        style: const TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
