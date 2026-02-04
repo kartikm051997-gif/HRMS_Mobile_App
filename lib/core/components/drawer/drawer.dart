@@ -1,19 +1,16 @@
 import 'package:flutter/foundation.dart';
-import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../provider/login_provider/login_provider.dart';
-import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart';
 import '../../../servicesAPI/LogOutApiService/LogOutApiService.dart'
     as LogOutApiService;
 import '../../../servicesAPI/LogInService/LogIn_Service.dart';
 import '../../constants/appimages.dart';
 import '../../routes/routes.dart';
 import '../../../controller/ui_controller/appbar_controllers.dart';
-import '../../../presentaion/pages/Deliverables Overview/employeesdetails/employee_detailsTabs_screen.dart';
 import '../../../presentaion/pages/authenticationScreens/loginScreens/login_screen.dart';
 import '../../../presentaion/pages/MyDetailsScreens/admin_my_details_menu_screen.dart';
 import '../../../presentaion/pages/MyDetailsScreens/normal_user_my_details_menu_screen.dart';
@@ -505,7 +502,8 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
 
     return Obx(() {
       // Check if EmployeeDetailsScreen is selected (using a custom route check)
-      bool isSelected = appBarController.selectedPage.value == '/employeeDetails';
+      bool isSelected =
+          appBarController.selectedPage.value == '/employeeDetails';
 
       return TweenAnimationBuilder<double>(
         tween: Tween(begin: 0.0, end: 1.0),
@@ -525,10 +523,13 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
               onTap: () {
                 Navigator.of(context).pop();
                 // Navigate to appropriate menu screen based on user role
-                final loginProvider = Provider.of<LoginProvider>(context, listen: false);
+                final loginProvider = Provider.of<LoginProvider>(
+                  context,
+                  listen: false,
+                );
                 final String roleId = loginProvider.userRole?.trim() ?? "";
                 final bool isAdmin = roleId == "1";
-                
+
                 // Debug logging
                 if (kDebugMode) {
                   print("🔍 Drawer - My Details clicked");
@@ -539,42 +540,49 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   print("   User ID: ${user?.userId}");
                   print("   Full user data: ${user?.toJson()}");
                 }
-                
+
                 final empId = user?.userId ?? "";
-                final empPhoto = (user?.avatar != null && user!.avatar!.isNotEmpty)
-                    ? "https://app.draravindsivf.com/hrms/${user.avatar}"
-                    : "";
+                final empPhoto =
+                    (user?.avatar != null && user!.avatar!.isNotEmpty)
+                        ? "https://app.draravindsivf.com/hrms/${user.avatar}"
+                        : "";
                 final empName = user?.fullname ?? "N/A";
-                final empDesignation = "N/A"; // User model doesn't have designation
+                final empDesignation =
+                    "N/A"; // User model doesn't have designation
                 final empBranch = user?.locationName ?? "N/A";
 
                 // Use separate screens for admin vs normal user
                 if (isAdmin) {
-                  if (kDebugMode) print("   → Navigating to AdminMyDetailsMenuScreen");
+                  if (kDebugMode)
+                    print("   → Navigating to AdminMyDetailsMenuScreen");
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => AdminMyDetailsMenuScreen(
-                        empId: empId,
-                        empPhoto: empPhoto,
-                        empName: empName,
-                        empDesignation: empDesignation,
-                        empBranch: empBranch,
-                      ),
+                      builder:
+                          (_) => AdminMyDetailsMenuScreen(
+                            empId: empId,
+                            empPhoto: empPhoto,
+                            empName: empName,
+                            empDesignation: empDesignation,
+                            empBranch: empBranch,
+                          ),
                     ),
                   );
                 } else {
-                  if (kDebugMode) print("   → Navigating to NormalUserMyDetailsMenuScreen");
+                  if (kDebugMode) {
+                    print("   → Navigating to NormalUserMyDetailsMenuScreen");
+                  }
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => NormalUserMyDetailsMenuScreen(
-                        empId: empId,
-                        empPhoto: empPhoto,
-                        empName: empName,
-                        empDesignation: empDesignation,
-                        empBranch: empBranch,
-                      ),
+                      builder:
+                          (_) => NormalUserMyDetailsMenuScreen(
+                            empId: empId,
+                            empPhoto: empPhoto,
+                            empName: empName,
+                            empDesignation: empDesignation,
+                            empBranch: empBranch,
+                          ),
                     ),
                   );
                 }
@@ -1362,27 +1370,28 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
               ElevatedButton(
                 onPressed: () async {
                   if (kDebugMode) print("🚪 Logout button pressed");
-                  
+
                   // Close dialog first
                   Navigator.pop(context);
                   if (kDebugMode) print("✅ Dialog closed");
-                  
+
                   // Close drawer if still open
                   if (Navigator.canPop(context)) {
                     Navigator.pop(context);
                     if (kDebugMode) print("✅ Drawer closed");
                   }
-                  
+
                   // Small delay to ensure UI is fully closed
                   await Future.delayed(const Duration(milliseconds: 300));
-                  
+
                   // Call logout API if token exists
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     final token = prefs.getString('authToken');
                     if (token != null && token.isNotEmpty) {
                       try {
-                        final response = await LogOutApiService.ApiService.logoutUser(token);
+                        final response = await LogOutApiService
+                            .ApiService.logoutUser(token);
                         if (kDebugMode) {
                           print("✅ Logout API called successfully");
                           print("📋 Response status: ${response.status}");
@@ -1398,7 +1407,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   } catch (e) {
                     if (kDebugMode) print("⚠️ Error calling logout API: $e");
                   }
-                  
+
                   // Step 1: Clear session data
                   try {
                     final loginService = LoginService();
@@ -1407,39 +1416,41 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   } catch (e) {
                     if (kDebugMode) print("❌ Error clearing session: $e");
                   }
-                  
+
                   // Step 2: Navigate to login screen IMMEDIATELY
                   // Use Navigator with rootNavigator to bypass drawer context
                   try {
                     if (kDebugMode) print("🔄 Navigating to login screen...");
-                    
+
                     // Close drawer first if it's open
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
                       await Future.delayed(const Duration(milliseconds: 100));
                     }
-                    
+
                     // Navigate using rootNavigator
-                    Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (_) => const LoginScreen(),
-                      ),
+                    Navigator.of(
+                      context,
+                      rootNavigator: true,
+                    ).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
                       (route) => false, // Remove all routes
                     );
-                    
+
                     if (kDebugMode) print("✅ Navigation completed");
                   } catch (e) {
                     if (kDebugMode) print("❌ Navigation error: $e");
-                    
+
                     // Fallback: Try GetX navigation
                     try {
                       Get.offAllNamed(AppRoutes.loginScreen);
                       if (kDebugMode) print("✅ Fallback navigation via GetX");
                     } catch (e2) {
-                      if (kDebugMode) print("❌ GetX navigation also failed: $e2");
+                      if (kDebugMode)
+                        print("❌ GetX navigation also failed: $e2");
                     }
                   }
-                  
+
                   // Step 3: Clear provider state (this won't navigate since we already did)
                   // But we'll skip calling logout() to avoid double navigation
                   // The session is already cleared, so login screen will detect no session

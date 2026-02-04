@@ -72,13 +72,13 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     // ✅ Ensure non-admin users start on NormalUserMyDetailsMenuScreen (index 0)
     final String roleId = loginProvider.userRole?.trim() ?? "";
     final bool isAdmin = roleId == "1";
-    
+
     if (kDebugMode) {
       print("🔍 BottomNavScreen didChangeDependencies");
       print("   Role ID: '$roleId'");
       print("   Is Admin: $isAdmin");
     }
-    
+
     // Non-admin users have no bottom nav items, so keep index at 0
     if (!isAdmin && _selectedIndex != 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,7 +107,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     final user = loginProvider.loginData?.user;
     final String roleId = loginProvider.userRole?.trim() ?? "";
     final bool isAdmin = roleId == "1";
-    
+
     // Debug logging
     if (kDebugMode) {
       print("🔍 BottomNavScreen build");
@@ -121,16 +121,17 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
     // ✅ Screens list - order matches bottom nav indices
     // For admin (role == "1"): [Home, Employees, Profile]
     // For non-admin: [NormalUserMyDetailsMenuScreen] (shows current user's menu)
-    final List<Widget> screens = isAdmin
-        ? const [
-            PaGarBookAdminScreen(),
-            EmployeeManagementTabviewScreen(),
-            UserProfileScreen(),
-          ]
-        : [
-            // Normal user: Show NormalUserMyDetailsMenuScreen with current user's details
-            _buildEmployeeDetailsScreenForCurrentUser(user),
-          ];
+    final List<Widget> screens =
+        isAdmin
+            ? const [
+              PaGarBookAdminScreen(),
+              EmployeeManagementTabviewScreen(),
+              UserProfileScreen(),
+            ]
+            : [
+              // Normal user: Show NormalUserMyDetailsMenuScreen with current user's details
+              _buildEmployeeDetailsScreenForCurrentUser(user),
+            ];
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -139,53 +140,55 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
           return Scaffold(
             key: _scaffoldKey, // ✅ Add scaffold key
             // ✅ Add Drawer
-            drawer: _buildDrawer(context, user),
-
             body: screens[_selectedIndex.clamp(0, screens.length - 1)],
 
             // ---------------- FAB ----------------- (only for admin)
-            floatingActionButton: isAdmin
-                ? Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFE91E63), Color(0xFFFF4081)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFE91E63).withOpacity(0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(rootContext).showSnackBar(
-                      const SnackBar(
-                        content: Text('Add button pressed'),
-                        duration: Duration(seconds: 1),
+            floatingActionButton:
+                isAdmin
+                    ? Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE91E63), Color(0xFFFF4081)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE91E63).withOpacity(0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(30),
-                  child: const Icon(Icons.add, color: Colors.white, size: 32),
-                ),
-              ),
-                )
-                : null,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(rootContext).showSnackBar(
+                              const SnackBar(
+                                content: Text('Add button pressed'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(30),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                    )
+                    : null,
 
-            floatingActionButtonLocation: isAdmin
-                ? FloatingActionButtonLocation.centerDocked
-                : null,
+            floatingActionButtonLocation:
+                isAdmin ? FloatingActionButtonLocation.centerDocked : null,
 
             // ---------------- Bottom Navigation -----------------
             bottomNavigationBar: Container(
@@ -206,34 +209,38 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 shape: const CircularNotchedRectangle(),
                 child: SizedBox(
                   height: 65,
-                  child: isAdmin
-                      ? Row(
-                          children: [
-                            Expanded(
-                              child: _buildNavItem(
-                                icon: Icons.home_rounded,
-                                label: 'Home',
-                                index: 0,
+                  child:
+                      isAdmin
+                          ? Row(
+                            children: [
+                              Expanded(
+                                child: _buildNavItem(
+                                  icon: Icons.home_rounded,
+                                  label: 'Home',
+                                  index: 0,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 40), // Space for FAB
-                            Expanded(
-                              child: _buildNavItem(
-                                icon: Icons.people_rounded,
-                                label: 'Employees',
-                                index: 1,
+                              const SizedBox(width: 40), // Space for FAB
+                              Expanded(
+                                child: _buildNavItem(
+                                  icon: Icons.people_rounded,
+                                  label: 'Employees',
+                                  index: 1,
+                                ),
                               ),
-                            ),
-                            Expanded(
-                              child: _buildProfileNavItem(user: user, index: 2),
-                            ),
-                          ],
-                        )
-                      : Row(
-                          // Non-admin: No bottom nav items (can access via drawer)
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [],
-                        ),
+                              Expanded(
+                                child: _buildProfileNavItem(
+                                  user: user,
+                                  index: 2,
+                                ),
+                              ),
+                            ],
+                          )
+                          : Row(
+                            // Non-admin: No bottom nav items (can access via drawer)
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [],
+                          ),
                 ),
               ),
             ),
@@ -244,179 +251,6 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   }
 
   // ✅ Build Drawer Widget
-  Widget _buildDrawer(BuildContext context, dynamic user) {
-    return Drawer(
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Drawer Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.white,
-                      backgroundImage:
-                          (user?.avatar != null && user!.avatar!.isNotEmpty)
-                              ? NetworkImage(
-                                "https://app.draravindsivf.com/hrms/${user.avatar}",
-                              )
-                              : null,
-                      child:
-                          (user?.avatar == null || user!.avatar!.isEmpty)
-                              ? Text(
-                                user?.fullname != null &&
-                                        user!.fullname!.isNotEmpty
-                                    ? user.fullname![0].toUpperCase()
-                                    : "U",
-                                style: const TextStyle(
-                                  color: Color(0xFF8E0E6B),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32,
-                                  fontFamily: AppFonts.poppins,
-                                ),
-                              )
-                              : null,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      user?.fullname ?? "User",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user?.email ?? "",
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
-                        fontFamily: AppFonts.poppins,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: Colors.white24, thickness: 1),
-
-              // Drawer Menu Items
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    _buildDrawerItem(
-                      icon: Icons.home_rounded,
-                      title: 'Home',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() => _selectedIndex = 0);
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.people_rounded,
-                      title: 'Employees',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() => _selectedIndex = 1);
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.person_rounded,
-                      title: 'Profile',
-                      onTap: () {
-                        Navigator.pop(context);
-                        setState(() => _selectedIndex = 2);
-                      },
-                    ),
-                    const Divider(color: Colors.white24, thickness: 1),
-                    _buildDrawerItem(
-                      icon: Icons.settings_rounded,
-                      title: 'Settings',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to settings
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.help_rounded,
-                      title: 'Help & Support',
-                      onTap: () {
-                        Navigator.pop(context);
-                        // Navigate to help
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.logout_rounded,
-                      title: 'Logout',
-                      onTap: () async {
-                        Navigator.pop(context);
-                        // Show logout confirmation
-                        final shouldLogout = await showDialog<bool>(
-                          context: context,
-                          builder:
-                              (context) => AlertDialog(
-                                title: const Text('Logout'),
-                                content: const Text(
-                                  'Are you sure you want to logout?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.pop(context, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.pop(context, true),
-                                    child: const Text('Logout'),
-                                  ),
-                                ],
-                              ),
-                        );
-
-                        if (shouldLogout == true && mounted) {
-                          // Perform logout
-                          await loginProvider.logout();
-                          if (mounted) {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              // App Version
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Version 1.0.0',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                    fontFamily: AppFonts.poppins,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   // ✅ Drawer Item Widget
   Widget _buildDrawerItem({
@@ -581,9 +415,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   // Helper method to build appropriate menu screen for current user
   Widget _buildEmployeeDetailsScreenForCurrentUser(dynamic user) {
     final empId = user?.userId ?? "";
-    final empPhoto = (user?.avatar != null && user!.avatar!.isNotEmpty)
-        ? "https://app.draravindsivf.com/hrms/${user.avatar}"
-        : "";
+    final empPhoto =
+        (user?.avatar != null && user!.avatar!.isNotEmpty)
+            ? "https://app.draravindsivf.com/hrms/${user.avatar}"
+            : "";
     final empName = user?.fullname ?? "N/A";
     final empDesignation = "N/A"; // User model doesn't have designation
     final empBranch = user?.locationName ?? "N/A";

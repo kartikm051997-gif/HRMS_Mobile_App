@@ -27,38 +27,15 @@ class AutomatedPayrollIndividualScreen extends StatefulWidget {
 }
 
 class _AutomatedPayrollIndividualScreenState
-    extends State<AutomatedPayrollIndividualScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
-  // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
-
+    extends State<AutomatedPayrollIndividualScreen> {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AutomatedPayrollProvider>().fetchAutomatedPayroll(
         widget.empId,
       );
-      _animationController.forward();
     });
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
   }
 
   @override
@@ -66,96 +43,39 @@ class _AutomatedPayrollIndividualScreenState
     final payrollProvider = context.watch<AutomatedPayrollProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFF5F5F5),
       drawer: const TabletMobileDrawer(),
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          "Automated Payroll Individual",
+          "Automated Payroll",
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
+            color: Color(0xFF1F2937),
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             fontFamily: AppFonts.poppins,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text(
-                      "Automated Payroll",
-                      style: TextStyle(
-                        fontFamily: AppFonts.poppins,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Content
-              Expanded(
-                child:
-                    payrollProvider.isLoading
-                        ? const CustomCardShimmer(itemCount: 3)
-                        : payrollProvider.payrollRecords.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: payrollProvider.payrollRecords.length,
-                          itemBuilder: (context, index) {
-                            final record =
-                                payrollProvider.payrollRecords[index];
-                            return TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: Duration(
-                                milliseconds: 400 + (index * 100),
-                              ),
-                              curve: Curves.easeOutCubic,
-                              builder: (context, value, child) {
-                                return Transform.translate(
-                                  offset: Offset(0, 20 * (1 - value)),
-                                  child: Opacity(opacity: value, child: child),
-                                );
-                              },
-                              child: _buildPayrollCard(record, index),
-                            );
-                          },
-                        ),
-              ),
-            ],
-          ),
+        iconTheme: const IconThemeData(color: Color(0xFF1F2937)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE5E7EB)),
         ),
       ),
+      body:
+          payrollProvider.isLoading
+              ? const CustomCardShimmer(itemCount: 4)
+              : payrollProvider.payrollRecords.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: payrollProvider.payrollRecords.length,
+                itemBuilder: (context, index) {
+                  final record = payrollProvider.payrollRecords[index];
+                  return _buildPayrollCard(record);
+                },
+              ),
     );
   }
 
@@ -164,36 +84,24 @@ class _AutomatedPayrollIndividualScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.1),
-                  secondaryColor.withOpacity(0.1),
-                ],
-              ),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.account_balance_outlined,
-              size: 48,
-              color: primaryColor,
-            ),
+          Icon(
+            Icons.account_balance_outlined,
+            size: 64,
+            color: Colors.grey[400],
           ),
-          const SizedBox(height: 20),
-          const Text(
+          const SizedBox(height: 16),
+          Text(
             "No Payroll Records Found",
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: Color(0xFF475569),
+              color: Colors.grey[700],
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            "Automated payroll records will appear here",
+            "Your payroll records will appear here",
             style: TextStyle(
               fontSize: 14,
               fontFamily: AppFonts.poppins,
@@ -205,194 +113,160 @@ class _AutomatedPayrollIndividualScreenState
     );
   }
 
-  Widget _buildPayrollCard(Map<String, dynamic> record, int index) {
+  Widget _buildPayrollCard(Map<String, dynamic> record) {
     final status = record["status"] ?? "Pending";
     final statusColor =
-        status == "Processed" ? const Color(0xFF10B981) : primaryColor;
+        status == "Processed"
+            ? const Color(0xFF059669)
+            : const Color(0xFF6B7280);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Header
+          // Header
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [statusColor, statusColor.withOpacity(0.8)],
-              ),
+              color: Colors.grey[50],
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
               ),
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_rounded,
-                    color: Colors.white,
-                    size: 22,
+                Expanded(
+                  child: Text(
+                    record["month"] ?? "N/A",
+                    style: const TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        record["month"] ?? "N/A",
-                        style: const TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          status,
-                          style: const TextStyle(
-                            fontFamily: AppFonts.poppins,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      fontFamily: AppFonts.poppins,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: statusColor,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // Payroll Details
+          // Salary Breakdown
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Salary Breakdown
-                _buildPayrollInfoRow(
+                // Gross Salary
+                _buildSalaryRow(
                   "Gross Salary",
                   "₹ ${record["grossSalary"] ?? "0"}",
-                  Icons.trending_up_rounded,
-                  const Color(0xFF10B981),
+                  Icons.trending_up,
+                  const Color(0xFF059669),
                 ),
                 const SizedBox(height: 12),
-                _buildPayrollInfoRow(
+
+                // Deductions
+                _buildSalaryRow(
                   "Deductions",
                   "₹ ${record["deductions"] ?? "0"}",
-                  Icons.trending_down_rounded,
-                  const Color(0xFFEF4444),
+                  Icons.trending_down,
+                  const Color(0xFFDC2626),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
+                // Divider
+                Divider(height: 1, color: Colors.grey[200]),
+                const SizedBox(height: 16),
+
+                // Net Salary (Highlighted)
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        primaryColor.withOpacity(0.1),
-                        secondaryColor.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: primaryColor.withOpacity(0.3),
-                      width: 2,
-                    ),
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[300]!),
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.account_balance_wallet_rounded,
-                          color: primaryColor,
-                          size: 24,
-                        ),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.account_balance_wallet_outlined,
+                            size: 24,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Net Salary",
+                            style: TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Net Salary",
-                              style: TextStyle(
-                                fontFamily: AppFonts.poppins,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "₹ ${record["netSalary"] ?? "0"}",
-                              style: TextStyle(
-                                fontFamily: AppFonts.poppins,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w700,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        "₹ ${record["netSalary"] ?? "0"}",
+                        style: const TextStyle(
+                          fontFamily: AppFonts.poppins,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1F2937),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+
                 // Payment Details
-                _buildPayrollInfoRow(
+                _buildInfoRow(
                   "Payment Method",
                   record["paymentMethod"] ?? "N/A",
-                  Icons.payment_rounded,
-                  const Color(0xFF3B82F6),
+                  Icons.payment,
                 ),
-                const SizedBox(height: 12),
-                _buildPayrollInfoRow(
+                const SizedBox(height: 8),
+                _buildInfoRow(
                   "Processed Date",
                   record["processedDate"] ?? "N/A",
-                  Icons.calendar_today_rounded,
-                  const Color(0xFFF59E0B),
+                  Icons.calendar_today_outlined,
                 ),
+
                 if (record["transactionId"] != null) ...[
-                  const SizedBox(height: 12),
-                  _buildPayrollInfoRow(
+                  const SizedBox(height: 8),
+                  _buildInfoRow(
                     "Transaction ID",
                     record["transactionId"] ?? "N/A",
-                    Icons.receipt_long_rounded,
-                    const Color(0xFF64748B),
+                    Icons.receipt_long_outlined,
                   ),
                 ],
               ],
@@ -403,58 +277,65 @@ class _AutomatedPayrollIndividualScreenState
     );
   }
 
-  Widget _buildPayrollInfoRow(
+  Widget _buildSalaryRow(
     String label,
-    String value,
+    String amount,
     IconData icon,
     Color color,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontFamily: AppFonts.poppins,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-              ],
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppFonts.poppins,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
             ),
           ),
-        ],
-      ),
+        ),
+        Text(
+          amount,
+          style: TextStyle(
+            fontFamily: AppFonts.poppins,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.grey[600]),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppFonts.poppins,
+              fontSize: 13,
+              color: Colors.grey[600],
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontFamily: AppFonts.poppins,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+      ],
     );
   }
 }

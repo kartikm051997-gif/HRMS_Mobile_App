@@ -200,10 +200,15 @@ class _AdminMyDetailsMenuScreenState extends State<AdminMyDetailsMenuScreen> {
 
                   // Navigate to EmployeeDetailsScreen with the selected tab
                   // Use the helper method from EmployeeDetailsScreen to get correct index
-                  final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(item, true);
+                  final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(
+                    item,
+                    true,
+                  );
 
                   if (kDebugMode) {
-                    print("🔍 AdminMenu: Navigating to '$item' -> tab index $tabIndex");
+                    print(
+                      "🔍 AdminMenu: Navigating to '$item' -> tab index $tabIndex",
+                    );
                   }
 
                   Navigator.push(
@@ -217,7 +222,8 @@ class _AdminMyDetailsMenuScreenState extends State<AdminMyDetailsMenuScreen> {
                             empDesignation: widget.empDesignation,
                             empBranch: widget.empBranch,
                             initialTabIndex: tabIndex,
-                            showDrawer: false, // Don't show drawer when navigated from menu
+                            showDrawer:
+                                false, // Don't show drawer when navigated from menu
                           ),
                     ),
                   );

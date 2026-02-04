@@ -26,10 +26,12 @@ class NormalUserMyDetailsMenuScreen extends StatefulWidget {
   });
 
   @override
-  State<NormalUserMyDetailsMenuScreen> createState() => _NormalUserMyDetailsMenuScreenState();
+  State<NormalUserMyDetailsMenuScreen> createState() =>
+      _NormalUserMyDetailsMenuScreenState();
 }
 
-class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuScreen> {
+class _NormalUserMyDetailsMenuScreenState
+    extends State<NormalUserMyDetailsMenuScreen> {
   int selectedIndex = 0; // "Employee Details" is selected by default
 
   // Normal user menu items (with "Employee Details" as first item - matches second image)
@@ -67,7 +69,7 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
     final loginProvider = Provider.of<LoginProvider>(context, listen: false);
     final String roleId = loginProvider.userRole?.trim() ?? "";
     final bool isAdmin = roleId == "1";
-    
+
     // Debug logging
     if (kDebugMode) {
       print("🔍 NormalUserMyDetailsMenuScreen build");
@@ -76,21 +78,24 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
       print("   Is Admin: $isAdmin");
       print("   User ID: ${widget.empId}");
     }
-    
+
     if (isAdmin) {
       // User is admin, redirect to admin menu screen
-      if (kDebugMode) print("   ⚠️ Is admin - redirecting to AdminMyDetailsMenuScreen");
+      if (kDebugMode) {
+        print("   ⚠️ Is admin - redirecting to AdminMyDetailsMenuScreen");
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (_) => AdminMyDetailsMenuScreen(
-                empId: widget.empId,
-                empPhoto: widget.empPhoto,
-                empName: widget.empName,
-                empDesignation: widget.empDesignation,
-                empBranch: widget.empBranch,
-              ),
+              builder:
+                  (_) => AdminMyDetailsMenuScreen(
+                    empId: widget.empId,
+                    empPhoto: widget.empPhoto,
+                    empName: widget.empName,
+                    empDesignation: widget.empDesignation,
+                    empBranch: widget.empBranch,
+                  ),
             ),
           );
         }
@@ -98,9 +103,11 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
       // Return empty container while redirecting
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    
-    if (kDebugMode) print("   ✅ Normal user confirmed - showing normal user menu");
-    
+
+    if (kDebugMode) {
+      print("   ✅ Normal user confirmed - showing normal user menu");
+    }
+
     const primaryColor = Color(0xFF8E0E6B);
     const backgroundColor = Color(0xFFF8FAFC);
     const cardBackgroundColor = Colors.white;
@@ -160,13 +167,14 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => DeliverablesScreen(
-                          empId: widget.empId,
-                          empPhoto: widget.empPhoto,
-                          empName: widget.empName,
-                          empDesignation: widget.empDesignation,
-                          empBranch: widget.empBranch,
-                        ),
+                        builder:
+                            (_) => DeliverablesScreen(
+                              empId: widget.empId,
+                              empPhoto: widget.empPhoto,
+                              empName: widget.empName,
+                              empDesignation: widget.empDesignation,
+                              empBranch: widget.empBranch,
+                            ),
                       ),
                     );
                     return;
@@ -177,13 +185,14 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => AutomatedPayrollIndividualScreen(
-                          empId: widget.empId,
-                          empPhoto: widget.empPhoto,
-                          empName: widget.empName,
-                          empDesignation: widget.empDesignation,
-                          empBranch: widget.empBranch,
-                        ),
+                        builder:
+                            (_) => AutomatedPayrollIndividualScreen(
+                              empId: widget.empId,
+                              empPhoto: widget.empPhoto,
+                              empName: widget.empName,
+                              empDesignation: widget.empDesignation,
+                              empBranch: widget.empBranch,
+                            ),
                       ),
                     );
                     return;
@@ -191,10 +200,15 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
 
                   // Navigate to EmployeeDetailsScreen with the selected tab
                   // Use the helper method from EmployeeDetailsScreen to get correct index
-                  final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(item, false);
+                  final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(
+                    item,
+                    false,
+                  );
 
                   if (kDebugMode) {
-                    print("🔍 NormalUserMenu: Navigating to '$item' -> tab index $tabIndex");
+                    print(
+                      "🔍 NormalUserMenu: Navigating to '$item' -> tab index $tabIndex",
+                    );
                   }
 
                   Navigator.push(
@@ -208,7 +222,8 @@ class _NormalUserMyDetailsMenuScreenState extends State<NormalUserMyDetailsMenuS
                             empDesignation: widget.empDesignation,
                             empBranch: widget.empBranch,
                             initialTabIndex: tabIndex,
-                            showDrawer: false, // Don't show drawer when navigated from menu
+                            showDrawer:
+                                false, // Don't show drawer when navigated from menu
                           ),
                     ),
                   );
