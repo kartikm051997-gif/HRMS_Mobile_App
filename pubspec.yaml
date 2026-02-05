@@ -69,6 +69,8 @@ dependencies:
   battery_plus: ^5.0.2
   connectivity_plus: ^5.0.2
   device_info_plus: ^9.1.1
+  webview_flutter: ^4.4.2
+
 
 
 

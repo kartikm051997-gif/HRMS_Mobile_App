@@ -248,9 +248,10 @@ class PayslipItem {
       netSalary: json['net_salary']?.toString(),
       totalDays: json['total_days']?.toString(),
       lopDays: json['lop_days']?.toString(),
-      leaveDays: json['leave_days'] is int
-          ? json['leave_days']
-          : int.tryParse(json['leave_days']?.toString() ?? '0'),
+      leaveDays:
+          json['leave_days'] is int
+              ? json['leave_days']
+              : int.tryParse(json['leave_days']?.toString() ?? '0'),
       workedDays: json['worked_days']?.toString(),
       employeeCategoryType: json['employee_category_type']?.toString(),
       status: json['status']?.toString(),

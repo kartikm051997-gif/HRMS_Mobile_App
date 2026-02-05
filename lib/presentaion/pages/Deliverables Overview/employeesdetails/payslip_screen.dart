@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
 import '../../../../core/fonts/fonts.dart';
+import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
 import '../../../../provider/Deliverables_Overview_provider/payslip_provider.dart';
-import '../../../../model/deliverables_model/payslip_model.dart';
-import '../../../../servicesAPI/LogInService/LogIn_Service.dart';
+import '../../../../model/EmployeeDetailsModel/employee_details_model.dart';
+import 'PayslipPdfTemplate.dart';
 
 class PaySlipScreen extends StatefulWidget {
   final String empId, empPhoto, empName, empDesignation, empBranch;
@@ -39,7 +39,14 @@ class _PaySlipScreenState extends State<PaySlipScreen>
     );
 
     Future.delayed(Duration.zero, () {
+      // Fetch payslips
       context.read<PaySlipProvider>().fetchPaySlip(widget.empId);
+
+      // Fetch employee details
+      context.read<EmployeeDetailsProvider>().fetchEmployeeDetails(
+        widget.empId,
+      );
+
       _animationController.forward();
     });
   }
@@ -56,9 +63,9 @@ class _PaySlipScreenState extends State<PaySlipScreen>
       backgroundColor: const Color(0xFFF5F7FA),
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: Consumer<PaySlipProvider>(
-          builder: (context, paySlipProvider, child) {
-            if (paySlipProvider.isLoading) {
+        child: Consumer2<PaySlipProvider, EmployeeDetailsProvider>(
+          builder: (context, paySlipProvider, employeeProvider, child) {
+            if (paySlipProvider.isLoading || employeeProvider.isLoading) {
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -69,7 +76,9 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      "Loading payslips...",
+                      employeeProvider.isLoading
+                          ? "Loading employee details..."
+                          : "Loading payslips...",
                       style: TextStyle(
                         fontFamily: AppFonts.poppins,
                         fontSize: 13,
@@ -90,39 +99,54 @@ class _PaySlipScreenState extends State<PaySlipScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Simple Header
-                  Row(
-                    children: [
-                      const Text(
-                        "Payslip",
-                        style: TextStyle(
-                          fontFamily: AppFonts.poppins,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                          color: Color(0xFF1A1A1A),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF5B7FFF),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          "${paySlipProvider.payslip.length}",
-                          style: const TextStyle(
+                  // Header with count
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        const Text(
+                          "Payslip History",
+                          style: TextStyle(
                             fontFamily: AppFonts.poppins,
-                            fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            fontSize: 17,
+                            color: Color(0xFF1A1A1A),
                           ),
                         ),
-                      ),
-                    ],
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF5B7FFF), Color(0xFF9333EA)],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF5B7FFF).withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            "${paySlipProvider.payslip.length} ${paySlipProvider.payslip.length == 1 ? 'Payslip' : 'Payslips'}",
+                            style: const TextStyle(
+                              fontFamily: AppFonts.poppins,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -132,8 +156,12 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                       physics: const BouncingScrollPhysics(),
                       itemCount: paySlipProvider.payslip.length,
                       itemBuilder: (context, index) {
-                        final document = paySlipProvider.payslip[index];
-                        return _buildPayslipCard(document, paySlipProvider);
+                        final payslipItem = paySlipProvider.payslip[index];
+                        return _buildPayslipCard(
+                          payslipItem,
+                          index,
+                          employeeProvider,
+                        );
                       },
                     ),
                   ),
@@ -152,30 +180,35 @@ class _PaySlipScreenState extends State<PaySlipScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(32),
+            padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEFF),
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF5B7FFF).withOpacity(0.1),
+                  const Color(0xFF9333EA).withOpacity(0.1),
+                ],
+              ),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.receipt_long_outlined,
-              size: 48,
+              size: 64,
               color: Color(0xFF5B7FFF),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Text(
-            "No Payslips",
+            "No Payslips Available",
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
               color: Color(0xFF1A1A1A),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
-            "Payslip records will appear here",
+            "Your payslip records will appear here",
             style: TextStyle(
               fontSize: 13,
               fontFamily: AppFonts.poppins,
@@ -188,68 +221,145 @@ class _PaySlipScreenState extends State<PaySlipScreen>
   }
 
   Widget _buildPayslipCard(
-    PaySlipModel document,
-    PaySlipProvider paySlipProvider,
+    PayslipItem payslipItem,
+    int index,
+    EmployeeDetailsProvider employeeProvider,
   ) {
+    // Calculate colors based on index for variety
+    final cardColors = [
+      [const Color(0xFF5B7FFF), const Color(0xFF9333EA)],
+      [const Color(0xFF10B981), const Color(0xFF059669)],
+      [const Color(0xFFF59E0B), const Color(0xFFEF4444)],
+      [const Color(0xFF8B5CF6), const Color(0xFFEC4899)],
+    ];
+
+    final colorSet = cardColors[index % cardColors.length];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+        color: Colors.white70,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorSet[0].withOpacity(0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: colorSet[0].withOpacity(0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => _openPayslipPdf(context, document, paySlipProvider),
-          borderRadius: BorderRadius.circular(12),
+          onTap:
+              () =>
+                  _openPayslipTemplate(context, payslipItem, employeeProvider),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Row(
               children: [
-                // Icon
+                // Icon with gradient background
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EEFF),
-                    borderRadius: BorderRadius.circular(10),
+                    gradient: LinearGradient(
+                      colors: colorSet,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorSet[0].withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Icon(
                     Icons.description_outlined,
-                    color: Color(0xFF5B7FFF),
-                    size: 20,
+                    color: Colors.white,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        document.salaryMonth,
+                        payslipItem.salaryMonth ?? 'Unknown',
                         style: const TextStyle(
                           fontFamily: AppFonts.poppins,
-                          fontSize: 14,
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF1A1A1A),
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 12,
-                            color: Colors.grey[500],
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 12,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  payslipItem.createdDate ?? '-',
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 11,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            document.date,
-                            style: TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.account_balance_wallet,
+                                  size: 12,
+                                  color: Colors.green[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "₹${payslipItem.netSalary ?? '0'}",
+                                  style: TextStyle(
+                                    fontFamily: AppFonts.poppins,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green[700],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -258,10 +368,17 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                   ),
                 ),
                 // Arrow Icon
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: Colors.grey[400],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: colorSet[0].withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: colorSet[0],
+                  ),
                 ),
               ],
             ),
@@ -271,281 +388,34 @@ class _PaySlipScreenState extends State<PaySlipScreen>
     );
   }
 
-  Future<void> _openPayslipPdf(
+  void _openPayslipTemplate(
     BuildContext context,
-    PaySlipModel document,
-    PaySlipProvider provider,
-  ) async {
-    if (document.documentUrl.isEmpty) {
-      _showSnackBar(context, false, 'Payslip PDF URL not available');
-      return;
-    }
-
-    if (!context.mounted) return;
-
-    final title = "${document.salaryMonth} - ${document.date}";
-
-    String pdfUrl = document.documentUrl;
-
-    if (!pdfUrl.toLowerCase().endsWith('.pdf')) {
-      pdfUrl = '${document.documentUrl}/pdf';
-    }
-
-    try {
-      final loginService = LoginService();
-      final token = await loginService.getValidToken();
-
-      if (token != null && token.isNotEmpty) {
-        final uri = Uri.parse(pdfUrl);
-        if (uri.queryParameters.isEmpty) {
-          pdfUrl = '$pdfUrl?token=$token';
-        } else {
-          pdfUrl =
-              uri
-                  .replace(
-                    queryParameters: {...uri.queryParameters, 'token': token},
-                  )
-                  .toString();
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Error appending token: $e');
-    }
-
-    debugPrint('📄 Opening payslip PDF URL: $pdfUrl');
-
-    if (!context.mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder:
-          (dialogContext) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  // Header
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF5B7FFF),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () async {
-                            Navigator.pop(dialogContext);
-                            final success = await provider.downloadDocument(
-                              document,
-                            );
-                            if (context.mounted) {
-                              _showSnackBar(
-                                context,
-                                success,
-                                success
-                                    ? 'Downloaded successfully'
-                                    : 'Download failed',
-                              );
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.download_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(dialogContext),
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
-                            size: 22,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // PDF viewer
-                  Expanded(
-                    child: PDF(
-                      enableSwipe: true,
-                      swipeHorizontal: false,
-                      autoSpacing: false,
-                      pageFling: true,
-                      pageSnap: true,
-                      onError: (error) {
-                        debugPrint('❌ PDF Error: $error');
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext);
-                          _showSnackBar(
-                            context,
-                            false,
-                            "Could not open PDF. Try downloading instead.",
-                          );
-                        }
-                      },
-                      onPageError: (page, error) {
-                        debugPrint('❌ Page $page Error: $error');
-                      },
-                    ).cachedFromUrl(
-                      pdfUrl,
-                      placeholder:
-                          (progress) => Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Color(0xFF5B7FFF),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  "Loading... ${(progress * 100).toStringAsFixed(0)}%",
-                                  style: const TextStyle(
-                                    fontFamily: AppFonts.poppins,
-                                    fontSize: 13,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      errorWidget:
-                          (error) => Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.error_outline,
-                                    size: 42,
-                                    color: Color(0xFFEF4444),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  const Text(
-                                    "Could not load PDF",
-                                    style: TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1A1A1A),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    error.toString(),
-                                    style: TextStyle(
-                                      fontFamily: AppFonts.poppins,
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      Navigator.pop(dialogContext);
-                                      final success = await provider
-                                          .downloadDocument(document);
-                                      if (context.mounted) {
-                                        _showSnackBar(
-                                          context,
-                                          success,
-                                          success
-                                              ? 'Downloaded successfully'
-                                              : 'Download failed',
-                                        );
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF5B7FFF),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 20,
-                                        vertical: 10,
-                                      ),
-                                    ),
-                                    icon: const Icon(
-                                      Icons.download,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    label: const Text(
-                                      "Download Instead",
-                                      style: TextStyle(
-                                        fontFamily: AppFonts.poppins,
-                                        fontSize: 13,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+    PayslipItem payslipItem,
+    EmployeeDetailsProvider employeeProvider,
+  ) {
+    // Create EmployeeDetailsData from provider's structured getters
+    final employeeData = EmployeeDetailsData(
+      basicInfo: employeeProvider.basicInfo,
+      professionalInfo: employeeProvider.professionalInfo,
+      bankDetails: employeeProvider.bankDetails,
+      salaryDetails: employeeProvider.salaryDetails,
+      addressInfo: employeeProvider.addressInfo,
+      recruiter: employeeProvider.recruiter,
+      createdBy: employeeProvider.createdBy,
+      documents: employeeProvider.documents,
+      letters: employeeProvider.letters,
+      circulars: employeeProvider.circulars,
+      payslips: employeeProvider.payslips,
     );
-  }
 
-  void _showSnackBar(BuildContext context, bool success, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              success ? Icons.check_circle : Icons.error,
-              color: Colors.white,
-              size: 20,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => PayslipPdfTemplate(
+              payslip: payslipItem,
+              employeeData: employeeData,
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  fontFamily: AppFonts.poppins,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor:
-            success ? const Color(0xFF10B981) : const Color(0xFFEF4444),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        duration: const Duration(seconds: 2),
       ),
     );
   }
