@@ -21,176 +21,162 @@ class UserProfileScreen extends StatelessWidget {
     final userId = loginProvider.loginData?.user?.userId;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FE),
       drawer: const TabletMobileDrawer(),
       appBar: const CustomAppBar(title: "Profile Details"),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            /// Profile Header Background
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              /// Profile Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 40),
-              child: Column(
-                children: [
-                  /// Profile Avatar
-                  GestureDetector(
-                    onTap: () {
-                      if (user?.avatar != null && user!.avatar!.isNotEmpty) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (_) => FullImageView(
-                                  imageUrl:
-                                      "https://app.draravindsivf.com/hrms/${user.avatar}",
-                                  tag: 'profileImageHero',
-                                ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Hero(
-                      tag: 'profileImageHero',
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        backgroundImage:
-                            (user?.avatar != null && user!.avatar!.isNotEmpty)
-                                ? NetworkImage(
-                                  "https://app.draravindsivf.com/hrms/${user.avatar}",
-                                )
-                                : null,
-                        child:
-                            (user?.avatar == null || user!.avatar!.isEmpty)
-                                ? Text(
-                                  user?.fullname != null &&
-                                          user!.fullname!.isNotEmpty
-                                      ? user.fullname![0].toUpperCase()
-                                      : "U",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 40,
-                                    fontFamily: AppFonts.poppins,
+                child: Column(
+                  children: [
+                    /// Profile Avatar
+                    GestureDetector(
+                      onTap: () {
+                        if (user?.avatar != null && user!.avatar!.isNotEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => FullImageView(
+                                    imageUrl:
+                                        "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                    tag: 'profileImageHero',
                                   ),
-                                )
-                                : null,
+                            ),
+                          );
+                        }
+                      },
+                      child: Hero(
+                        tag: 'profileImageHero',
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: AppColor.primaryColor1.withOpacity(
+                            0.1,
+                          ),
+                          backgroundImage:
+                              (user?.avatar != null && user!.avatar!.isNotEmpty)
+                                  ? NetworkImage(
+                                    "https://app.draravindsivf.com/hrms/${user.avatar}",
+                                  )
+                                  : null,
+                          child:
+                              (user?.avatar == null || user!.avatar!.isEmpty)
+                                  ? Text(
+                                    user?.fullname != null &&
+                                            user!.fullname!.isNotEmpty
+                                        ? user.fullname![0].toUpperCase()
+                                        : "U",
+                                    style: TextStyle(
+                                      color: AppColor.primaryColor1,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 32,
+                                      fontFamily: AppFonts.poppins,
+                                    ),
+                                  )
+                                  : null,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  /// User Name
-                  Text(
-                    user?.fullname ?? "User",
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: AppFonts.poppins,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  /// Branch Name
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      user?.locationName ?? "Branch Unknown",
+                    /// User Name
+                    Text(
+                      user?.fullname ?? "User",
                       style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
                         fontFamily: AppFonts.poppins,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 6),
 
-            /// Profile Details Section
-            Container(
-              margin: const EdgeInsets.all(20),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                    /// Branch Name
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColor.primaryColor1.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        user?.locationName ?? "Branch Unknown",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColor.primaryColor1,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProfileDetailRow(
-                    icon: Icons.person_outline,
-                    label: "Full Name",
-                    value: user?.fullname ?? "N/A",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileDetailRow(
-                    icon: Icons.person_outline,
-                    label: "Email",
-                    value: user?.email ?? "N/A",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileDetailRow(
-                    icon: Icons.badge_outlined,
-                    label: "UserName",
-                    value: user?.username ?? "N/A",
-                  ),
-                  const SizedBox(height: 16),
 
-                  _buildProfileDetailRow(
-                    icon: Icons.badge_outlined,
-                    label: "LastLogin",
-                    value: user?.lastLogin ?? "N/A",
-                  ),
-                ],
+              const SizedBox(height: 16),
+
+              /// Profile Details Section
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProfileDetailRow(
+                      icon: Icons.person_outline,
+                      label: "Full Name",
+                      value: user?.fullname ?? "N/A",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildProfileDetailRow(
+                      icon: Icons.email_outlined,
+                      label: "Email",
+                      value: user?.email ?? "N/A",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildProfileDetailRow(
+                      icon: Icons.badge_outlined,
+                      label: "Username",
+                      value: user?.username ?? "N/A",
+                    ),
+                    const SizedBox(height: 16),
+                    _buildProfileDetailRow(
+                      icon: Icons.access_time_outlined,
+                      label: "Last Login",
+                      value: user?.lastLogin ?? "N/A",
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            /// Logout Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Container(
+              const SizedBox(height: 24),
+
+              /// Logout Button
+              SizedBox(
                 width: double.infinity,
                 height: 50,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
                 child: ElevatedButton(
                   onPressed: () {
                     _showLogoutDialog(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors
-                            .transparent, // make button background transparent
-                    shadowColor: Colors.transparent, // remove button shadow
+                    backgroundColor: AppColor.primaryColor1,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -198,16 +184,16 @@ class UserProfileScreen extends StatelessWidget {
                   child: const Text(
                     "Logout",
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                       fontFamily: AppFonts.poppins,
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -220,15 +206,8 @@ class UserProfileScreen extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColor.primaryColor2.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColor.primaryColor2, size: 20),
-        ),
-        const SizedBox(width: 16),
+        Icon(icon, color: AppColor.primaryColor1, size: 22),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,16 +216,17 @@ class UserProfileScreen extends StatelessWidget {
                 label,
                 style: const TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: Color(0xFF6B7280),
                   fontFamily: AppFonts.poppins,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 value,
                 style: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1A1A1A),
                   fontFamily: AppFonts.poppins,
                 ),
               ),
@@ -262,21 +242,44 @@ class UserProfileScreen extends StatelessWidget {
       context: context,
       builder:
           (dialogContext) => AlertDialog(
-            title: const Text("Logout"),
-            content: const Text("Are you sure you want to logout?"),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              "Logout",
+              style: TextStyle(
+                fontFamily: AppFonts.poppins,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: const Text(
+              "Are you sure you want to logout?",
+              style: TextStyle(fontFamily: AppFonts.poppins),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text("Cancel"),
+                child: Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: AppColor.primaryColor1,
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(dialogContext); // close dialog
-                  _logout(context); // ✅ correct context
+                  Navigator.pop(dialogContext);
+                  _logout(context);
                 },
                 child: const Text(
                   "Logout",
-                  style: TextStyle(color: Colors.red),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontFamily: AppFonts.poppins,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],

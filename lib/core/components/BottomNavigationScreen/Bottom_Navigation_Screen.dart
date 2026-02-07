@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../presentaion/pages/PagarBookAdminScreens/PagarBookAdminScreen.dart';
@@ -149,12 +150,10 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
+                        color: AppColor.primaryColor1,
+
                         shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFE91E63), Color(0xFFFF4081)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFFE91E63).withOpacity(0.4),
@@ -302,7 +301,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                     icon,
                     color:
                         isSelected
-                            ? const Color(0xFF8E0E6B)
+                            ? AppColor.primaryColor1
                             : Colors.grey.shade400,
                     size: 26,
                   ),
@@ -316,7 +315,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 color:
-                    isSelected ? const Color(0xFF8E0E6B) : Colors.grey.shade500,
+                    isSelected ? AppColor.primaryColor1 : Colors.grey.shade500,
                 fontFamily: AppFonts.poppins,
               ),
               child: Text(label),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/document_provider.dart';

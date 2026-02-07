@@ -28,8 +28,8 @@ class _AttendanceCalendarScreenState extends State<AttendanceCalendarScreen>
   late Animation<double> _fadeAnimation;
 
   // Gradient colors - Light attractive theme
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
+  static const Color primaryColor = Color(0xff0FF5B7FFF);
+  static const Color secondaryColor = Color(0xff0FF5B7FFF);
 
   @override
   void initState() {

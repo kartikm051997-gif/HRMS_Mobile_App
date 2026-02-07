@@ -71,11 +71,7 @@ class _EmployeeManagementTabviewScreenState
             // backgroundColor: AppColor.primaryColor2,
             flexibleSpace: Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Color(0xff0FF5B7FFF)
               ),
             ),
 

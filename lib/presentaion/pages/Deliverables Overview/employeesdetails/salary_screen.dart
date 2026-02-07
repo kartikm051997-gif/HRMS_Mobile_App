@@ -82,7 +82,7 @@ class _SalaryScreenState extends State<SalaryScreen>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED),
+                        color: const Color(0xff0FF5B7FFF),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -136,7 +136,7 @@ class _SalaryScreenState extends State<SalaryScreen>
             child: const Icon(
               Icons.payments_outlined,
               size: 48,
-              color: Color(0xFF7C3AED),
+              color: Color(0xff0FF5B7FFF),
             ),
           ),
           const SizedBox(height: 16),
@@ -189,7 +189,7 @@ class _SalaryScreenState extends State<SalaryScreen>
                   ),
                   child: const Icon(
                     Icons.calendar_today,
-                    color: Color(0xFF7C3AED),
+                    color: Color(0xff0FF5B7FFF),
                     size: 20,
                   ),
                 ),
@@ -233,7 +233,7 @@ class _SalaryScreenState extends State<SalaryScreen>
                   ),
                   child: const Icon(
                     Icons.today,
-                    color: Color(0xFF7C3AED),
+                    color: Color(0xff0FF5B7FFF),
                     size: 20,
                   ),
                 ),

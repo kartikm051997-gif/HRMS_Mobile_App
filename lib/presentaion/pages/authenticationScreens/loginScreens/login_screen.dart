@@ -234,7 +234,7 @@ class _LoginScreenState extends State<LoginScreen>
                                         "Forgot Password?",
                                         style: TextStyle(
                                           fontFamily: AppFonts.poppins,
-                                          color: AppColor.primaryColor2,
+                                          color: AppColor.primaryColor1,
                                           fontWeight: FontWeight.w600,
                                           fontSize: 13,
                                         ),
@@ -344,7 +344,7 @@ class _LoginScreenState extends State<LoginScreen>
                     ),
                     prefixIcon: Icon(
                       icon,
-                      color: AppColor.primaryColor2.withOpacity(0.6),
+                      color: AppColor.primaryColor1,
                       size: 20,
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -361,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen>
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
-                        color: AppColor.primaryColor2,
+                        color: AppColor.primaryColor1,
                         width: 2,
                       ),
                     ),
@@ -386,7 +386,7 @@ class _LoginScreenState extends State<LoginScreen>
                                 obscureValue
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
-                                color: AppColor.primaryColor2.withOpacity(0.7),
+                                color: AppColor.primaryColor1,
                                 size: 20,
                               ),
                             )
@@ -423,11 +423,7 @@ class _LoginScreenState extends State<LoginScreen>
           width: double.infinity,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-            ),
+            color: AppColor.primaryColor1
           ),
           child: ElevatedButton(
             onPressed: provider.isLoading ? null : onPressed,

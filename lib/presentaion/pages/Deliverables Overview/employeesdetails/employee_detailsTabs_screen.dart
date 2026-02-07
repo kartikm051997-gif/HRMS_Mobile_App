@@ -414,11 +414,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
           backgroundColor: Colors.transparent,
           flexibleSpace: Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+                color: Color(0xff0FF5B7FFF),
+
             ),
           ),
           title: const Text(
@@ -474,8 +471,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     String avatarUrl,
   ) {
     // Gradient colors
-    const primaryColor = Color(0xFF8E0E6B);
-    const secondaryColor = Color(0xFFD4145A);
+    const primaryColor = Color(0xff0FF5B7FFF);
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -512,11 +508,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [primaryColor, secondaryColor],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Color(0xff0FF5B7FFF),
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(20),
                         topRight: Radius.circular(20),
@@ -884,9 +876,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   Widget _buildDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-        ),
+        color: Color(0xff0FF5B7FFF),
+
       ),
       child: Center(
         child: Text(
@@ -947,12 +938,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor.withOpacity(0.1),
-                  secondaryColor.withOpacity(0.05),
-                ],
-              ),
+              color: Color(0xff0FF5B7FFF),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -963,9 +949,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [primaryColor, secondaryColor],
-                    ),
+                    color: Color(0xff0FF5B7FFF),
+
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(icon, color: Colors.white, size: 20),
@@ -977,7 +962,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     fontFamily: AppFonts.poppins,
-                    color: Color(0xFF1E293B),
+                    color: Colors.white,
                   ),
                 ),
               ],
@@ -1000,7 +985,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     IconData icon, {
     bool isLast = false,
   }) {
-    const primaryColor = Color(0xFF8E0E6B);
+    const primaryColor = Color(0xff0FF5B7FFF);
     const borderColor = Color(0xFFE2E8F0);
     const textSecondary = Color(0xFF64748B);
     const textPrimary = Color(0xFF1E293B);
@@ -1063,7 +1048,7 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
     IconData icon, {
     bool isLast = false,
   }) {
-    const primaryColor = Color(0xFF8E0E6B);
+    const primaryColor = Color(0xff0FF5B7FFF);
     const secondaryColor = Color(0xFFD4145A);
     const borderColor = Color(0xFFE2E8F0);
     const textSecondary = Color(0xFF64748B);
@@ -1107,12 +1092,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
                           height: 32,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [
-                                primaryColor.withOpacity(0.2),
-                                secondaryColor.withOpacity(0.2),
-                              ],
-                            ),
+                            color: Color(0xff0FF5B7FFF),
+
                             border: Border.all(color: borderColor),
                           ),
                           child: ClipOval(
@@ -1163,9 +1144,8 @@ class _EmployeeDetailsScreenState extends State<EmployeeDetailsScreen>
   Widget _buildSmallDefaultAvatar(String name) {
     return Container(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-        ),
+        color: Color(0xff0FF5B7FFF),
+
       ),
       child: Center(
         child: Text(

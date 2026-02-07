@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:hrms_mobile_app/core/fonts/fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,8 +33,8 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
   late Animation<double> _fadeAnimation;
 
   // Modern gradient colors
-  static const Color primaryColor = Color(0xFF8E0E6B);
-  static const Color secondaryColor = Color(0xFFD4145A);
+  static const Color primaryColor = Color(0xff0FF5B7FFF);
+  static const Color secondaryColor = Color(0xff0FF5B7FFF);
   static const Color backgroundColor = Color(0xFFF8FAFC);
   static const Color textColor = Color(0xFF1E293B);
   static const Color subtextColor = Color(0xFF64748B);
@@ -1269,10 +1270,10 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
 
   Widget _buildLogoutButton(LoginProvider loginProvider) {
     return Container(
-      margin: const EdgeInsets.only(top: 8, bottom: 8),
+      margin: EdgeInsets.only(top: 8, bottom: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: AppColor.primaryColor1),
       ),
       child: Material(
         color: Colors.transparent,
@@ -1291,7 +1292,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                   ),
                   child: const Icon(
                     Icons.logout_rounded,
-                    color: Colors.red,
+                    color: AppColor.primaryColor1,
                     size: 20,
                   ),
                 ),
@@ -1303,7 +1304,7 @@ class _TabletMobileDrawerState extends State<TabletMobileDrawer>
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       fontFamily: AppFonts.poppins,
-                      color: Colors.red,
+                      color: Colors.black,
                     ),
                   ),
                 ),

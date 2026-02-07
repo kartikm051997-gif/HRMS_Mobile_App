@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
@@ -9,7 +11,6 @@ import 'package:flutter_cached_pdfview/flutter_cached_pdfview.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/letter_provider.dart';
 import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
-import '../../../../provider/login_provider/login_provider.dart';
 
 class LetterScreen extends StatefulWidget {
   final String empId, empPhoto, empName, empDesignation, empBranch;
@@ -60,7 +61,7 @@ class _LetterScreenState extends State<LetterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA), // ✅ Changed background color
+      backgroundColor: const Color(0xFFF5F7FA),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Consumer<EmployeeDetailsProvider>(
@@ -85,8 +86,8 @@ class _LetterScreenState extends State<LetterScreen>
                             color: const Color(0xFF10B981).withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: const CircularProgressIndicator(
-                            color: Color(0xFF10B981),
+                          child: CircularProgressIndicator(
+                            color: AppColor.primaryColor1,
                             strokeWidth: 3,
                           ),
                         ),
@@ -113,7 +114,6 @@ class _LetterScreenState extends State<LetterScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ✅ Changed Header Design
                       Row(
                         children: [
                           const Text(
@@ -132,7 +132,7 @@ class _LetterScreenState extends State<LetterScreen>
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF10B981),
+                              color: AppColor.primaryColor1,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -193,7 +193,6 @@ class _LetterScreenState extends State<LetterScreen>
     );
   }
 
-  // ✅ Changed Empty State Design
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -208,7 +207,7 @@ class _LetterScreenState extends State<LetterScreen>
             child: const Icon(
               Icons.mail_outline,
               size: 64,
-              color: Color(0xFF10B981),
+              color: AppColor.primaryColor1,
             ),
           ),
           const SizedBox(height: 24),
@@ -235,7 +234,6 @@ class _LetterScreenState extends State<LetterScreen>
     );
   }
 
-  // ✅ Changed Card Design ONLY - Same function signature
   Widget _buildLetterCard(
     dynamic document,
     bool isDownloading,
@@ -257,7 +255,6 @@ class _LetterScreenState extends State<LetterScreen>
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -266,12 +263,11 @@ class _LetterScreenState extends State<LetterScreen>
                   ),
                   child: const Icon(
                     Icons.description_outlined,
-                    color: Color(0xFF10B981),
+                    color: AppColor.primaryColor1,
                     size: 24,
                   ),
                 ),
                 const SizedBox(width: 16),
-                // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +305,6 @@ class _LetterScreenState extends State<LetterScreen>
                     ],
                   ),
                 ),
-                // Arrow Icon
                 Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
@@ -323,15 +318,29 @@ class _LetterScreenState extends State<LetterScreen>
     );
   }
 
-  // ✅ Keep all original functions unchanged
   Future<void> _openLetterContent(
     BuildContext context,
     dynamic document,
     DocumentListProvider provider,
   ) async {
-    final htmlContent = document.content ?? "";
-    final title = "${document.letterType} - ${document.date}";
-    await _showPdfViewer(context, title, htmlContent, document);
+    try {
+      final htmlContent = document.content ?? "";
+      final title = "${document.letterType}";
+
+      if (kDebugMode) {
+        print("Opening letter: $title");
+        print("Content length: ${htmlContent.length}");
+      }
+
+      await _showPdfViewer(context, title, htmlContent, document);
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error opening letter: $e");
+      }
+      if (context.mounted) {
+        _showSnackBar(context, false, "Failed to open letter: ${e.toString()}");
+      }
+    }
   }
 
   Future<void> _showPdfViewer(
@@ -340,157 +349,215 @@ class _LetterScreenState extends State<LetterScreen>
     String htmlContent,
     dynamic document,
   ) async {
-    final pdf = await _htmlToPdf(htmlContent, title);
-    final pdfBytes = await pdf.save();
-    final tempDir = await getTemporaryDirectory();
-    final tempFile = File(
-      '${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
-    await tempFile.writeAsBytes(pdfBytes);
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => const Center(
+              child: CircularProgressIndicator(color: AppColor.primaryColor1),
+            ),
+      );
 
-    if (!context.mounted) return;
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.all(16),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981), // ✅ Changed color
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
+      final pdf = await _htmlToPdf(htmlContent, title, document);
+      final pdfBytes = await pdf.save();
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File(
+        '${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+      await tempFile.writeAsBytes(pdfBytes);
+
+      if (!context.mounted) return;
+
+      // Close loading indicator
+      Navigator.pop(context);
+
+      // Show PDF viewer
+      showDialog(
+        context: context,
+        builder:
+            (context) => Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.all(16),
+              child: Container(
+                height: MediaQuery.of(context).size.height * 0.9,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColor.primaryColor1,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          topRight: Radius.circular(16),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              fontFamily: AppFonts.poppins,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: const TextStyle(
+                                fontFamily: AppFonts.poppins,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          PopupMenuButton<String>(
+                            icon: const Icon(
+                              Icons.more_vert_rounded,
                               color: Colors.white,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        PopupMenuButton<String>(
-                          icon: const Icon(
-                            Icons.more_vert_rounded,
                             color: Colors.white,
-                          ),
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          onSelected: (value) async {
-                            if (value == 'download') {
-                              Navigator.pop(context);
-                              final letterProvider =
-                                  Provider.of<DocumentListProvider>(
-                                    context,
-                                    listen: false,
-                                  );
-                              final docId =
-                                  "${document.id}_${DateTime.now().millisecondsSinceEpoch}";
-                              final fileName =
-                                  document.fileName.isNotEmpty
-                                      ? document.fileName.replaceAll(
-                                        '.html',
-                                        '.pdf',
-                                      )
-                                      : "letter_${document.id}_${document.date.replaceAll('/', '_')}.pdf";
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            onSelected: (value) async {
+                              if (value == 'download') {
+                                Navigator.pop(context);
+                                final letterProvider =
+                                    Provider.of<DocumentListProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+                                final docId =
+                                    "${document.id}_${DateTime.now().millisecondsSinceEpoch}";
+                                final fileName =
+                                    document.fileName.isNotEmpty
+                                        ? document.fileName.replaceAll(
+                                          '.html',
+                                          '.pdf',
+                                        )
+                                        : "letter_${document.id}_${document.date.replaceAll('/', '_')}.pdf";
 
-                              try {
-                                final result = await letterProvider
-                                    .downloadFile(docId, htmlContent, fileName);
-                                final isSuccess = result.contains('✅');
-                                _showSnackBar(context, isSuccess, result);
-                              } catch (e) {
-                                _showSnackBar(
-                                  context,
-                                  false,
-                                  "Download failed: ${e.toString()}",
-                                );
+                                try {
+                                  final result = await letterProvider
+                                      .downloadFile(
+                                        docId,
+                                        htmlContent,
+                                        fileName,
+                                        document,
+                                      );
+                                  final isSuccess = result.contains('✅');
+                                  if (context.mounted) {
+                                    _showSnackBar(context, isSuccess, result);
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    _showSnackBar(
+                                      context,
+                                      false,
+                                      "Download failed: ${e.toString()}",
+                                    );
+                                  }
+                                }
                               }
-                            }
-                          },
-                          itemBuilder:
-                              (BuildContext context) => [
-                                PopupMenuItem<String>(
-                                  value: 'download',
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.download_rounded,
-                                        color: Color(0xFF10B981),
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Text(
-                                        "Download",
-                                        style: TextStyle(
-                                          fontFamily: AppFonts.poppins,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: Color(0xFF1E293B),
+                            },
+                            itemBuilder:
+                                (BuildContext context) => [
+                                  PopupMenuItem<String>(
+                                    value: 'download',
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.download_rounded,
+                                          color: AppColor.primaryColor1,
+                                          size: 20,
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 12),
+                                        const Text(
+                                          "Download",
+                                          style: TextStyle(
+                                            fontFamily: AppFonts.poppins,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.close_rounded,
-                            color: Colors.white,
+                                ],
                           ),
-                        ),
-                      ],
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: PDF(
-                      enableSwipe: true,
-                      swipeHorizontal: false,
-                      autoSpacing: false,
-                      pageFling: true,
-                      onError: (error) {
-                        _showSnackBar(
-                          context,
-                          false,
-                          "Failed to load PDF: $error",
-                        );
-                        Navigator.pop(context);
-                      },
-                    ).fromPath(tempFile.path),
-                  ),
-                ],
+                    Expanded(
+                      child: PDF(
+                        enableSwipe: true,
+                        swipeHorizontal: false,
+                        autoSpacing: false,
+                        pageFling: true,
+                        onError: (error) {
+                          if (kDebugMode) {
+                            print("PDF Error: $error");
+                          }
+                          if (context.mounted) {
+                            _showSnackBar(
+                              context,
+                              false,
+                              "Failed to load PDF: $error",
+                            );
+                            Navigator.pop(context);
+                          }
+                        },
+                      ).fromPath(tempFile.path),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-    );
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in _showPdfViewer: $e");
+      }
+      if (context.mounted) {
+        // Close loading dialog if still showing
+        Navigator.pop(context);
+        _showSnackBar(
+          context,
+          false,
+          "Failed to generate PDF: ${e.toString()}",
+        );
+      }
+    }
   }
 
-  Future<pw.Document> _htmlToPdf(String htmlContent, String title) async {
-    final textContent =
+  Future<pw.Document> _htmlToPdf(
+    String htmlContent,
+    String title,
+    dynamic document,
+  ) async {
+    // Clean HTML content
+    String cleanContent =
         htmlContent
-            .replaceAll(RegExp(r'<[^>]*>'), '')
+            .replaceAll(RegExp(r'<o:p></o:p>'), '')
+            .replaceAll(RegExp(r'<o:p>'), '')
+            .replaceAll(RegExp(r'</o:p>'), '')
+            .replaceAll(RegExp(r'<br\s*/?>'), '\n')
+            .replaceAll(RegExp(r'<p[^>]*>'), '\n')
+            .replaceAll(RegExp(r'</p>'), '')
+            .replaceAll(RegExp(r'<b>'), '')
+            .replaceAll(RegExp(r'</b>'), '')
+            .replaceAll(RegExp(r'<span[^>]*>'), '')
+            .replaceAll(RegExp(r'</span>'), '')
             .replaceAll('&nbsp;', ' ')
             .replaceAll('&amp;', '&')
             .replaceAll('&lt;', '<')
@@ -498,26 +565,173 @@ class _LetterScreenState extends State<LetterScreen>
             .replaceAll('&quot;', '"')
             .trim();
 
+    // Extract subject and body
+    String subject = '';
+    String body = '';
+
+    if (cleanContent.toLowerCase().contains('subject:')) {
+      final parts = cleanContent.split(
+        RegExp(r'subject:', caseSensitive: false),
+      );
+      if (parts.length > 1) {
+        // Get the subject line (first line after "Subject:")
+        final afterSubject = parts[1].trim();
+        final lines = afterSubject.split('\n');
+        subject = 'Subject: ${lines[0].trim()}';
+        // Rest is body
+        body = lines.skip(1).join('\n').trim();
+      }
+    } else {
+      body = cleanContent;
+    }
+
     final pdf = pw.Document();
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text(
-                title,
-                style: pw.TextStyle(
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
+              // HEADER: Company Name + Date/ID
+              pw.Container(
+                padding: const pw.EdgeInsets.only(bottom: 12),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    bottom: pw.BorderSide(color: PdfColors.grey300, width: 1.5),
+                  ),
+                ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text(
+                          "Dr. ARAVIND's IVF",
+                          style: pw.TextStyle(
+                            fontSize: 18,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColor.fromHex('#E91E8C'),
+                          ),
+                        ),
+                        pw.SizedBox(height: 2),
+                        pw.Text(
+                          'FERTILITY & PREGNANCY CENTRE',
+                          style: pw.TextStyle(
+                            fontSize: 8,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text(
+                          'Date: ${document.date ?? ""}',
+                          style: const pw.TextStyle(
+                            fontSize: 8,
+                            color: PdfColors.black,
+                          ),
+                        ),
+                        if (document.id != null && document.id.isNotEmpty)
+                          pw.Text(
+                            'NC${document.id}',
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                              color: PdfColors.black,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              pw.SizedBox(height: 20),
-              pw.Expanded(
+
+              pw.SizedBox(height: 25),
+
+              // NOTICE TITLE
+              pw.Center(
                 child: pw.Text(
-                  textContent,
-                  style: const pw.TextStyle(fontSize: 12),
+                  'Notice',
+                  style: pw.TextStyle(
+                    fontSize: 14,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.black,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // TO SECTION
+              pw.Text(
+                'To,',
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+              ),
+              pw.SizedBox(height: 3),
+              pw.Text(
+                '${widget.empName}-${widget.empId}',
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+              ),
+              pw.Text(
+                widget.empDesignation,
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+              ),
+              pw.Text(
+                widget.empBranch,
+                style: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              // SUBJECT
+              if (subject.isNotEmpty) ...[
+                pw.Text(
+                  subject,
+                  style: pw.TextStyle(
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.black,
+                  ),
+                ),
+                pw.SizedBox(height: 12),
+              ],
+
+              // BODY CONTENT
+              pw.Text(
+                body,
+                style: const pw.TextStyle(
+                  fontSize: 10,
+                  lineSpacing: 1.4,
+                  color: PdfColors.black,
+                ),
+                textAlign: pw.TextAlign.justify,
+              ),
+
+              pw.Spacer(),
+
+              // FOOTER
+              pw.Container(
+                margin: const pw.EdgeInsets.only(top: 20),
+                padding: const pw.EdgeInsets.only(top: 10),
+                decoration: const pw.BoxDecoration(
+                  border: pw.Border(
+                    top: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                  ),
+                ),
+                child: pw.Text(
+                  'Tamil Nadu: Chennai-Sholinganallur, Vadapalani, Tambaram, Madipakkam, Urapakkam | Kanchipuram | Thiruvallur | Chengalpattu | Vellore | Hosur | Salem | Kallakurichi | Namakkal | Attur | Harur | Erode | Karur | Sathyamangalam | Coimbatore- Ganapathy,Sundarapuram,Thudiyalur | Pollachi | Tiruppur | Trichy | Thanjavur | Madurai | Kerala: Palakkad, Kozhikode | Karnataka: Bengaluru-Electronic City, Konanakunte, Hebbal, T.Dasarahalli | Andhra Pradesh: Tirupati | International: Sri Lanka | Bangladesh',
+                  style: const pw.TextStyle(
+                    fontSize: 6,
+                    color: PdfColors.grey600,
+                  ),
+                  textAlign: pw.TextAlign.justify,
                 ),
               ),
             ],
@@ -525,51 +739,8 @@ class _LetterScreenState extends State<LetterScreen>
         },
       ),
     );
+
     return pdf;
-  }
-
-  Future<void> _downloadHtmlContent(
-    BuildContext context,
-    dynamic document,
-    String htmlContent,
-  ) async {
-    try {
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = await getExternalStorageDirectory();
-        if (directory != null) {
-          final downloadsDir = Directory('${directory.path}/Download');
-          if (!await downloadsDir.exists()) {
-            await downloadsDir.create(recursive: true);
-          }
-          directory = downloadsDir;
-        }
-      } else {
-        directory = await getApplicationDocumentsDirectory();
-      }
-
-      if (directory == null) {
-        _showSnackBar(context, false, "Could not access storage directory");
-        return;
-      }
-
-      final fileName =
-          document.fileName.isNotEmpty
-              ? document.fileName
-              : "letter_${document.id}_${document.date.replaceAll('/', '_')}.html";
-      final filePath = '${directory.path}/$fileName';
-      final file = File(filePath);
-
-      await file.writeAsString(htmlContent);
-
-      if (await file.exists()) {
-        _showSnackBar(context, true, "✅ Downloaded: $fileName");
-      } else {
-        _showSnackBar(context, false, "Failed to save file");
-      }
-    } catch (e) {
-      _showSnackBar(context, false, "Download failed: ${e.toString()}");
-    }
   }
 
   void _showSnackBar(BuildContext context, bool success, String message) {

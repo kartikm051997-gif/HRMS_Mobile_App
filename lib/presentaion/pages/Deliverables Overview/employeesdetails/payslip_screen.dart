@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hrms_mobile_app/core/constants/appcolor_dart.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/Employee_Details_Provider.dart';
@@ -123,9 +124,7 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF5B7FFF), Color(0xFF9333EA)],
-                            ),
+                            color: AppColor.primaryColor1,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
@@ -264,11 +263,7 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: colorSet,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: AppColor.primaryColor1,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
@@ -347,7 +342,7 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                                 Icon(
                                   Icons.account_balance_wallet,
                                   size: 12,
-                                  color: Colors.green[700],
+                                  color: AppColor.primaryColor1,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
@@ -356,7 +351,7 @@ class _PaySlipScreenState extends State<PaySlipScreen>
                                     fontFamily: AppFonts.poppins,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.green[700],
+                                    color: AppColor.primaryColor1,
                                   ),
                                 ),
                               ],

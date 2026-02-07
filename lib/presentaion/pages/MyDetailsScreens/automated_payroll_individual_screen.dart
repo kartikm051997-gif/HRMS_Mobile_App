@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/components/appbar/appbar.dart';
 import '../../../core/components/drawer/drawer.dart';
 import '../../../core/fonts/fonts.dart';
 import '../../../provider/Deliverables_Overview_provider/automated_payroll_provider.dart';
@@ -43,26 +44,11 @@ class _AutomatedPayrollIndividualScreenState
     final payrollProvider = context.watch<AutomatedPayrollProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      appBar: const CustomAppBar(title: "Automated Payroll"),
       drawer: const TabletMobileDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          "Automated Payroll",
-          style: TextStyle(
-            color: Color(0xFF1F2937),
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            fontFamily: AppFonts.poppins,
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Color(0xFF1F2937)),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: const Color(0xFFE5E7EB)),
-        ),
-      ),
+
+
+      backgroundColor: const Color(0xFFF5F5F5),
       body:
           payrollProvider.isLoading
               ? const CustomCardShimmer(itemCount: 4)

@@ -33,56 +33,39 @@ class AdminMyDetailsMenuScreen extends StatefulWidget {
 class _AdminMyDetailsMenuScreenState extends State<AdminMyDetailsMenuScreen> {
   int selectedIndex = -1;
 
-  // Admin menu items (with "Employee Details" as first item - includes PF, ESI, Job Application, Documents)
-  final List<String> menuItems = [
-    "Employee Details",
-    "Attendance",
-    "Bank",
-    "Documents",
-    "Salary",
-    "Job Application",
-    "PF",
-    "ESI",
-    "Letters",
-    "payslips",
-    "assetsdetails",
-    "Circulars",
-    "Deliverables",
-    "automated_payroll_individual",
+  final List<Map<String, dynamic>> menuItems = [
+    {"title": "Employee Details", "icon": Icons.person_outline},
+    {"title": "Attendance", "icon": Icons.calendar_today_outlined},
+    {"title": "Bank", "icon": Icons.account_balance_outlined},
+    {"title": "Documents", "icon": Icons.folder_outlined},
+    {"title": "Salary", "icon": Icons.payments_outlined},
+    {"title": "Job Application", "icon": Icons.work_outline},
+    {"title": "PF", "icon": Icons.account_balance_wallet_outlined},
+    {"title": "ESI", "icon": Icons.medical_services_outlined},
+    {"title": "Letters", "icon": Icons.mail_outline},
+    {"title": "payslips", "icon": Icons.description_outlined},
+    {"title": "assetsdetails", "icon": Icons.inventory_2_outlined},
+    {"title": "Circulars", "icon": Icons.campaign_outlined},
+    {"title": "Deliverables", "icon": Icons.task_alt_outlined},
+    {
+      "title": "automated_payroll_individual",
+      "icon": Icons.auto_awesome_outlined,
+    },
   ];
-
-  // Map menu items to tab indices in EmployeeDetailsScreen
-  // Admin tabs: [0:Employee Details, 1:Attendance, 2:Bank, 3:Documents, 4:Salary, 5:Job Application, 6:PF, 7:ESI, 8:Letter, 9:Payslip, 10:Assets Details, 11:Circular, 12:Task Details]
-  final Map<String, int> menuToTabIndex = {
-    "Employee Details": 0,
-    "Attendance": 1,
-    "Bank": 2,
-    "Salary": 4, // Salary is at index 4 (after Documents)
-    "Letters": 8, // Letter is at index 8
-    "payslips": 9, // Payslip is at index 9
-    "assetsdetails": 10, // Assets Details is at index 10
-    "Circulars": 11, // Circular is at index 11
-    // "Deliverables" and "automated_payroll_individual" navigate to standalone screens
-  };
 
   @override
   Widget build(BuildContext context) {
-    // ✅ CRITICAL: Check user role dynamically - if not admin, redirect to normal user screen
     final loginProvider = Provider.of<LoginProvider>(context, listen: false);
     final String roleId = loginProvider.userRole?.trim() ?? "";
     final bool isAdmin = roleId == "1";
 
-    // Debug logging
     if (kDebugMode) {
       print("🔍 AdminMyDetailsMenuScreen build");
       print("   Role ID: '$roleId'");
-      print("   Role ID length: ${roleId.length}");
       print("   Is Admin: $isAdmin");
-      print("   User ID: ${widget.empId}");
     }
 
     if (!isAdmin) {
-      // User is not admin, redirect to normal user menu screen
       if (kDebugMode) {
         print("   ⚠️ Not admin - redirecting to NormalUserMyDetailsMenuScreen");
       }
@@ -102,159 +85,260 @@ class _AdminMyDetailsMenuScreenState extends State<AdminMyDetailsMenuScreen> {
           );
         }
       });
-      // Return empty container while redirecting
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (kDebugMode) print("   ✅ Admin confirmed - showing admin menu");
-
-    const primaryColor = Color(0xFF8E0E6B);
-    const backgroundColor = Color(0xFFF8FAFC);
-    const cardBackgroundColor = Colors.white;
-    const selectedBackgroundColor = Color(0xFF8E0E6B);
-    const textColor = Color(0xFF1E293B);
-    const dividerColor = Color(0xFFE2E8F0);
+    const primaryColor = Color(0xFF5B7FFF);
+    const backgroundColor = Color(0xFFF8F9FE);
 
     return Scaffold(
       backgroundColor: backgroundColor,
       drawer: const TabletMobileDrawer(),
       appBar: AppBar(
-        backgroundColor: primaryColor,
+        backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
           "Employee Details",
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
+            color: Color(0xFF1A1A1A),
+            fontSize: 18,
             fontWeight: FontWeight.w600,
             fontFamily: AppFonts.poppins,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color(0xFF1A1A1A)),
       ),
-      body: Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          decoration: BoxDecoration(
-            color: cardBackgroundColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ListView.separated(
-            padding: EdgeInsets.zero,
-            itemCount: menuItems.length,
-            separatorBuilder:
-                (context, index) =>
-                    Divider(height: 1, thickness: 1, color: dividerColor),
-            itemBuilder: (context, index) {
-              final item = menuItems[index];
-              final isSelected = selectedIndex == index;
-
-              return InkWell(
-                onTap: () {
-                  setState(() {
-                    selectedIndex = index;
-                  });
-
-                  // Special handling for "Deliverables" - navigate to standalone screen
-                  if (item == "Deliverables") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => DeliverablesScreen(
-                              empId: widget.empId,
-                              empPhoto: widget.empPhoto,
-                              empName: widget.empName,
-                              empDesignation: widget.empDesignation,
-                              empBranch: widget.empBranch,
+      body: Column(
+        children: [
+          // Simple Profile Header
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: primaryColor.withOpacity(0.1),
+                  backgroundImage:
+                      widget.empPhoto.isNotEmpty
+                          ? NetworkImage(widget.empPhoto)
+                          : null,
+                  child:
+                      widget.empPhoto.isEmpty
+                          ? const Icon(
+                            Icons.person,
+                            size: 28,
+                            color: primaryColor,
+                          )
+                          : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.empName,
+                              style: const TextStyle(
+                                color: Color(0xFF1A1A1A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Special handling for "automated_payroll_individual" - navigate to standalone screen
-                  if (item == "automated_payroll_individual") {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => AutomatedPayrollIndividualScreen(
-                              empId: widget.empId,
-                              empPhoto: widget.empPhoto,
-                              empName: widget.empName,
-                              empDesignation: widget.empDesignation,
-                              empBranch: widget.empBranch,
-                            ),
-                      ),
-                    );
-                    return;
-                  }
-
-                  // Navigate to EmployeeDetailsScreen with the selected tab
-                  // Use the helper method from EmployeeDetailsScreen to get correct index
-                  final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(
-                    item,
-                    true,
-                  );
-
-                  if (kDebugMode) {
-                    print(
-                      "🔍 AdminMenu: Navigating to '$item' -> tab index $tabIndex",
-                    );
-                  }
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => EmployeeDetailsScreen(
-                            empId: widget.empId,
-                            empPhoto: widget.empPhoto,
-                            empName: widget.empName,
-                            empDesignation: widget.empDesignation,
-                            empBranch: widget.empBranch,
-                            initialTabIndex: tabIndex,
-                            showDrawer:
-                                false, // Don't show drawer when navigated from menu
                           ),
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? selectedBackgroundColor
-                            : Colors.transparent,
-                    borderRadius: BorderRadius.circular(0),
-                  ),
-                  child: Text(
-                    item,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : textColor,
-                      fontSize: 16,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.w400,
-                      fontFamily: AppFonts.poppins,
-                    ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: const Text(
+                              "Admin",
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: AppFonts.poppins,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        widget.empBranch,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          fontFamily: AppFonts.poppins,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
-              );
-            },
+              ],
+            ),
           ),
+
+          // Menu Items List
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: menuItems.length,
+              itemBuilder: (context, index) {
+                final item = menuItems[index];
+                final isSelected = selectedIndex == index;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _handleMenuTap(item["title"], index),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected ? primaryColor : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                item["icon"],
+                                color: isSelected ? Colors.white : primaryColor,
+                                size: 22,
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Text(
+                                  _getDisplayName(item["title"]),
+                                  style: TextStyle(
+                                    color:
+                                        isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF1A1A1A),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: AppFonts.poppins,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF9CA3AF),
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getDisplayName(String title) {
+    switch (title) {
+      case "payslips":
+        return "Payslips";
+      case "assetsdetails":
+        return "Assets Details";
+      case "automated_payroll_individual":
+        return "Automated Payroll";
+      default:
+        return title;
+    }
+  }
+
+  void _handleMenuTap(String item, int index) {
+    setState(() {
+      selectedIndex = index;
+    });
+
+    if (item == "Deliverables") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => DeliverablesScreen(
+                empId: widget.empId,
+                empPhoto: widget.empPhoto,
+                empName: widget.empName,
+                empDesignation: widget.empDesignation,
+                empBranch: widget.empBranch,
+              ),
         ),
+      );
+      return;
+    }
+
+    if (item == "automated_payroll_individual") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder:
+              (_) => AutomatedPayrollIndividualScreen(
+                empId: widget.empId,
+                empPhoto: widget.empPhoto,
+                empName: widget.empName,
+                empDesignation: widget.empDesignation,
+                empBranch: widget.empBranch,
+              ),
+        ),
+      );
+      return;
+    }
+
+    final tabIndex = EmployeeDetailsScreen.getTabIndexForMenuItem(item, true);
+
+    if (kDebugMode) {
+      print("🔍 AdminMenu: Navigating to '$item' -> tab index $tabIndex");
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => EmployeeDetailsScreen(
+              empId: widget.empId,
+              empPhoto: widget.empPhoto,
+              empName: widget.empName,
+              empDesignation: widget.empDesignation,
+              empBranch: widget.empBranch,
+              initialTabIndex: tabIndex,
+              showDrawer: false,
+            ),
       ),
     );
   }

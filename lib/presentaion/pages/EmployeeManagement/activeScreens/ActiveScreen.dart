@@ -409,7 +409,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                         decoration: BoxDecoration(
                           color:
                               activeProvider.showFilters
-                                  ? AppColor.primaryColor
+                                  ? AppColor.primaryColor1
                                   : Colors.grey[200],
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -597,8 +597,9 @@ class _ActiveScreenState extends State<ActiveScreen> {
                                         activeProvider.areAllFiltersSelected
                                             ? const LinearGradient(
                                               colors: [
-                                                Color(0xFF8E0E6B),
-                                                Color(0xFFD4145A),
+                                                AppColor.primaryColor1,
+
+                                                AppColor.primaryColor1,
                                               ],
                                               begin: Alignment.centerLeft,
                                               end: Alignment.centerRight,
@@ -790,7 +791,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                               decoration: BoxDecoration(
                                 color:
                                     activeProvider.currentPage == pageNum
-                                        ? AppColor.primaryColor
+                                        ? AppColor.primaryColor1
                                         : Colors.grey[200],
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -841,14 +842,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20), // smoother
-        gradient: LinearGradient(colors: [color1, color2]),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 14,
-            offset: Offset(0, 8),
-          ),
-        ],
+        color: AppColor.primaryColor1
       ),
       child: Row(
         children: [
@@ -988,20 +982,24 @@ class _ActiveScreenState extends State<ActiveScreen> {
                       String? avatarUrl = _getAvatarUrl(user.avatar);
                       return CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFF8E0E6B).withOpacity(0.1),
-                        backgroundImage: avatarUrl.isNotEmpty
-                            ? NetworkImage(avatarUrl)
-                            : null,
-                        child: avatarUrl.isEmpty
-                            ? Text(
-                                (user.username ?? 'E')[0].toUpperCase(),
-                                style: const TextStyle(
-                                  color: Color(0xFF8E0E6B),
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              )
-                            : null,
+                        backgroundColor: const Color(
+                          0xFF8E0E6B,
+                        ).withOpacity(0.1),
+                        backgroundImage:
+                            avatarUrl.isNotEmpty
+                                ? NetworkImage(avatarUrl)
+                                : null,
+                        child:
+                            avatarUrl.isEmpty
+                                ? Text(
+                                  (user.username ?? 'E')[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: AppColor.primaryColor1,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                )
+                                : null,
                       );
                     },
                   ),
@@ -1033,15 +1031,15 @@ class _ActiveScreenState extends State<ActiveScreen> {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF8E0E6B).withOpacity(0.08),
+                            color: AppColor.primaryColor1,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            "ECI ID: ${user.employmentId ?? 'N/A'}",
-                            style: const TextStyle(
+                            "ECI ID: ${user.employmentId ?? 'N/A'}  ",
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF8E0E6B),
+                              color: AppColor.whiteColor,
                               fontFamily: AppFonts.poppins,
                             ),
                           ),
@@ -1122,11 +1120,7 @@ class _ActiveScreenState extends State<ActiveScreen> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8E0E6B), Color(0xFFD4145A)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColor.primaryColor1,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
@@ -1156,7 +1150,8 @@ class _ActiveScreenState extends State<ActiveScreen> {
     if (avatarStr.startsWith('http://') || avatarStr.startsWith('https://')) {
       return avatarStr;
     }
-    final cleanPath = avatarStr.startsWith('/') ? avatarStr.substring(1) : avatarStr;
+    final cleanPath =
+        avatarStr.startsWith('/') ? avatarStr.substring(1) : avatarStr;
     return '${ApiBase.baseUrl}$cleanPath';
   }
 }

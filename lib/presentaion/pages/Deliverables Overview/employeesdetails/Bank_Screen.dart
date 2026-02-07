@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/constants/appcolor_dart.dart';
 import '../../../../core/fonts/fonts.dart';
 import '../../../../provider/Deliverables_Overview_provider/bank_details_provider.dart';
 import '../../../../widgets/shimmer_custom_screen/shimmer_custom_screen.dart';
@@ -82,7 +83,7 @@ class _BankScreenState extends State<BankScreen>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF10B981),
+                        color: AppColor.primaryColor1,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -101,18 +102,19 @@ class _BankScreenState extends State<BankScreen>
 
               // Content
               Expanded(
-                child: bankDetailsProvider.isLoading
-                    ? const CustomCardShimmer(itemCount: 1)
-                    : bankDetailsProvider.bankDetails.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: bankDetailsProvider.bankDetails.length,
-                  itemBuilder: (context, index) {
-                    final bank = bankDetailsProvider.bankDetails[index];
-                    return _buildBankCard(bank);
-                  },
-                ),
+                child:
+                    bankDetailsProvider.isLoading
+                        ? const CustomCardShimmer(itemCount: 1)
+                        : bankDetailsProvider.bankDetails.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: bankDetailsProvider.bankDetails.length,
+                          itemBuilder: (context, index) {
+                            final bank = bankDetailsProvider.bankDetails[index];
+                            return _buildBankCard(bank);
+                          },
+                        ),
               ),
             ],
           ),
@@ -129,13 +131,13 @@ class _BankScreenState extends State<BankScreen>
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: const Color(0xFFD1FAE5),
+              color: AppColor.primaryColor1,
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.account_balance_outlined,
               size: 48,
-              color: Color(0xFF10B981),
+              color: AppColor.primaryColor1,
             ),
           ),
           const SizedBox(height: 16),
@@ -145,8 +147,7 @@ class _BankScreenState extends State<BankScreen>
               fontSize: 16,
               fontWeight: FontWeight.w600,
               fontFamily: AppFonts.poppins,
-              color: Color(0xFF1A1A1A),
-            ),
+                color:AppColor.primaryColor1            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -185,7 +186,7 @@ class _BankScreenState extends State<BankScreen>
                   ),
                   child: const Icon(
                     Icons.account_balance,
-                    color: Color(0xFF10B981),
+                    color: Color(0xff0FF5B7FFF),
                     size: 20,
                   ),
                 ),
@@ -229,7 +230,7 @@ class _BankScreenState extends State<BankScreen>
                   ),
                   child: const Icon(
                     Icons.credit_card,
-                    color: Color(0xFF10B981),
+                    color: Color(0xff0FF5B7FFF),
                     size: 20,
                   ),
                 ),
@@ -273,7 +274,7 @@ class _BankScreenState extends State<BankScreen>
                   ),
                   child: const Icon(
                     Icons.code,
-                    color: Color(0xFF10B981),
+                    color: Color(0xff0FF5B7FFF),
                     size: 20,
                   ),
                 ),
